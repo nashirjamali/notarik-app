@@ -2,7 +2,7 @@
 
 **Status:** draft. Based on the v1 prototype spec (`../notarik/PRODUCT.md`), revised.
 **Author:** Nashir Jamali
-**Purpose:** a real expense tracker, and a portfolio project showing evaluated, safe AI agents.
+**Purpose:** a real expense tracker, a portfolio project showing evaluated, safe AI agents, and a **learning vehicle**: the owner writes the code to build developer and AI-engineering skills, with Claude acting as teacher and reviewer (see `CLAUDE.md`, "Learning mode").
 
 ## 1. Problem
 
