@@ -11,12 +11,12 @@ A reliable test setup against a real Postgres, so RLS and queries can be tested 
 - Test pyramid: unit, integration, end-to-end
 
 ## Build
-- [ ] Set up the test runner (pytest, if Python) and a test database created and migrated automatically.
-- [ ] Fixtures: a database connection as `app_user`, an admin connection for setup, a `make_user()` helper that creates two distinct users.
-- [ ] Isolation: each test runs in a transaction that rolls back, or the database is truncated between tests.
-- [ ] API test client fixture that can send requests with a given user's token (a fake token for now).
-- [ ] A command to run tests and one to run only fast unit tests. Add both to `CLAUDE.md`.
-- [ ] Set up CI (GitHub Actions) running the tests with a Postgres service.
+- [x] Set up the test runner (pytest, if Python) and a test database created and migrated automatically.
+- [x] Fixtures: a database connection as `app_user`, an admin connection for setup, a `make_user()` helper that creates two distinct users.
+- [x] Isolation: each test runs in a transaction that rolls back, or the database is truncated between tests.
+- [x] API test client fixture that can send requests with a given user's token (a fake token for now).
+- [x] A command to run tests and one to run only fast unit tests. Add both to `CLAUDE.md`.
+- [x] Set up CI (GitHub Actions) running the tests with a Postgres service.
 
 ## Done when
 - `make test` passes locally and in CI on a clean checkout.

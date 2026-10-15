@@ -1,4 +1,4 @@
-.PHONY: db api migrate migrate-down test
+.PHONY: db api migrate migrate-down test test-unit
 
 db:
 	docker compose up -d --wait
@@ -14,3 +14,6 @@ migrate-down:
 
 test:
 	cd apps/api && uv run pytest
+
+test-unit:
+	cd apps/api && uv run pytest tests/unit
