@@ -46,4 +46,8 @@ The owner is building this project to **train their developer skills and learn A
 - Do not commit unless asked.
 
 ## Commands
-None yet. Add install, dev, test and eval commands here as they are created.
+- `make db` — start local Postgres (Docker Compose, host port 5433)
+- `make migrate` — apply Alembic migrations with the admin role
+- `make migrate-down` — roll the schema back to empty
+- `make api` — start the API on http://127.0.0.1:8000
+- `make test` — smoke test `GET /health`
