@@ -14,3 +14,9 @@ class Settings(BaseSettings):
 class MigrationSettings(BaseSettings):
     migration_database_url: str
     model_config = ConfigDict(env_file=ROOT_ENV, extra="ignore")
+
+
+class TestSettings(BaseSettings):
+    test_database_url: str
+    app_user_password: str
+    model_config = ConfigDict(env_file=ROOT_ENV, extra="ignore")

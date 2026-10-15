@@ -17,5 +17,8 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = [".", "tests"]
 testpaths = ["tests"]
+markers = [
+    "integration: needs the migrated Postgres test database",
+]

@@ -18,6 +18,9 @@ target_metadata = None
 
 
 def migration_url() -> str:
+    configured = config.get_main_option("sqlalchemy.url")
+    if configured:
+        return configured
     return MigrationSettings().migration_database_url
 
 
