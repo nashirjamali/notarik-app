@@ -11,11 +11,11 @@ Automated checks for the app's critical paths, wired into CI, so later changes d
 - Browser end-to-end tests against the web build
 
 ## Build
-- [ ] Set up the unit/component test runner (Jest with the React Native testing library, per Expo docs).
-- [ ] Cover pure logic first: money formatting, amount parsing, totals, date grouping.
-- [ ] Component tests for the add-expense form (validation errors, adding/removing items).
-- [ ] End-to-end test of the web build with Playwright: sign up, add an expense, see it in the list, delete it. Use a dedicated test database and a seeded test user.
-- [ ] Run lint, type check and tests in CI for the mobile app.
+- [x] Set up the unit/component test runner (Jest with the React Native testing library, per Expo docs).
+- [x] Cover pure logic first: money formatting, amount parsing, totals, date grouping.
+- [x] Component tests for the add-expense form (validation errors, adding/removing items).
+- [x] End-to-end test of the web build with Playwright: sign up, add an expense, see it in the list, delete it. Use a dedicated test database and a seeded test user.
+- [x] Run lint, type check and tests in CI for the mobile app.
 
 ## Done when
 - CI runs lint, types, unit and the end-to-end test on every pull request.

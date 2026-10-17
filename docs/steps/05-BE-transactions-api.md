@@ -12,11 +12,11 @@ Create, read, update and delete transactions and their items through a clean, va
 - Writing a parent and child rows atomically
 
 ## Build
-- [ ] Schemas for create/update/read, with validation: non-negative integer amounts, allowed categories, sane date range.
-- [ ] Endpoints: `POST /transactions`, `GET /transactions` (cursor pagination, filter by month and category), `GET /transactions/{id}`, `PATCH`, `DELETE`.
-- [ ] Items are written in the same database transaction as the parent.
-- [ ] A consistent error response shape (code, message) and a 404 for rows the user can't see (don't reveal that they exist).
-- [ ] Export the OpenAPI spec and generate TypeScript types for the app (used in step 07).
+- [x] Schemas for create/update/read, with validation: non-negative integer amounts, allowed categories, sane date range.
+- [x] Endpoints: `POST /transactions`, `GET /transactions` (cursor pagination, filter by month and category), `GET /transactions/{id}`, `PATCH`, `DELETE`.
+- [x] Items are written in the same database transaction as the parent.
+- [x] A consistent error response shape (code, message) and a 404 for rows the user can't see (don't reveal that they exist).
+- [x] Export the OpenAPI spec and generate TypeScript types for the app (used in step 07).
 
 ## Done when
 - All endpoints work through the test client with a user token.

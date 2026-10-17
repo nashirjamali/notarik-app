@@ -1,7 +1,10 @@
 from collections.abc import Iterator
 from contextlib import contextmanager
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from uuid import UUID
 
+import jwt
 import psycopg
 from alembic import command
 from alembic.config import Config
@@ -10,9 +13,36 @@ from sqlalchemy import Engine
 from sqlalchemy.engine import Connection
 from sqlalchemy.engine.url import URL, make_url
 
-from settings import TestSettings
+from app.core.config import TestSettings
+from app.db.migrate import install_revision_scan
 
 API_ROOT = Path(__file__).resolve().parents[1]
+
+
+def access_token(
+    user_id: UUID,
+    *,
+    secret: str,
+    audience: str,
+    expired: bool = False,
+    audience_override: str | None = None,
+    secret_override: str | None = None,
+    subject: str | None = None,
+) -> str:
+    now = datetime.now(timezone.utc)
+    if expired:
+        issued_at = now - timedelta(hours=2)
+        expires_at = now - timedelta(minutes=5)
+    else:
+        issued_at = now
+        expires_at = now + timedelta(hours=1)
+    payload = {
+        "sub": subject if subject is not None else str(user_id),
+        "aud": audience_override or audience,
+        "iat": issued_at,
+        "exp": expires_at,
+    }
+    return jwt.encode(payload, secret_override or secret, algorithm="HS256")
 
 
 def prepare_test_database() -> tuple[URL, URL]:
@@ -67,6 +97,7 @@ def _ensure_database(admin_url: URL, app_password: str) -> None:
 
 
 def _migrate(admin_url: URL) -> None:
+    install_revision_scan()
     cfg = Config(str(API_ROOT / "alembic.ini"))
     cfg.set_main_option(
         "sqlalchemy.url",

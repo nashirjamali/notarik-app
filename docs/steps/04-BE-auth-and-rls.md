@@ -11,14 +11,14 @@ Requests are authenticated with a token, the user's identity reaches Postgres pe
 - Transaction-local settings and why session-level settings leak under connection pooling
 
 ## Before you start
-- [ ] Write **ADR-002: auth and database provider** (Supabase vs Clerk + Neon vs self-managed). Check JWT handling, mobile and web sign-in, RLS support and free-tier limits. Verify you can run RLS on the option you pick.
+- [x] Write **ADR-002: auth and database provider** (Supabase vs Clerk + Neon vs self-managed). Check JWT handling, mobile and web sign-in, RLS support and free-tier limits. Verify you can run RLS on the option you pick.
 
 ## Build
-- [ ] Verify the provider's JWT in a request dependency; reject missing, expired or malformed tokens with 401.
-- [ ] Create a database session helper that opens a transaction and sets the user identity transaction-locally (see `PLAN.md` Part 2c).
-- [ ] Migration: enable and force RLS on every table; add policies for select/insert/update/delete. Child tables get their own policy.
-- [ ] Add `(select auth.uid())`-style claim lookup as a SQL function so policies stay short.
-- [ ] Verify the service role / owner role is never used by the API.
+- [x] Verify the provider's JWT in a request dependency; reject missing, expired or malformed tokens with 401.
+- [x] Create a database session helper that opens a transaction and sets the user identity transaction-locally (see `PLAN.md` Part 2c).
+- [x] Migration: enable and force RLS on every table; add policies for select/insert/update/delete. Child tables get their own policy.
+- [x] Add `(select auth.uid())`-style claim lookup as a SQL function so policies stay short.
+- [x] Verify the service role / owner role is never used by the API.
 
 ## Done when
 - A valid token can read and write only its own rows.

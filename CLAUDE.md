@@ -26,7 +26,7 @@ The owner is building this project to **train their developer skills and learn A
 ## Planned stack (confirm before building)
 - Client: Expo (React Native) + Expo Router + TypeScript, web via React Native Web, in `apps/mobile/`
 - API: **Python**, FastAPI + LangGraph in `apps/api/` (decided, `docs/adr/001-backend-language-python.md`)
-- DB: Postgres with RLS on every table; auth provider undecided (ADR-002, decide before step 04)
+- DB: self-managed Postgres with RLS on every table; auth is Supabase Auth (ADR-002)
 - LLM: OpenRouter through LangChain chat models. The user uses OpenRouter for all LLM calls.
 - Tracing/evals: LangSmith or Langfuse (ADR-004, decide at step 15)
 

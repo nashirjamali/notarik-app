@@ -10,6 +10,8 @@ __pycache__/
 .expo/
 dist/
 build/
+test-results/
+playwright-report/
 .next/
 
 # Receipt eval data contains personal data. Keep raw images out of git.

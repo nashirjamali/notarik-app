@@ -1,0 +1,241 @@
+{
+  "info": {
+    "name": "Notarik API",
+    "description": "Local API at http://127.0.0.1:8000. Run Signup or Login first. Those requests store access_token, refresh_token, and user_id on the collection. Create transaction stores transaction_id. Amounts are integer rupiah.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000" },
+    { "key": "email", "value": "you@example.com" },
+    { "key": "password", "value": "password123" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "user_id", "value": "" },
+    { "key": "transaction_id", "value": "" },
+    { "key": "next_cursor", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('access_token', body.access_token);",
+                  "pm.collectionVariables.set('refresh_token', body.refresh_token);",
+                  "pm.collectionVariables.set('user_id', body.user_id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/signup",
+            "description": "201 with tokens. 409 if the email is already registered. Password must be at least 8 characters."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('access_token', body.access_token);",
+                  "pm.collectionVariables.set('refresh_token', body.refresh_token);",
+                  "pm.collectionVariables.set('user_id', body.user_id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login",
+            "description": "200 with tokens. 401 for an unknown email or a wrong password, with the same message either way."
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{baseUrl}}/me",
+            "description": "Returns the user id from the access token. A user_id query param is ignored."
+          }
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('access_token', body.access_token);",
+                  "pm.collectionVariables.set('refresh_token', body.refresh_token);",
+                  "pm.collectionVariables.set('user_id', body.user_id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh",
+            "description": "Rotates the refresh token. The previous refresh token then returns 401."
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/logout",
+            "description": "204. The refresh token can no longer be used."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "item": [
+        {
+          "name": "Create transaction",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('transaction_id', body.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchant\": \"Warung\",\n  \"date\": \"2026-10-17\",\n  \"total_minor\": 25000,\n  \"category\": \"Dining\",\n  \"source\": \"manual\",\n  \"items\": [\n    { \"name\": \"Nasi\", \"qty\": \"1\", \"line_total_minor\": 15000 },\n    { \"name\": \"Es teh\", \"qty\": \"1\", \"line_total_minor\": 5000 }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/transactions",
+            "description": "201. total_minor is integer rupiah. Categories: Groceries, Dining, Transport, Shopping, Bills, Other. source defaults to manual."
+          }
+        },
+        {
+          "name": "List transactions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('next_cursor', body.next_cursor || '');",
+                  "if (body.items && body.items.length && !pm.collectionVariables.get('transaction_id')) {",
+                  "  pm.collectionVariables.set('transaction_id', body.items[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/transactions?month=2026-10&category=Dining&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["transactions"],
+              "query": [
+                { "key": "month", "value": "2026-10", "description": "YYYY-MM, matched on the expense date" },
+                { "key": "category", "value": "Dining" },
+                { "key": "limit", "value": "20" },
+                { "key": "cursor", "value": "{{next_cursor}}", "disabled": true }
+              ]
+            },
+            "description": "Newest first. Enable the cursor query after the first page to load the next page."
+          }
+        },
+        {
+          "name": "Get transaction",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{baseUrl}}/transactions/{{transaction_id}}",
+            "description": "404 when the id belongs to another user or does not exist."
+          }
+        },
+        {
+          "name": "Update transaction",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchant\": \"Warung Baru\",\n  \"total_minor\": 30000,\n  \"items\": [\n    { \"name\": \"Nasi goreng\", \"qty\": \"1\", \"line_total_minor\": 30000 }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/transactions/{{transaction_id}}",
+            "description": "Send items only when you want to replace them. Omitting items leaves the existing lines."
+          }
+        },
+        {
+          "name": "Delete transaction",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{baseUrl}}/transactions/{{transaction_id}}",
+            "description": "204. Line items are deleted with the expense."
+          }
+        }
+      ]
+    }
+  ]
+}

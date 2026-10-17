@@ -12,11 +12,11 @@ The first complete vertical slice: add an expense by hand with line items, see i
 - Money entry UX (typing "25000", "25rb", paste)
 
 ## Build
-- [ ] Add screen: merchant, date picker, category picker (six categories, colors from the tokens), total, optional line items (add/remove rows).
-- [ ] Decide and document the rule: is `total` typed by the user or computed from items? Show a warning if they differ.
-- [ ] Transactions list: grouped by day, newest first, infinite scroll, pull to refresh, month filter.
-- [ ] Detail screen with items; edit and delete (with confirmation; allow removing a single line item as v1 did).
-- [ ] Error handling: server validation errors shown next to the right field.
+- [x] Add screen: merchant, date picker, category picker (six categories, colors from the tokens), total, optional line items (add/remove rows).
+- [x] Decide and document the rule: is `total` typed by the user or computed from items? Show a warning if they differ.
+- [x] Transactions list: grouped by day, newest first, infinite scroll, pull to refresh, month filter.
+- [x] Detail screen with items; edit and delete (with confirmation; allow removing a single line item as v1 did).
+- [x] Error handling: server validation errors shown next to the right field.
 
 ## Done when
 - You can create, view, edit and delete an expense end to end on phone and in the browser.

@@ -7,6 +7,10 @@ MERCHANT = "isolation-probe"
 
 
 def test_inserted_row_is_visible_in_this_test(db_connection, make_user):
+    from app.db.database import set_request_claims
+
+    user_id = make_user()
+    set_request_claims(db_connection, user_id)
     db_connection.execute(
         text(
             """
@@ -18,7 +22,7 @@ def test_inserted_row_is_visible_in_this_test(db_connection, make_user):
             )
             """
         ),
-        {"user_id": make_user(), "merchant": MERCHANT},
+        {"user_id": user_id, "merchant": MERCHANT},
     )
     db_connection.commit()
     count = db_connection.execute(
@@ -28,8 +32,8 @@ def test_inserted_row_is_visible_in_this_test(db_connection, make_user):
     assert count == 1
 
 
-def test_inserted_row_is_not_visible_in_the_next_test(db_connection):
-    count = db_connection.execute(
+def test_inserted_row_is_not_visible_in_the_next_test(admin_connection):
+    count = admin_connection.execute(
         text("SELECT count(*) FROM transactions WHERE merchant = :merchant"),
         {"merchant": MERCHANT},
     ).scalar_one()

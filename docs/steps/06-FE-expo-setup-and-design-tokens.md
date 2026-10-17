@@ -11,12 +11,12 @@ An Expo app that runs on your phone and in the browser with tab navigation and a
 - Design tokens: one source for colors, spacing and type
 
 ## Build
-- [ ] Create the app in `apps/mobile/` with TypeScript and Expo Router. Run it in Expo Go (or a dev build), in an iOS/Android simulator, and in the browser.
-- [ ] Tabs: Home (recap), Transactions, Add, Chat, Settings. Screens can be placeholders.
-- [ ] Web layout: constrain the content to a phone-width column centered on large screens, so the web version matches the mobile layout.
-- [ ] A `theme` module with color, spacing, radius and typography tokens. Resolve the TBD values from the old design notes: one indigo accent, tinted neutrals, six category colors that are color-blind-safe, success/amber/red status colors. Check contrast ratios.
-- [ ] A few base components: `Screen`, `Text`, `Button`, `Card`, `Money` (formats IDR with tabular numerals).
-- [ ] Light and dark support, or an explicit decision to defer dark mode.
+- [x] Create the app in `apps/mobile/` with TypeScript and Expo Router. Run it in Expo Go (or a dev build), in an iOS/Android simulator, and in the browser.
+- [x] Tabs: Home (recap), Transactions, Add, Chat, Settings. Screens can be placeholders.
+- [x] Web layout: constrain the content to a phone-width column centered on large screens, so the web version matches the mobile layout.
+- [x] A `theme` module with color, spacing, radius and typography tokens. Resolve the TBD values from the old design notes: one indigo accent, tinted neutrals, six category colors that are color-blind-safe, success/amber/red status colors. Check contrast ratios.
+- [x] A few base components: `Screen`, `Text`, `Button`, `Card`, `Money` (formats IDR with tabular numerals).
+- [x] Light and dark support, or an explicit decision to defer dark mode.
 
 ## Done when
 - The same screens render on phone and in a desktop browser with the same layout.
