@@ -8,8 +8,11 @@ from fastapi.responses import JSONResponse
 
 from app.db.database import engine
 from app.routers.auth import router as auth_router
+from app.routers.chat import router as chat_router
 from app.routers.health import router as health_router
 from app.routers.me import router as me_router
+from app.routers.recap import router as recap_router
+from app.routers.receipts import router as receipts_router
 from app.routers.transactions import router as transactions_router
 
 _STATUS_CODES = {
@@ -17,6 +20,7 @@ _STATUS_CODES = {
     404: "not_found",
     409: "conflict",
     422: "validation_error",
+    429: "rate_limited",
     503: "unavailable",
 }
 
@@ -38,6 +42,9 @@ app.include_router(health_router)
 app.include_router(me_router)
 app.include_router(auth_router)
 app.include_router(transactions_router)
+app.include_router(receipts_router)
+app.include_router(recap_router)
+app.include_router(chat_router)
 
 
 @app.exception_handler(HTTPException)

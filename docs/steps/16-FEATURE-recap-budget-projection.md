@@ -12,10 +12,10 @@ A Home screen with the monthly recap by category, a monthly budget with spent-vs
 - Designing a projection that doesn't pretend to be a promise
 
 ## Build
-- [ ] `GET /recap?month=YYYY-MM`: totals per category, total spent, count; computed in SQL.
-- [ ] `GET/PUT /budget?month=`: total monthly budget per user and month.
-- [ ] `GET /projection?month=`: straight-line run-rate estimate, with the method explained in the response.
-- [ ] Re-implement the recap and projection logic from the old prototype (`../notarik/lib/recap.ts`) by understanding it, not copying it. Decide edge cases: partial first week, month with no data, budget not set.
+- [x] `GET /recap?month=YYYY-MM`: totals per category, total spent, count; computed in SQL.
+- [x] `GET/PUT /budget?month=`: total monthly budget per user and month.
+- [x] `GET /projection?month=`: straight-line run-rate estimate, with the method explained in the response.
+- [x] Re-implement the recap and projection logic from the old prototype (`../notarik/lib/recap.ts`) by understanding it, not copying it. Decide edge cases: partial first week, month with no data, budget not set.
 - [ ] Frontend: donut or bar chart with the category colors, accessible labels, a month selector, budget progress with status colors (on track, near limit, over), and the projection with "estimate" wording.
 - [ ] Empty and first-use states.
 

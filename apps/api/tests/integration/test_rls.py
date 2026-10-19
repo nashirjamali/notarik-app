@@ -13,7 +13,14 @@ TABLES = (
     "budgets",
     "merchant_memory",
 )
-RLS_TABLES = TABLES + ("users", "refresh_tokens")
+RLS_TABLES = TABLES + (
+    "users",
+    "refresh_tokens",
+    "spending_memory",
+    "chat_threads",
+    "chat_messages",
+    "llm_usage",
+)
 
 
 def insert_row(connection, table: str, user_id) -> None:

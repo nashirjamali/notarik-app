@@ -14,12 +14,12 @@ Compose extract, validate, repair, categorize and review into one LangGraph grap
 
 ## Build
 - [ ] Define `ReceiptState` (per `PLAN.md` Part 2b).
-- [ ] Nodes: `preprocess`, `extract`, `validate`, `repair`, `categorize`, `gate`, `review` (interrupt), `persist`.
-- [ ] Conditional edges: issues and attempts < 2 → repair; otherwise continue with issues carried forward.
-- [ ] The `repair` node re-reads the image with the specific issues and targets only failing fields.
+- [x] Nodes: `preprocess`, `extract`, `validate`, `repair`, `categorize`, `gate`, `review` (interrupt), `persist`.
+- [x] Conditional edges: issues and attempts < 2 → repair; otherwise continue with issues carried forward.
+- [x] The `repair` node re-reads the image with the specific issues and targets only failing fields.
 - [ ] Stub `categorize` with a simple LLM call for now; the RAG hook comes in step 17.
-- [ ] `review` pauses the graph and resumes with the user's edits.
-- [ ] Emit step events (`trace`) for later SSE streaming.
+- [x] `review` pauses the graph and resumes with the user's edits.
+- [x] Emit step events (`trace`) for later SSE streaming.
 - [ ] Run on the dev split: compare single-shot vs graph, with accuracy, repair rate, latency and cost.
 
 ## Done when

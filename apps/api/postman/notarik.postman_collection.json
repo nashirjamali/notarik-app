@@ -12,7 +12,9 @@
     { "key": "refresh_token", "value": "" },
     { "key": "user_id", "value": "" },
     { "key": "transaction_id", "value": "" },
-    { "key": "next_cursor", "value": "" }
+    { "key": "next_cursor", "value": "" },
+    { "key": "run_id", "value": "" },
+    { "key": "thread_id", "value": "" }
   ],
   "item": [
     {
@@ -233,6 +235,144 @@
             "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
             "url": "{{baseUrl}}/transactions/{{transaction_id}}",
             "description": "204. Line items are deleted with the expense."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Receipts",
+      "item": [
+        {
+          "name": "Upload receipt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('run_id', body.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "" }] },
+            "url": "{{baseUrl}}/receipts",
+            "description": "JPEG, PNG, or PDF, max 5 MB. 201 returns draft, issues, and trace. Nothing is saved as an expense until Confirm receipt."
+          }
+        },
+        {
+          "name": "Get receipt run",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{baseUrl}}/receipts/{{run_id}}",
+            "description": "404 for another user's run."
+          }
+        },
+        {
+          "name": "Confirm receipt",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"merchant\": \"Warung\",\n  \"date\": \"2026-10-17\",\n  \"total_minor\": 25000,\n  \"category\": \"Dining\",\n  \"items\": [{ \"name\": \"Nasi\", \"qty\": 1, \"line_total_minor\": 25000 }]\n}"
+            },
+            "url": "{{baseUrl}}/receipts/{{run_id}}/confirm",
+            "description": "Creates the transaction. user_edited_fields lists what changed from the draft."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recap",
+      "item": [
+        {
+          "name": "Recap",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{baseUrl}}/recap?month=2026-10"
+          }
+        },
+        {
+          "name": "Get budget",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{baseUrl}}/budget?month=2026-10"
+          }
+        },
+        {
+          "name": "Set budget",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"month\": \"2026-10\",\n  \"total_minor\": 2000000\n}" },
+            "url": "{{baseUrl}}/budget"
+          }
+        },
+        {
+          "name": "Projection",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{access_token}}" }],
+            "url": "{{baseUrl}}/projection?month=2026-10",
+            "description": "projected_minor is an estimate. Show detail, and hide the number when ready is false."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Send message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const done = pm.response.text().split('event: done').pop();",
+                  "const match = done.match(/\"thread_id\":\\s*\"([^\"]+)\"/);",
+                  "if (match) pm.collectionVariables.set('thread_id', match[1]);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"nasi goreng 25rb\",\n  \"thread_id\": null\n}" },
+            "url": "{{baseUrl}}/chat",
+            "description": "SSE. A pending_action event is a proposal. Pass thread_id from the done event on the next message."
+          }
+        },
+        {
+          "name": "Confirm action",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"decision\": \"approve\"\n}" },
+            "url": "{{baseUrl}}/chat/{{thread_id}}/confirm",
+            "description": "decision is approve, reject, or edit. edit also sends payload. Reject writes nothing."
           }
         }
       ]

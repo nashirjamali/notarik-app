@@ -14,9 +14,9 @@ One retrieval index over the user's own transactions and corrections that improv
 
 ## Build
 - [ ] Enable pgvector. Add the memory table: `user_id`, `kind` (transaction or correction), `source_id`, `text`, `embedding`. RLS policy on it.
-- [ ] Write the indexing step: on confirm, embed `merchant | item names | category`; on user correction, embed the corrected mapping.
-- [ ] Implement `search_spending_memory(query, k)`: filter by user, exact/trigram merchant match, then vector search.
-- [ ] Wire it into the `categorize` node as few-shot examples; skip the LLM when a high-confidence merchant match exists.
+- [x] Write the indexing step: on confirm, embed `merchant | item names | category`; on user correction, embed the corrected mapping.
+- [x] Implement `search_spending_memory(query, k)`: filter by user, exact/trigram merchant match, then vector search.
+- [x] Wire it into the `categorize` node as few-shot examples; skip the LLM when a high-confidence merchant match exists.
 - [ ] Ablation on the dataset (or a simulated history): category accuracy and cost with vs without retrieval.
 - [ ] Decide the embedding model and record cost and latency.
 

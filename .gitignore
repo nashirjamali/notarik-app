@@ -17,3 +17,4 @@ playwright-report/
 # Receipt eval data contains personal data. Keep raw images out of git.
 apps/api/evals/data/raw/
 apps/api/evals/data/images/
+apps/api/data/
