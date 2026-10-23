@@ -1,6 +1,7 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '@/theme/Theme';
 import { Logo } from './Logo';
+import BellIcon from '@/assets/svg/icon-bell.svg';
 
 export function HomeHeader({ onNotificationPress }: { onNotificationPress?: () => void }) {
   const theme = useTheme();
@@ -22,7 +23,7 @@ export function HomeHeader({ onNotificationPress }: { onNotificationPress?: () =
           }
         ]}
       >
-        <View style={[styles.bellIcon, { borderColor: theme.text }]} />
+        <BellIcon width={24} height={24} />
       </Pressable>
     </View>
   );
@@ -39,13 +40,5 @@ const styles = StyleSheet.create({
   notificationButton: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  bellIcon: {
-    width: 20,
-    height: 20,
-    borderWidth: 2,
-    borderRadius: 4,
-    borderBottomLeftRadius: 10,
-    borderBottomRightRadius: 10,
   },
 });

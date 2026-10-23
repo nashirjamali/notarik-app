@@ -5,21 +5,8 @@ import { HomeHeader } from '@/components/HomeHeader';
 import { ActionCard } from '@/components/ActionCard';
 import { ShortcutTile } from '@/components/ShortcutTile';
 import { SuggestionChip } from '@/components/SuggestionChip';
-
-const CameraIcon = ({ color }: { color: string }) => (
-  <View style={[styles.cameraIcon, { borderColor: color }]}>
-    <View style={[styles.cameraLens, { borderColor: color }]} />
-  </View>
-);
-
-const GhostIcon = ({ color }: { color: string }) => (
-  <View style={[styles.ghostIcon, { backgroundColor: color }]}>
-    <View style={styles.ghostEyes}>
-      <View style={styles.ghostEye} />
-      <View style={styles.ghostEye} />
-    </View>
-  </View>
-);
+import CameraIcon from '@/assets/svg/icon-camera.svg';
+import LogoMark from '@/assets/svg/logo-mark.svg';
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -65,14 +52,14 @@ export default function HomeScreen() {
           <ActionCard
             title="Snap receipt"
             subtitle="Photo a receipt, we'll do the rest"
-            icon={<CameraIcon color={theme.accentText} />}
+            icon={<CameraIcon width={32} height={32} color={theme.accentText} />}
             variant="primary"
             onPress={() => router.push('/(app)/add')}
           />
           <ActionCard
             title="Ask Notarik"
             subtitle="Ask anything about your spending"
-            icon={<GhostIcon color={theme.accent} />}
+            icon={<LogoMark width={32} height={28} />}
             variant="subtle"
             onPress={() => router.push('/(app)/chat')}
           />
@@ -169,38 +156,5 @@ const styles = StyleSheet.create({
   },
   suggestions: {
     paddingVertical: 4,
-  },
-  cameraIcon: {
-    width: 32,
-    height: 28,
-    borderWidth: 3,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cameraLens: {
-    width: 16,
-    height: 16,
-    borderWidth: 3,
-    borderRadius: 8,
-  },
-  ghostIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    overflow: 'hidden',
-    justifyContent: 'flex-start',
-    paddingTop: 8,
-  },
-  ghostEyes: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  ghostEye: {
-    width: 4,
-    height: 6,
-    backgroundColor: '#FEFEFE',
-    borderRadius: 2,
   },
 });

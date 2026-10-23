@@ -1,5 +1,6 @@
 import { View, Text, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 import { useTheme } from '@/theme/Theme';
+import ArrowIcon from '@/assets/svg/icon-arrow-up-right.svg';
 
 interface ActionCardProps {
   title: string;
@@ -16,6 +17,7 @@ export function ActionCard({ title, subtitle, icon, variant, onPress, style }: A
   const backgroundColor = variant === 'primary' ? theme.accent : theme.bg;
   const textColor = variant === 'primary' ? theme.accentText : theme.text;
   const subtitleColor = variant === 'primary' ? theme.accentText : theme.muted;
+  const arrowColor = variant === 'primary' ? theme.accentText : theme.text;
   
   return (
     <Pressable
@@ -53,7 +55,9 @@ export function ActionCard({ title, subtitle, icon, variant, onPress, style }: A
           {subtitle}
         </Text>
       </View>
-      <View style={[styles.arrow, { borderColor: textColor }]} />
+      <View style={styles.arrowContainer}>
+        <ArrowIcon width={20} height={20} color={arrowColor} />
+      </View>
     </Pressable>
   );
 }
@@ -79,12 +83,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontWeight: '400',
   },
-  arrow: {
-    width: 16,
-    height: 16,
-    borderTopWidth: 2,
-    borderRightWidth: 2,
-    transform: [{ rotate: '45deg' }],
+  arrowContainer: {
     alignSelf: 'flex-end',
   },
 });

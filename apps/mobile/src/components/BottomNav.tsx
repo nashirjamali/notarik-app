@@ -1,44 +1,15 @@
 import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { useTheme } from '@/theme/Theme';
-
-const HomeIcon = ({ active, color }: { active: boolean; color: string }) => (
-  <View style={[
-    styles.iconCircle,
-    active && { backgroundColor: color }
-  ]}>
-    {!active && (
-      <View style={[styles.homeIcon, { borderColor: color }]} />
-    )}
-  </View>
-);
-
-const TransactionsIcon = ({ color }: { color: string }) => (
-  <View style={styles.iconContainer}>
-    <View style={[styles.listLine, { backgroundColor: color }]} />
-    <View style={[styles.listLine, { backgroundColor: color }]} />
-    <View style={[styles.listLine, { backgroundColor: color }]} />
-  </View>
-);
-
-const ChatIcon = ({ color }: { color: string }) => (
-  <View style={[styles.chatBubble, { borderColor: color }]} />
-);
-
-const SettingsIcon = ({ color }: { color: string }) => (
-  <View style={styles.iconContainer}>
-    <View style={[styles.gear, { borderColor: color }]}>
-      <View style={[styles.gearCenter, { backgroundColor: color }]} />
-    </View>
-  </View>
-);
-
-const PlusIcon = ({ color }: { color: string }) => (
-  <View style={styles.iconContainer}>
-    <View style={[styles.plusH, { backgroundColor: color }]} />
-    <View style={[styles.plusV, { backgroundColor: color }]} />
-  </View>
-);
+import NavHomeActive from '@/assets/svg/nav-home-active_26a5.svg';
+import NavHomeInactive from '@/assets/svg/nav-home-inactive_d13a.svg';
+import NavTransactionsActive from '@/assets/svg/nav-transactions-active_6b2f.svg';
+import NavTransactionsInactive from '@/assets/svg/nav-transactions-inactive_9f4d.svg';
+import NavChatActive from '@/assets/svg/nav-chat-active_46a5.svg';
+import NavChatInactive from '@/assets/svg/nav-chat-inactive_5c78.svg';
+import NavSettingsActive from '@/assets/svg/nav-settings-active_8816.svg';
+import NavSettingsInactive from '@/assets/svg/nav-settings-inactive_4cb0.svg';
+import NavPlusButton from '@/assets/svg/nav-plus-button_a419.svg';
 
 export function BottomNav() {
   const theme = useTheme();
@@ -59,47 +30,51 @@ export function BottomNav() {
         style={styles.navItem}
         onPress={() => router.push('/(app)/(tabs)/')}
       >
-        <HomeIcon 
-          active={isActive('/(app)/(tabs)/')} 
-          color={isActive('/(app)/(tabs)/') ? theme.accentText : theme.muted}
-        />
+        {isActive('/(app)/(tabs)/') ? (
+          <NavHomeActive width={32} height={32} />
+        ) : (
+          <NavHomeInactive width={32} height={32} />
+        )}
       </Pressable>
       
       <Pressable
         style={styles.navItem}
         onPress={() => router.push('/(app)/(tabs)/transactions')}
       >
-        <TransactionsIcon 
-          color={isActive('/(app)/(tabs)/transactions') ? theme.accentText : theme.muted}
-        />
+        {isActive('/(app)/(tabs)/transactions') ? (
+          <NavTransactionsActive width={24} height={24} />
+        ) : (
+          <NavTransactionsInactive width={24} height={24} />
+        )}
       </Pressable>
       
       <Pressable
-        style={[
-          styles.addButton,
-          { backgroundColor: theme.accent }
-        ]}
+        style={styles.addButton}
         onPress={() => router.push('/(app)/(tabs)/add')}
       >
-        <PlusIcon color={theme.accentText} />
+        <NavPlusButton width={56} height={56} />
       </Pressable>
       
       <Pressable
         style={styles.navItem}
         onPress={() => router.push('/(app)/(tabs)/chat')}
       >
-        <ChatIcon 
-          color={isActive('/(app)/(tabs)/chat') ? theme.accentText : theme.muted}
-        />
+        {isActive('/(app)/(tabs)/chat') ? (
+          <NavChatActive width={24} height={24} />
+        ) : (
+          <NavChatInactive width={24} height={24} />
+        )}
       </Pressable>
       
       <Pressable
         style={styles.navItem}
         onPress={() => router.push('/(app)/(tabs)/settings')}
       >
-        <SettingsIcon 
-          color={isActive('/(app)/(tabs)/settings') ? theme.accentText : theme.muted}
-        />
+        {isActive('/(app)/(tabs)/settings') ? (
+          <NavSettingsActive width={24} height={24} />
+        ) : (
+          <NavSettingsInactive width={24} height={24} />
+        )}
       </Pressable>
     </View>
   );
@@ -137,67 +112,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: 56,
     height: 56,
-    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  iconCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  homeIcon: {
-    width: 20,
-    height: 18,
-    borderWidth: 2.5,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 2,
-    borderTopRightRadius: 2,
-  },
-  iconContainer: {
-    width: 24,
-    height: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  listLine: {
-    width: 20,
-    height: 2.5,
-    borderRadius: 1.25,
-    marginVertical: 2,
-  },
-  chatBubble: {
-    width: 22,
-    height: 20,
-    borderWidth: 2.5,
-    borderRadius: 11,
-    borderBottomLeftRadius: 2,
-  },
-  gear: {
-    width: 20,
-    height: 20,
-    borderWidth: 2.5,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  gearCenter: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  plusH: {
-    width: 20,
-    height: 3,
-    borderRadius: 1.5,
-    position: 'absolute',
-  },
-  plusV: {
-    width: 3,
-    height: 20,
-    borderRadius: 1.5,
-    position: 'absolute',
   },
 });

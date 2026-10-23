@@ -1,5 +1,6 @@
-import { Text, Pressable, StyleSheet } from 'react-native';
+import { Text, Pressable, StyleSheet, View } from 'react-native';
 import { useTheme } from '@/theme/Theme';
+import SparkleIcon from '@/assets/svg/icon-sparkle.svg';
 
 interface SuggestionChipProps {
   text: string;
@@ -24,12 +25,9 @@ export function SuggestionChip({ text, onPress }: SuggestionChipProps) {
         }
       ]}
     >
-      <Text style={[
-        styles.sparkle,
-        { color: theme.accent }
-      ]}>
-        ✨
-      </Text>
+      <View style={styles.iconContainer}>
+        <SparkleIcon width={16} height={16} color={theme.accent} />
+      </View>
       <Text style={[
         styles.text,
         {
@@ -49,8 +47,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  sparkle: {
-    fontSize: 14,
+  iconContainer: {
+    width: 16,
+    height: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   text: {
     fontWeight: '400',
