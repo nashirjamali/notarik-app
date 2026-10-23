@@ -17,7 +17,8 @@ export function ActionCard({ title, subtitle, icon, variant, onPress, style }: A
   const backgroundColor = variant === 'primary' ? theme.accent : theme.bg;
   const textColor = variant === 'primary' ? theme.accentText : theme.text;
   const subtitleColor = variant === 'primary' ? theme.accentText : theme.muted;
-  const arrowColor = variant === 'primary' ? theme.accentText : theme.text;
+  const arrowColor = variant === 'primary' ? theme.accentText : '#141718';
+  const iconCircleBg = variant === 'primary' ? 'rgba(255, 255, 255, 0.2)' : theme.surface;
   
   return (
     <Pressable
@@ -32,15 +33,24 @@ export function ActionCard({ title, subtitle, icon, variant, onPress, style }: A
         style,
       ]}
     >
-      <View style={styles.iconContainer}>
-        {icon}
+      <View style={styles.header}>
+        <View style={[
+          styles.iconCircle,
+          { backgroundColor: iconCircleBg, borderRadius: 24 }
+        ]}>
+          {icon}
+        </View>
+        <View style={styles.arrowContainer}>
+          <ArrowIcon width={20} height={20} color={arrowColor} />
+        </View>
       </View>
+      
       <View style={styles.content}>
         <Text style={[
           styles.title,
           {
             color: textColor,
-            ...theme.type.body2Bold,
+            ...theme.type.body1Bold,
           }
         ]}>
           {title}
@@ -55,9 +65,6 @@ export function ActionCard({ title, subtitle, icon, variant, onPress, style }: A
           {subtitle}
         </Text>
       </View>
-      <View style={styles.arrowContainer}>
-        <ArrowIcon width={20} height={20} color={arrowColor} />
-      </View>
     </Pressable>
   );
 }
@@ -65,25 +72,33 @@ export function ActionCard({ title, subtitle, icon, variant, onPress, style }: A
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    minHeight: 180,
-    justifyContent: 'space-between',
+    minHeight: 200,
   },
-  iconContainer: {
-    width: 40,
-    height: 40,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  iconCircle: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowContainer: {
+    width: 20,
+    height: 20,
   },
   content: {
     flex: 1,
-    justifyContent: 'center',
-    gap: 4,
+    justifyContent: 'flex-end',
+    gap: 8,
+    marginTop: 16,
   },
   title: {
-    fontWeight: '500',
+    fontWeight: '600',
   },
   subtitle: {
     fontWeight: '400',
-  },
-  arrowContainer: {
-    alignSelf: 'flex-end',
   },
 });

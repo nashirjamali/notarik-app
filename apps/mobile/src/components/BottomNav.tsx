@@ -31,9 +31,11 @@ export function BottomNav() {
         onPress={() => router.push('/(app)/(tabs)/')}
       >
         {isActive('/(app)/(tabs)/') ? (
-          <NavHomeActive width={32} height={32} />
+          <View style={styles.activeCircle}>
+            <NavHomeActive width={24} height={24} />
+          </View>
         ) : (
-          <NavHomeInactive width={32} height={32} />
+          <NavHomeInactive width={24} height={24} />
         )}
       </Pressable>
       
@@ -106,6 +108,14 @@ const styles = StyleSheet.create({
   navItem: {
     width: 48,
     height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FEFEFE',
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -16,10 +16,8 @@ export function HomeHeader({ onNotificationPress }: { onNotificationPress?: () =
           {
             width: theme.buttonHeights.icon,
             height: theme.buttonHeights.icon,
-            backgroundColor: theme.surface,
+            backgroundColor: '#E8ECEF',
             borderRadius: theme.buttonHeights.icon / 2,
-            borderWidth: 1,
-            borderColor: theme.border,
           }
         ]}
       >

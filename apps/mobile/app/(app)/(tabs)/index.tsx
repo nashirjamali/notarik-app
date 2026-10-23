@@ -79,35 +79,42 @@ export default function HomeScreen() {
           <ShortcutTile
             label="Quick add"
             icon={require('../../../assets/icons/quick-add.png')}
+            tintColor="#E9E3F4"
             onPress={() => router.push('/(app)/add')}
           />
           <ShortcutTile
             label="Recap"
             icon={require('../../../assets/icons/recap.png')}
+            tintColor="#D9EAF4"
             onPress={() => {}}
           />
           <ShortcutTile
             label="Budget"
             icon={require('../../../assets/icons/budget.png')}
+            tintColor="#D9F2E6"
             onPress={() => {}}
           />
           <ShortcutTile
             label="Transactions"
             icon={require('../../../assets/icons/transactions.png')}
+            tintColor="#FEF0DC"
             onPress={() => router.push('/(app)/transactions')}
           />
         </ScrollView>
         
         <View style={[styles.section, { paddingHorizontal: theme.spacing[24] }]}>
-          <Text style={[
-            styles.sectionLabel,
-            {
-              color: theme.muted,
-              ...theme.type.captionSmallBold,
-            }
-          ]}>
-            Try asking Notarik
-          </Text>
+          <View style={styles.sectionHeader}>
+            <LogoMark width={16} height={14} />
+            <Text style={[
+              styles.sectionLabel,
+              {
+                color: theme.muted,
+                ...theme.type.captionSmallBold,
+              }
+            ]}>
+              Try asking Notarik
+            </Text>
+          </View>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -140,6 +147,11 @@ const styles = StyleSheet.create({
   section: {
     gap: 12,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   headline: {
     fontWeight: '700',
   },
@@ -151,8 +163,6 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   suggestions: {
     paddingVertical: 4,

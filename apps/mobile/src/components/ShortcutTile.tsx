@@ -4,10 +4,11 @@ import { useTheme } from '@/theme/Theme';
 interface ShortcutTileProps {
   label: string;
   icon: ImageSourcePropType;
+  tintColor: string;
   onPress?: () => void;
 }
 
-export function ShortcutTile({ label, icon, onPress }: ShortcutTileProps) {
+export function ShortcutTile({ label, icon, tintColor, onPress }: ShortcutTileProps) {
   const theme = useTheme();
   
   return (
@@ -15,7 +16,7 @@ export function ShortcutTile({ label, icon, onPress }: ShortcutTileProps) {
       <View style={[
         styles.iconTile,
         {
-          backgroundColor: theme.bg,
+          backgroundColor: tintColor,
           borderRadius: theme.radius[14],
         }
       ]}>
@@ -25,7 +26,7 @@ export function ShortcutTile({ label, icon, onPress }: ShortcutTileProps) {
         styles.label,
         {
           color: theme.text,
-          ...theme.type.captionSmall,
+          ...theme.type.captionSmallBold,
         }
       ]}>
         {label}
@@ -52,6 +53,6 @@ const styles = StyleSheet.create({
   },
   label: {
     textAlign: 'center',
-    fontWeight: '400',
+    fontWeight: '600',
   },
 });
