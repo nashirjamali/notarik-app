@@ -55,6 +55,17 @@ const category = {
 } as const;
 
 const spacing = {
+  2: 2,
+  4: 4,
+  6: 6,
+  8: 8,
+  10: 10,
+  12: 12,
+  14: 14,
+  16: 16,
+  20: 20,
+  24: 24,
+  34: 34,
   xs: 4,
   sm: 8,
   md: 12,
@@ -64,6 +75,17 @@ const spacing = {
 } as const;
 
 const radius = {
+  3: 3,
+  8: 8,
+  10: 10,
+  12: 12,
+  14: 14,
+  16: 16,
+  20: 20,
+  24: 24,
+  32: 32,
+  40: 40,
+  pill: 9999,
   sm: 8,
   md: 12,
   lg: 16,
@@ -74,6 +96,87 @@ const type = {
   body: 16,
   title: 22,
   display: 28,
+  headline: {
+    hero: {
+      fontFamily: 'Inter_700Bold',
+      fontSize: 40,
+      lineHeight: 48,
+      letterSpacing: -1.6,
+      fontWeight: '700' as const,
+    },
+  },
+  body1Bold: {
+    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 24,
+    lineHeight: 32,
+    letterSpacing: 0,
+    fontWeight: '600' as const,
+  },
+  body2Bold: {
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: 0,
+    fontWeight: '500' as const,
+  },
+  body2: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: 0,
+    fontWeight: '400' as const,
+  },
+  captionBold: {
+    fontFamily: 'Poppins_500Medium',
+    fontSize: 14,
+    lineHeight: 24,
+    letterSpacing: 0,
+    fontWeight: '500' as const,
+  },
+  caption: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 14,
+    lineHeight: 24,
+    letterSpacing: 0,
+    fontWeight: '400' as const,
+  },
+  captionSmallBold: {
+    fontFamily: 'Poppins_600SemiBold',
+    fontSize: 12,
+    lineHeight: 20,
+    letterSpacing: 0,
+    fontWeight: '600' as const,
+  },
+  captionSmall: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 12,
+    lineHeight: 20,
+    letterSpacing: 0,
+    fontWeight: '400' as const,
+  },
+  button1: {
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 16,
+    lineHeight: 16,
+    letterSpacing: 0,
+    fontWeight: '700' as const,
+  },
+  button2: {
+    fontFamily: 'DMSans_700Bold',
+    fontSize: 14,
+    lineHeight: 16,
+    letterSpacing: 0,
+    fontWeight: '700' as const,
+  },
+} as const;
+
+const buttonHeights = {
+  primary: 52,
+  primaryCompact: 40,
+  secondary: 48,
+  secondaryCompact: 40,
+  ghost: 44,
+  icon: 48,
 } as const;
 
 export const light = {
@@ -94,6 +197,7 @@ export const light = {
   spacing,
   radius,
   type,
+  buttonHeights,
 };
 
 export const dark = {
@@ -114,6 +218,7 @@ export const dark = {
   spacing,
   radius,
   type,
+  buttonHeights,
 };
 
 export type Theme = {
@@ -130,31 +235,9 @@ export type Theme = {
   scrim: string;
   glass: string;
   borderStrong: string;
-  category: {
-    Groceries: string;
-    Dining: string;
-    Transport: string;
-    Shopping: string;
-    Bills: string;
-    Other: string;
-  };
-  spacing: {
-    xs: number;
-    sm: number;
-    md: number;
-    lg: number;
-    xl: number;
-    xxl: number;
-  };
-  radius: {
-    sm: number;
-    md: number;
-    lg: number;
-  };
-  type: {
-    label: number;
-    body: number;
-    title: number;
-    display: number;
-  };
+  category: typeof category;
+  spacing: typeof spacing;
+  radius: typeof radius;
+  type: typeof type;
+  buttonHeights: typeof buttonHeights;
 };
