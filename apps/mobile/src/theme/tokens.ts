@@ -9,13 +9,49 @@ export const categories = [
 
 export type Category = (typeof categories)[number];
 
+const primitives = {
+  neutral: {
+    '01': { '100': '#FEFEFE', '95': '#FEFEFEF2', '20': '#FEFEFE33', '10': '#FEFEFE1A' },
+    '02': { '100': '#F3F5F7', '50': '#F3F5F780' },
+    '03': { '100': '#E8ECEF', '75': '#E8ECEFBF', '50': '#E8ECEF80' },
+    '04': { '100': '#6C7275', '75': '#6C7275BF', '50': '#6C727580', '25': '#6C727540', '15': '#6C727526' },
+    '05': { '100': '#343839', '50': '#34383980' },
+    '06': { '100': '#232627', '95': '#232627F2', '90': '#232627E5', '50': '#23262780' },
+    '07': { '100': '#141718', '95': '#141718F2', '90': '#141718E5', '50': '#14171880' },
+  },
+  primary: {
+    '01': { '100': '#8E55EA', '50': '#8E55EA80', '10': '#8E55EA1A', '5': '#8E55EA0D' },
+    '02': '#3FDD78',
+  },
+  accents: {
+    '01': '#D84C10',
+    '02': '#3E90F0',
+    '03': '#8E55EA',
+    '04': '#8C6584',
+    '05': '#DDA73F',
+  },
+  status: {
+    successSubtle: '#ECFCF1',
+    warningSubtle: '#FCF6EC',
+    dangerSubtle: '#FBEDE7',
+  },
+  category: {
+    groceries: '#29B26E',
+    dining: '#FF9433',
+    transport: '#338CFF',
+    shopping: '#ED59A6',
+    bills: '#F2BF1A',
+    other: '#999EA8',
+  },
+} as const;
+
 const category = {
-  Groceries: "#009E73",
-  Dining: "#E69F00",
-  Transport: "#0072B2",
-  Shopping: "#CC79A7",
-  Bills: "#D55E00",
-  Other: "#6B6B76",
+  Groceries: primitives.category.groceries,
+  Dining: primitives.category.dining,
+  Transport: primitives.category.transport,
+  Shopping: primitives.category.shopping,
+  Bills: primitives.category.bills,
+  Other: primitives.category.other,
 } as const;
 
 const spacing = {
@@ -41,16 +77,19 @@ const type = {
 } as const;
 
 export const light = {
-  bg: "#F4F5FB",
-  surface: "#FFFFFF",
-  text: "#1C1B2E",
-  muted: "#5C5A73",
-  accent: "#3730A3",
-  accentText: "#FFFFFF",
-  border: "#E2E3F0",
-  success: "#067647",
-  warning: "#B45309",
-  danger: "#B91C1C",
+  bg: primitives.neutral['02']['100'],
+  surface: primitives.neutral['01']['100'],
+  text: primitives.neutral['07']['100'],
+  muted: primitives.neutral['04']['100'],
+  accent: primitives.primary['01']['100'],
+  accentText: primitives.neutral['01']['100'],
+  border: primitives.neutral['03']['100'],
+  success: primitives.primary['02'],
+  warning: primitives.accents['05'],
+  danger: primitives.accents['01'],
+  scrim: primitives.neutral['07']['50'],
+  glass: primitives.neutral['01']['20'],
+  borderStrong: primitives.neutral['04']['25'],
   category,
   spacing,
   radius,
@@ -58,17 +97,64 @@ export const light = {
 };
 
 export const dark = {
-  ...light,
-  bg: "#12121A",
-  surface: "#1C1C28",
-  text: "#F4F4FB",
-  muted: "#A7A6BD",
-  accent: "#A5B4FC",
-  accentText: "#12121A",
-  border: "#2E2E42",
-  success: "#6EE7B7",
-  warning: "#FCD34D",
-  danger: "#FCA5A5",
+  bg: primitives.neutral['07']['100'],
+  surface: primitives.neutral['06']['100'],
+  text: primitives.neutral['01']['100'],
+  muted: primitives.neutral['04']['100'],
+  accent: primitives.primary['01']['100'],
+  accentText: primitives.neutral['07']['100'],
+  border: primitives.neutral['05']['100'],
+  success: primitives.primary['02'],
+  warning: primitives.accents['05'],
+  danger: primitives.accents['01'],
+  scrim: primitives.neutral['07']['90'],
+  glass: primitives.neutral['07']['50'],
+  borderStrong: primitives.neutral['04']['50'],
+  category,
+  spacing,
+  radius,
+  type,
 };
 
-export type Theme = typeof light;
+export type Theme = {
+  bg: string;
+  surface: string;
+  text: string;
+  muted: string;
+  accent: string;
+  accentText: string;
+  border: string;
+  success: string;
+  warning: string;
+  danger: string;
+  scrim: string;
+  glass: string;
+  borderStrong: string;
+  category: {
+    Groceries: string;
+    Dining: string;
+    Transport: string;
+    Shopping: string;
+    Bills: string;
+    Other: string;
+  };
+  spacing: {
+    xs: number;
+    sm: number;
+    md: number;
+    lg: number;
+    xl: number;
+    xxl: number;
+  };
+  radius: {
+    sm: number;
+    md: number;
+    lg: number;
+  };
+  type: {
+    label: number;
+    body: number;
+    title: number;
+    display: number;
+  };
+};
