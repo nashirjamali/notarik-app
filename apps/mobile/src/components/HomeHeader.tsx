@@ -1,7 +1,7 @@
 import { View, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '@/theme/Theme';
 import { Logo } from './Logo';
-import BellIcon from '@/assets/svg/icon-bell.svg';
+import BellIcon from '../../assets/svg/icon-bell.svg';
 
 export function HomeHeader({ onNotificationPress }: { onNotificationPress?: () => void }) {
   const theme = useTheme();

@@ -1,6 +1,6 @@
 import { Text, Pressable, StyleSheet, View } from 'react-native';
 import { useTheme } from '@/theme/Theme';
-import SparkleIcon from '@/assets/svg/icon-sparkle.svg';
+import SparkleIcon from '../../assets/svg/icon-sparkle.svg';
 
 interface SuggestionChipProps {
   text: string;

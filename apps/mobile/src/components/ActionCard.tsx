@@ -1,6 +1,6 @@
 import { View, Text, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 import { useTheme } from '@/theme/Theme';
-import ArrowIcon from '@/assets/svg/icon-arrow-up-right.svg';
+import ArrowIcon from '../../assets/svg/icon-arrow-up-right.svg';
 
 interface ActionCardProps {
   title: string;

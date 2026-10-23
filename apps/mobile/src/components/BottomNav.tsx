@@ -1,15 +1,15 @@
 import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { useTheme } from '@/theme/Theme';
-import NavHomeActive from '@/assets/svg/nav-home-active_26a5.svg';
-import NavHomeInactive from '@/assets/svg/nav-home-inactive_d13a.svg';
-import NavTransactionsActive from '@/assets/svg/nav-transactions-active_6b2f.svg';
-import NavTransactionsInactive from '@/assets/svg/nav-transactions-inactive_9f4d.svg';
-import NavChatActive from '@/assets/svg/nav-chat-active_46a5.svg';
-import NavChatInactive from '@/assets/svg/nav-chat-inactive_5c78.svg';
-import NavSettingsActive from '@/assets/svg/nav-settings-active_8816.svg';
-import NavSettingsInactive from '@/assets/svg/nav-settings-inactive_4cb0.svg';
-import NavPlusButton from '@/assets/svg/nav-plus-button_a419.svg';
+import NavHomeActive from '../../assets/svg/nav-home-active_26a5.svg';
+import NavHomeInactive from '../../assets/svg/nav-home-inactive_d13a.svg';
+import NavTransactionsActive from '../../assets/svg/nav-transactions-active_6b2f.svg';
+import NavTransactionsInactive from '../../assets/svg/nav-transactions-inactive_9f4d.svg';
+import NavChatActive from '../../assets/svg/nav-chat-active_46a5.svg';
+import NavChatInactive from '../../assets/svg/nav-chat-inactive_5c78.svg';
+import NavSettingsActive from '../../assets/svg/nav-settings-active_8816.svg';
+import NavSettingsInactive from '../../assets/svg/nav-settings-inactive_4cb0.svg';
+import NavPlusButton from '../../assets/svg/nav-plus-button_a419.svg';
 
 export function BottomNav() {
   const theme = useTheme();

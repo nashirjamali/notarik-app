@@ -5,8 +5,8 @@ import { HomeHeader } from '@/components/HomeHeader';
 import { ActionCard } from '@/components/ActionCard';
 import { ShortcutTile } from '@/components/ShortcutTile';
 import { SuggestionChip } from '@/components/SuggestionChip';
-import CameraIcon from '@/assets/svg/icon-camera.svg';
-import LogoMark from '@/assets/svg/logo-mark.svg';
+import CameraIcon from '../../../assets/svg/icon-camera.svg';
+import LogoMark from '../../../assets/svg/logo-mark.svg';
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -78,22 +78,22 @@ export default function HomeScreen() {
         >
           <ShortcutTile
             label="Quick add"
-            icon={require('@/assets/icons/quick-add.png')}
+            icon={require('../../../assets/icons/quick-add.png')}
             onPress={() => router.push('/(app)/add')}
           />
           <ShortcutTile
             label="Recap"
-            icon={require('@/assets/icons/recap.png')}
+            icon={require('../../../assets/icons/recap.png')}
             onPress={() => {}}
           />
           <ShortcutTile
             label="Budget"
-            icon={require('@/assets/icons/budget.png')}
+            icon={require('../../../assets/icons/budget.png')}
             onPress={() => {}}
           />
           <ShortcutTile
             label="Transactions"
-            icon={require('@/assets/icons/transactions.png')}
+            icon={require('../../../assets/icons/transactions.png')}
             onPress={() => router.push('/(app)/transactions')}
           />
         </ScrollView>
