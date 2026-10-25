@@ -6,4 +6,9 @@ module.exports = defineConfig([
   {
     ignores: ["dist/**", ".expo/**", "playwright-report/**"],
   },
+  {
+    rules: {
+      "import/no-unresolved": ["error", { ignore: ["\\.svg$"] }],
+    },
+  },
 ]);
