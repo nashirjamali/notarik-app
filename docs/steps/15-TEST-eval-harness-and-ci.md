@@ -12,7 +12,7 @@ A repeatable evaluation harness that runs the receipt pipeline over the dataset,
 - Statistical caution with small datasets
 
 ## Before you start
-- [ ] Write **ADR-004: tracing and eval tool** (LangSmith vs Langfuse).
+- [x] Write **ADR-004: tracing and eval tool** (LangSmith vs Langfuse).
 
 ## Build
 - [ ] A single command `eval receipts --split dev|test --model X --graph Y` that runs the dataset and writes a JSON report plus a Markdown table.

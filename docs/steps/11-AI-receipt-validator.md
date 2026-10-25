@@ -11,9 +11,9 @@ A deterministic validator that checks an `ExpenseDraft` and returns specific, ma
 - Property-style thinking: invariants of a valid receipt
 
 ## Build
-- [ ] Implement checks from `PLAN.md` Part 2b: items sum vs subtotal (small tolerance), total >= subtotal, date not in the future or too old, missing total, schema invalid, "item price looks like a unit price" heuristic (for example price x qty equals a plausible subtotal).
-- [ ] Each issue has a code, the field, and a detail string that is safe to feed back to the model.
-- [ ] Decide the rules for rounding, service charge and tax lines. Write them down.
+- [x] Implement checks from `PLAN.md` Part 2b: items sum vs subtotal (small tolerance), total >= subtotal, date not in the future or too old, missing total, schema invalid, "item price looks like a unit price" heuristic (for example price x qty equals a plausible subtotal).
+- [x] Each issue has a code, the field, and a detail string that is safe to feed back to the model.
+- [x] Decide the rules for rounding, service charge and tax lines. Write them down.
 - [ ] Run the validator over the labelled dataset: how often does it flag correct labels (false positives) and how often does it catch real extraction errors?
 
 ## Done when

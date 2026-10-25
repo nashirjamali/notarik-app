@@ -15,10 +15,10 @@ A labelled set of real receipts and a script that scores the old v1 extraction p
 ## Build
 - [ ] Collect 40–60 receipts (photos and a few PDFs). Mix: supermarkets, restaurants, thermal-faded, crumpled, long, short, multi-page.
 - [ ] Redact personal data (names, card digits, phone numbers) before saving.
-- [ ] Define a label format in JSON per receipt: `merchant`, `date`, `subtotal`, `total`, `items[{name, qty, line_total}]`, `category`. Write a short `labeling-guide.md` with your rules (for example: what counts as the total on a receipt with rounding or service charge).
+- [x] Define a label format in JSON per receipt: `merchant`, `date`, `subtotal`, `total`, `items[{name, qty, line_total}]`, `category`. Write a short `labeling-guide.md` with your rules (for example: what counts as the total on a receipt with rounding or service charge).
 - [ ] Label every receipt by hand. Split ~30% as a held-out **test split** and don't tune prompts on it.
 - [ ] Write a script that sends each receipt to the model with the old v1 prompt (`../notarik/lib/extraction.ts`) and saves raw outputs.
-- [ ] Write a scorer: total exact match, date match, item precision/recall (match items by normalized name plus line total), category accuracy, parse failures.
+- [x] Write a scorer: total exact match, date match, item precision/recall (match items by normalized name plus line total), category accuracy, parse failures.
 - [ ] Record the baseline results in `docs/eval-results.md`.
 
 ## Done when

@@ -12,11 +12,11 @@ Serve the chat graph over a streaming API with persisted, user-isolated conversa
 - Rate limiting and budgets for paid APIs
 
 ## Build
-- [ ] `POST /chat` with `thread_id`, message and optional attachments; streams tokens, tool-call events and a final `pending_action` if any.
-- [ ] `POST /chat/{thread_id}/confirm` with approve / edit / reject.
+- [x] `POST /chat` with `thread_id`, message and optional attachments; streams tokens, tool-call events and a final `pending_action` if any.
+- [x] `POST /chat/{thread_id}/confirm` with approve / edit / reject.
 - [ ] Configure the Postgres checkpointer. Make sure its tables carry the `user_id` (or thread metadata) and have RLS, and that loading a thread verifies ownership.
-- [ ] Per-user rate limit (requests per minute) and a daily token/cost budget; clear error codes for each.
-- [ ] Input limits: message length, attachment size, history length.
+- [x] Per-user rate limit (requests per minute) and a daily token/cost budget; clear error codes for each.
+- [x] Input limits: message length, attachment size, history length.
 - [ ] Log every tool call with user, latency and cost for tracing.
 
 ## Done when

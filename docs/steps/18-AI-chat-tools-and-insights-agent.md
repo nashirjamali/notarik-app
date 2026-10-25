@@ -12,9 +12,9 @@ A single tool-calling agent that answers questions about spending using safe, re
 - Grounding answers in tool results and detecting made-up numbers
 
 ## Build
-- [ ] Implement tools from `PLAN.md` Part 2b: `spend_by_category`, `top_merchants`, `compare_periods`, `list_transactions`, `get_budget`, `search_spending_memory`.
-- [ ] Tools take `user_id` from server-side state only and run through the RLS-enforced session.
-- [ ] Return compact, structured results with currency and the exact period used.
+- [x] Implement tools from `PLAN.md` Part 2b: `spend_by_category`, `top_merchants`, `compare_periods`, `list_transactions`, `get_budget`, `search_spending_memory`.
+- [x] Tools take `user_id` from server-side state only and run through the RLS-enforced session.
+- [x] Return compact, structured results with currency and the exact period used.
 - [ ] Build the agent with a system prompt that says: answer from tool results only, state the period, say when data is missing, ask a clarifying question when the request is ambiguous.
 - [ ] A fixture database of known transactions for repeatable tests.
 - [ ] A script that asks 15 sample questions and prints answers and the tool calls used.

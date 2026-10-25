@@ -13,14 +13,14 @@ A single extraction function that turns a receipt image into a schema-validated 
 
 ## Before you start
 - [ ] Step 00 (dataset and baseline) is done.
-- [ ] Write **ADR-003: LLM access** (OpenRouter via LangChain chat models; which models you will compare).
+- [x] Write **ADR-003: LLM access** (OpenRouter via LangChain chat models; which models you will compare).
 
 ## Build
-- [ ] Configure the chat model through OpenRouter (key from env, model name configurable).
-- [ ] Define `ExpenseDraft` and `Item` per `PLAN.md` Part 2b.
-- [ ] Write the extraction prompt, reusing the v1 receipt rules (rightmost amount is the line total, final payable total not subtotal, integers, null when unsure).
-- [ ] Use the model's structured-output mode with the schema. Handle schema-invalid output as a typed failure, not a crash.
-- [ ] Record per call: model, latency, input/output tokens, cost estimate.
+- [x] Configure the chat model through OpenRouter (key from env, model name configurable).
+- [x] Define `ExpenseDraft` and `Item` per `PLAN.md` Part 2b.
+- [x] Write the extraction prompt, reusing the v1 receipt rules (rightmost amount is the line total, final payable total not subtotal, integers, null when unsure).
+- [x] Use the model's structured-output mode with the schema. Handle schema-invalid output as a typed failure, not a crash.
+- [x] Record per call: model, latency, input/output tokens, cost estimate.
 - [ ] Run it on the dev split from step 00 and compare to the baseline.
 
 ## Done when

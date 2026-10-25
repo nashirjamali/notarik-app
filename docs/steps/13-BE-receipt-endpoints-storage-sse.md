@@ -11,13 +11,13 @@ Expose the receipt graph through the API: upload an image, watch progress live, 
 - Running a graph per request, per user, safely
 
 ## Build
-- [ ] `POST /receipts`: validate type and size, store the file in object storage under a user-scoped path, create an `extraction_runs` row, start the graph, return a `run_id`.
-- [ ] `GET /receipts/{run_id}/events`: SSE stream of graph step events; ends on interrupt or finish.
-- [ ] `GET /receipts/{run_id}`: current draft, issues and status.
-- [ ] `POST /receipts/{run_id}/confirm`: resume the graph with the user's edits; create the transaction; record `user_edited_fields`.
-- [ ] Storage policy so users can read only their own receipt images.
-- [ ] Limits: max file size, allowed MIME types, max pages, per-user concurrent runs.
-- [ ] Persist run metadata: model, graph version, latency, cost, validator result.
+- [x] `POST /receipts`: validate type and size, store the file in object storage under a user-scoped path, create an `extraction_runs` row, start the graph, return a `run_id`.
+- [x] `GET /receipts/{run_id}/events`: SSE stream of graph step events; ends on interrupt or finish.
+- [x] `GET /receipts/{run_id}`: current draft, issues and status.
+- [x] `POST /receipts/{run_id}/confirm`: resume the graph with the user's edits; create the transaction; record `user_edited_fields`.
+- [x] Storage policy so users can read only their own receipt images.
+- [x] Limits: max file size, allowed MIME types, max pages, per-user concurrent runs.
+- [x] Persist run metadata: model, graph version, latency, cost, validator result.
 
 ## Done when
 - From a script you can upload a receipt, stream events, confirm and see the transaction.

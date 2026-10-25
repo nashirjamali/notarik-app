@@ -12,12 +12,12 @@ Users can sign up, log in and log out; the app stores the session securely and c
 - Server state with TanStack Query (caching, loading and error states)
 
 ## Build
-- [ ] Sign up, log in and log out screens using the auth provider's client library.
-- [ ] Store the session in secure storage on native and the provider's recommended storage on web. Restore it on app start.
-- [ ] Route guard: unauthenticated users see only auth screens.
-- [ ] Generate the typed client from the OpenAPI spec (step 05) and wrap it so every request carries the access token and refreshes when expired.
-- [ ] Set up TanStack Query with sensible defaults (retry, stale time) and a shared error handler that signs out on 401.
-- [ ] Loading, empty and error states for every query-backed screen.
+- [x] Sign up, log in and log out screens using the auth provider's client library.
+- [x] Store the session in secure storage on native and the provider's recommended storage on web. Restore it on app start.
+- [x] Route guard: unauthenticated users see only auth screens.
+- [x] Generate the typed client from the OpenAPI spec (step 05) and wrap it so every request carries the access token and refreshes when expired.
+- [x] Set up TanStack Query with sensible defaults (retry, stale time) and a shared error handler that signs out on 401.
+- [x] Loading, empty and error states for every query-backed screen.
 
 ## Done when
 - You can sign up, close the app, reopen it and still be signed in.

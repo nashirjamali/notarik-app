@@ -14,11 +14,11 @@ Split the single agent into a supervisor with specialist agents, add write-propo
 ## Build
 - [ ] Write the routing eval cases first (see step 22 and `PLAN.md` Part 2b) and measure the single agent.
 - [ ] Add `supervisor` (structured-output router, cheap model, no tools) and the `ChatState` from the plan.
-- [ ] `capture` agent: text → `ExpenseDraft`; photo attachment → invoke the receipt graph as a subgraph. It only creates a `PendingAction`.
-- [ ] `budget` agent: read tools plus `propose_budget_change` (proposal only).
-- [ ] `confirm` interrupt node and `commit` node. Only `commit` writes, through the normal API layer.
-- [ ] Handle follow-ups ("and last month?") so context routes to the same specialist.
-- [ ] Decide the policy for messages that need two routes (for example log an expense and ask if it was too much). Document it as an ADR.
+- [x] `capture` agent: text → `ExpenseDraft`; photo attachment → invoke the receipt graph as a subgraph. It only creates a `PendingAction`.
+- [x] `budget` agent: read tools plus `propose_budget_change` (proposal only).
+- [x] `confirm` interrupt node and `commit` node. Only `commit` writes, through the normal API layer.
+- [x] Handle follow-ups ("and last month?") so context routes to the same specialist.
+- [x] Decide the policy for messages that need two routes (for example log an expense and ask if it was too much). Document it as an ADR.
 - [ ] Compare single-agent vs supervisor on routing accuracy, answer quality, cost and latency. Keep the supervisor only if it earns it.
 
 ## Done when

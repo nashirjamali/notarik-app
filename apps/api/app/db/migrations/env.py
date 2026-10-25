@@ -5,9 +5,9 @@ import sys
 from alembic import context
 from sqlalchemy import create_engine, pool
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from settings import MigrationSettings
+from app.core.config import MigrationSettings
 
 config = context.config
 
