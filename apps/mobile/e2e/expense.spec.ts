@@ -4,6 +4,8 @@ const textbox = (page: Page, name: string) =>
   page.getByRole("textbox", { name }).filter({ visible: true });
 const button = (page: Page, name: string) =>
   page.getByRole("button", { name }).filter({ visible: true });
+const radio = (page: Page, name: string) =>
+  page.getByRole("radio", { name }).filter({ visible: true });
 const tab = (page: Page, name: string) =>
   page.getByRole("tab", { name }).filter({ visible: true });
 
@@ -24,11 +26,11 @@ test("sign up, add an expense, see it, and delete it", async ({ page }) => {
   await signUp(page, email);
 
   await tab(page, "Add").click();
-  await textbox(page, "Merchant").fill("Warung");
-  await textbox(page, "Date").fill(date);
-  await textbox(page, "Total").fill("25000");
-  await button(page, "Save").click();
-  await expect(page.getByText("Warung").filter({ visible: true })).toBeVisible();
+  await textbox(page, "What did you spend?").fill("makan siang 25rb di warung");
+  await expect(page.getByText("Notarik understood")).toBeVisible();
+  await expect(page.getByText("Rp 25.000").first()).toBeVisible();
+  await button(page, "Save expense").click();
+  await expect(page.getByText("Warung", { exact: true })).toBeVisible();
 
   await button(page, "Back").click();
   await tab(page, "Transactions").click();
@@ -55,6 +57,40 @@ test("sign up rejects a short password before calling the API", async ({ page })
   await expect(page.getByRole("alert")).toContainText("at least 8 characters");
 });
 
+test("add expense: category override, missing amount, close and receipt shortcut", async ({ page }) => {
+  await signUp(page, `e2e-quick-${Date.now()}@example.com`);
+  await tab(page, "Add").click();
+
+  // No amount yet: nothing to preview and saving explains why.
+  await textbox(page, "What did you spend?").fill("makan siang di warteg");
+  await expect(page.getByText("Notarik understood")).toBeHidden();
+  await button(page, "Save expense").click();
+  await expect(page.getByRole("alert")).toContainText("Add an amount");
+
+  // The words pick a category; tapping a chip overrides it.
+  await textbox(page, "What did you spend?").fill("bayar listrik 450rb");
+  await expect(radio(page, "Bills")).toBeChecked();
+  await radio(page, "Shopping").click();
+  await expect(radio(page, "Shopping")).toBeChecked();
+  await button(page, "Save expense").click();
+  await expect(page.getByText(/· Shopping/)).toBeVisible();
+
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await tab(page, "Add").click();
+  await button(page, "Voice").click();
+  await expect(page.getByRole("alert")).toContainText("not available yet");
+  await button(page, "Snap receipt").click();
+  await expect(page.getByText("Fit the whole receipt in the frame")).toBeVisible();
+});
+
+test("add expense: the close button returns to home", async ({ page }) => {
+  await signUp(page, `e2e-sheet-${Date.now()}@example.com`);
+  await tab(page, "Add").click();
+  await expect(page.getByText("Add expense").first()).toBeVisible();
+  await button(page, "Close sheet").click();
+  await expect(page.getByText("Snap it.").first()).toBeVisible();
+});
+
 test("snap receipt: upload a photo, review it and save the expense", async ({ page }) => {
   await signUp(page, `e2e-snap-${Date.now()}@example.com`);
   await page.getByText("Snap receipt").first().click();
@@ -65,11 +101,36 @@ test("snap receipt: upload a photo, review it and save the expense", async ({ pa
   await (await chooser).setFiles("e2e/fixtures/receipt.png");
 
   // The server has no model key in e2e, so the draft is empty and the user fills it in.
-  await expect(page.getByText("Check your receipt")).toBeVisible();
+  await expect(page.getByText("Review receipt")).toBeVisible();
   await textbox(page, "Merchant").fill("Warung Snap");
   await textbox(page, "Total").fill("30000");
+  await button(page, "Groceries").click();
+  await textbox(page, "Note").fill("weekly shop");
   await button(page, "Save expense").click();
   await expect(page.getByText("Warung Snap").filter({ visible: true })).toBeVisible();
+  await expect(page.getByText("weekly shop")).toBeVisible();
+});
+
+test("review receipt: validation, retake and discard", async ({ page }) => {
+  await signUp(page, `e2e-review-${Date.now()}@example.com`);
+  await page.getByText("Snap receipt").first().click();
+  let chooser = page.waitForEvent("filechooser");
+  await button(page, "Gallery").click();
+  await (await chooser).setFiles("e2e/fixtures/receipt.png");
+  await expect(page.getByText("Review receipt")).toBeVisible();
+
+  // Nothing was read from the image, so saving an empty form is refused with hints.
+  await button(page, "Save expense").click();
+  await expect(page.getByText("Enter a merchant")).toBeVisible();
+  await expect(page.getByText(/Enter an amount/)).toBeVisible();
+
+  await button(page, "Retake").click();
+  await expect(page.getByText("Fit the whole receipt in the frame")).toBeVisible();
+  chooser = page.waitForEvent("filechooser");
+  await button(page, "Gallery").click();
+  await (await chooser).setFiles("e2e/fixtures/receipt.png");
+  await button(page, "Discard").click();
+  await expect(page.getByText("Snap it.").first()).toBeVisible();
 });
 
 test("snap receipt: close returns to home", async ({ page }) => {
