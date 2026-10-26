@@ -55,6 +55,30 @@ test("sign up rejects a short password before calling the API", async ({ page })
   await expect(page.getByRole("alert")).toContainText("at least 8 characters");
 });
 
+test("snap receipt: upload a photo, review it and save the expense", async ({ page }) => {
+  await signUp(page, `e2e-snap-${Date.now()}@example.com`);
+  await page.getByText("Snap receipt").first().click();
+  await expect(page.getByText("Fit the whole receipt in the frame")).toBeVisible();
+
+  const chooser = page.waitForEvent("filechooser");
+  await button(page, "Gallery").click();
+  await (await chooser).setFiles("e2e/fixtures/receipt.png");
+
+  // The server has no model key in e2e, so the draft is empty and the user fills it in.
+  await expect(page.getByText("Check your receipt")).toBeVisible();
+  await textbox(page, "Merchant").fill("Warung Snap");
+  await textbox(page, "Total").fill("30000");
+  await button(page, "Save expense").click();
+  await expect(page.getByText("Warung Snap").filter({ visible: true })).toBeVisible();
+});
+
+test("snap receipt: close returns to home", async ({ page }) => {
+  await signUp(page, `e2e-close-${Date.now()}@example.com`);
+  await page.getByText("Snap receipt").first().click();
+  await button(page, "Close").click();
+  await expect(page.getByText("Snap it.").first()).toBeVisible();
+});
+
 test("log out, then log in again from the onboarding screen", async ({ page }) => {
   const email = `e2e-login-${Date.now()}@example.com`;
 
