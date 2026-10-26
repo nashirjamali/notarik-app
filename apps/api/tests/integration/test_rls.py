@@ -224,7 +224,7 @@ def test_me_ignores_another_users_id(api_client, make_user):
     with api_client(user_id) as client:
         response = client.get("/me", params={"user_id": str(other)})
     assert response.status_code == 200
-    assert response.json() == {"user_id": str(user_id)}
+    assert response.json() == {"user_id": str(user_id), "name": None}
 
 
 def test_claims_do_not_leak_across_transactions_on_one_connection(

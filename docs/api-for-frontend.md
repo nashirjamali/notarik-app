@@ -16,6 +16,10 @@ Money is always an integer number of rupiah (`total_minor`). Errors are JSON:
 
 Codes you will see: `unauthorized` (401), `not_found` (404), `validation_error` (422), `rate_limited` (429), `budget_exceeded` (429), `conflict` (409). A missing or other user's receipt, thread, or transaction is `not_found`, never 403.
 
+## Account name
+
+`POST /auth/signup` takes an optional `name` (at most 80 characters, trimmed; blank means none). `GET /me` returns `{ "user_id": "uuid", "name": "Ada" | null }`. Accounts created before the name existed have `name: null`.
+
 ## Receipt scan (step 14)
 
 `POST /receipts` as `multipart/form-data`, field name `file`. JPEG, PNG, or PDF, at most 5 MB. The server checks the file bytes, not the extension.

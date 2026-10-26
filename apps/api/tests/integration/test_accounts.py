@@ -68,3 +68,40 @@ def test_logout_revokes_refresh_token(anon_client):
 def test_app_user_cannot_read_password_hashes(db_connection):
     with pytest.raises(DBAPIError):
         db_connection.execute(text("SELECT * FROM users"))
+
+
+def _signup_and_get_me(anon_client, api_client, **extra):
+    created = anon_client.post(
+        "/auth/signup",
+        json={
+            "email": f"name-{uuid4()}@example.com",
+            "password": "correct-horse",
+            **extra,
+        },
+    )
+    assert created.status_code == 201
+    with api_client(created.json()["user_id"]) as client:
+        return client.get("/me").json()
+
+
+def test_signup_stores_trimmed_name(anon_client, api_client):
+    me = _signup_and_get_me(anon_client, api_client, name="  Ada Lovelace ")
+    assert me["name"] == "Ada Lovelace"
+
+
+def test_signup_without_name_leaves_it_empty(anon_client, api_client):
+    assert _signup_and_get_me(anon_client, api_client)["name"] is None
+    assert _signup_and_get_me(anon_client, api_client, name="   ")["name"] is None
+
+
+def test_overlong_name_is_422(anon_client):
+    response = anon_client.post(
+        "/auth/signup",
+        json={
+            "email": f"long-{uuid4()}@example.com",
+            "password": "correct-horse",
+            "name": "x" * 81,
+        },
+    )
+    assert response.status_code == 422
+    assert "name" in response.json()["message"]

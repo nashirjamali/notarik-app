@@ -10,4 +10,5 @@ router = APIRouter()
 @router.get("/me")
 def me(connection: Connection = Depends(user_connection)):
     user_id = connection.execute(text("SELECT auth.uid()")).scalar_one()
-    return {"user_id": str(user_id)}
+    name = connection.execute(text("SELECT auth.current_name()")).scalar_one()
+    return {"user_id": str(user_id), "name": name}
