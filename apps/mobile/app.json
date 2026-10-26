@@ -9,7 +9,20 @@
       "expo-router",
       "expo-secure-store",
       "expo-status-bar",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Notarik uses the camera to scan your receipts."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Notarik reads receipt photos you choose from your library."
+        }
+      ],
+      "expo-document-picker"
     ],
     "experiments": {
       "typedRoutes": false
