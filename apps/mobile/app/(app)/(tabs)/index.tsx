@@ -84,7 +84,7 @@ export default function HomeScreen() {
             label="Quick add"
             icon={require('../../../assets/icons/quick-add.png')}
             tintColor="#E9E3F4"
-            onPress={() => router.push('/(app)/add')}
+            onPress={() => router.push('/quick-add')}
           />
           <ShortcutTile
             label="Recap"

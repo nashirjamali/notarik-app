@@ -8,6 +8,8 @@ test("formats IDR with dot thousands separators", () => {
 
 test("parses Indonesian amount shorthand", () => {
   expect(parseAmount("25rb")).toBe(25_000);
+  expect(parseAmount("25k")).toBe(25_000);
+  expect(parseAmount("1,5k")).toBe(1_500);
   expect(parseAmount("1,5jt")).toBe(1_500_000);
   expect(parseAmount("25.000")).toBe(25_000);
   expect(parseAmount("1.500.000")).toBe(1_500_000);
