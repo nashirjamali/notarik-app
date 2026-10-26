@@ -58,7 +58,7 @@ export default function HomeScreen() {
             subtitle="Photo a receipt, we'll do the rest"
             icon={<CameraIcon width={32} height={32} color={theme.accentText} />}
             variant="primary"
-            onPress={() => router.push('/(app)/add')}
+            onPress={() => router.push('/snap')}
           />
           <ActionCard
             title="Ask Notarik"
