@@ -1,4 +1,4 @@
-from datetime import datetime
+import re
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.engine import Connection
 
 from app.dependencies import current_user, user_connection
+from app.schemas.transaction import MAX_MINOR
 from app.services.recap import get_budget, projection, put_budget, recap
 
 router = APIRouter(tags=["recap"])
@@ -13,13 +14,11 @@ router = APIRouter(tags=["recap"])
 
 class BudgetBody(BaseModel):
     month: str
-    total_minor: int = Field(ge=0)
+    total_minor: int = Field(ge=0, le=MAX_MINOR)
 
 
 def _month(value: str) -> str:
-    try:
-        datetime.strptime(value, "%Y-%m")
-    except ValueError:
+    if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", value):
         raise HTTPException(
             status_code=422,
             detail={"code": "validation_error", "message": "month must be YYYY-MM"},

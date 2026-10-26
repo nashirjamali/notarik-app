@@ -8,7 +8,7 @@ from sqlalchemy.engine import Connection
 
 from app.ai.limits import LimitError
 from app.dependencies import current_user, settings, user_connection
-from app.services.chat import confirm, send_message
+from app.services.chat import ChatActionError, confirm, send_message
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -66,7 +66,10 @@ def post_confirm(
             status_code=422,
             detail={"code": "validation_error", "message": "decision must be approve, reject, or edit"},
         )
-    result = confirm(connection, user_id, thread_id, body.decision, body.payload)
+    try:
+        result = confirm(connection, user_id, thread_id, body.decision, body.payload)
+    except ChatActionError as exc:
+        raise HTTPException(status_code=422, detail={"code": "validation_error", "message": str(exc)})
     if result is None:
         raise HTTPException(status_code=404, detail={"code": "not_found", "message": "Thread not found"})
     return result

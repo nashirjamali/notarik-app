@@ -49,13 +49,37 @@ def _parse_decimal(raw: str, allow_fraction: bool) -> float | None:
     return float(body)
 
 
-def amount_in_text(text: str) -> int | None:
-    match = re.search(
-        r"(\d{1,3}(?:[.\s]\d{3})+|\d+(?:[.,]\d+)?)(?:\s*)(juta|jt|ribu|rb|k)?",
-        text.lower(),
-    )
-    if not match:
+_AMOUNT = re.compile(
+    r"(\d{1,3}(?:[.\s]\d{3})+|\d+(?:[.,]\d+)?)(?:\s*(juta|jt|ribu|rb|k)(?![a-z]))?",
+    re.IGNORECASE,
+)
+# A bare number below this is a quantity ("2 packs of tea"), not an amount of rupiah.
+MIN_PLAIN_AMOUNT = 1_000
+
+
+def find_amount(text: str) -> tuple[int, int, int] | None:
+    """The amount a person means in a sentence, with where it sits: (rupiah, start, end)."""
+    found: list[tuple[int, int, int, bool]] = []
+    for match in _AMOUNT.finditer(text):
+        suffix = match.group(2) or ""
+        value = parse_amount(f"{match.group(1).replace(' ', '')}{suffix}")
+        if value is None or value <= 0:
+            continue
+        found.append((value, match.start(), match.end(), bool(suffix)))
+    # "2 nasi goreng 30rb": the number with rb/k/jt wins, otherwise the largest real amount.
+    suffixed = [item for item in found if item[3]]
+    plain = [item for item in found if item[0] >= MIN_PLAIN_AMOUNT]
+    chosen = suffixed[0] if suffixed else max(plain, key=lambda item: item[0], default=None)
+    if chosen is None:
         return None
-    number = match.group(1).replace(" ", "")
-    suffix = match.group(2) or ""
-    return parse_amount(f"{number}{suffix}")
+    return chosen[0], chosen[1], chosen[2]
+
+
+def amount_in_text(text: str) -> int | None:
+    found = find_amount(text)
+    return found[0] if found else None
+
+
+def format_idr(minor: int) -> str:
+    digits = f"{abs(int(minor)):,}".replace(",", ".")
+    return f"{'-' if minor < 0 else ''}Rp {digits}"

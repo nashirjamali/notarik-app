@@ -1,5 +1,8 @@
 import re
 
+from app.ai.capture import FOOD
+from app.ai.money import find_amount
+
 REFUSE = ("stock", "saham", "transfer", "invest", "user 2", "user2", "other user")
 INSIGHTS = (
     "berapa",
@@ -14,7 +17,6 @@ INSIGHTS = (
 BUDGET = ("budget", "on track", "afford")
 SMALLTALK = {"hi", "hello", "hey", "help", "what can you do?", "what can you do"}
 FOLLOWUPS = {"and last month?", "and last month", "what about last month?"}
-CAPTURE_WORDS = ("beli", "nasi", "kopi", "goceng")
 
 
 def route_message(text: str, attachments: list[str] | None = None, previous: str | None = None) -> str:
@@ -35,9 +37,9 @@ def route_message(text: str, attachments: list[str] | None = None, previous: str
         return "insights"
     if any(word in cleaned for word in ("delete", "hapus", "change that", "ubah")):
         return "capture"
-    if re.search(r"\d", cleaned) and (
-        any(word in cleaned for word in ("rb", "ribu", "jt", "juta", "k"))
-        or any(word in cleaned for word in CAPTURE_WORDS)
-    ):
+    if find_amount(cleaned) is not None:
+        return "capture"
+    # "nasi goreng" with no price is still a purchase; the capture step will ask how much.
+    if len(cleaned.split()) <= 4 and set(re.findall(r"[a-z]+", cleaned)) & (set(FOOD) | {"beli"}):
         return "capture"
     return "smalltalk"
