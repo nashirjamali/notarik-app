@@ -6,6 +6,7 @@ import {
 } from '@expo-google-fonts/poppins';
 import { DMSans_700Bold } from '@expo-google-fonts/dm-sans';
 import { Inter_700Bold } from '@expo-google-fonts/inter';
+import { Karla_400Regular } from '@expo-google-fonts/karla';
 
 export function useFonts() {
   return useExpoFonts({
@@ -14,5 +15,6 @@ export function useFonts() {
     Poppins_600SemiBold,
     DMSans_700Bold,
     Inter_700Bold,
+    Karla_400Regular,
   });
 }

@@ -138,22 +138,29 @@ When `ready` is false, `projected_minor` is `null`. Show the detail sentence. Do
 
 ## Chat (step 21)
 
-`POST /chat` with `{ "message": "nasi goreng 25rb", "thread_id": null }`. The response is `text/event-stream`:
+`POST /chat` with `{ "message": "kopi 25rb tadi pagi", "thread_id": null }`. The response is `text/event-stream`, sent as one piece:
 
 ```
 event: token
-data: {"text":"Save 25000 IDR as Dining?"}
+data: {"text":"Got it. Here's what I'll log:"}
 
 event: pending_action
-data: {"kind":"create_expense","payload":{...},"summary":"Save 25000 IDR as Dining?"}
+data: {"kind":"create_expense","payload":{...},"summary":"Save Rp 25.000 as Food & Drink?"}
 
 event: done
 data: {"thread_id":"uuid","route":"capture"}
 ```
 
-`pending_action` is omitted when nothing is proposed. Keep `thread_id` and send it on the next message so "and last month?" stays on the previous topic.
+React Native cannot read a streamed body, so read the whole text and split on blank lines. `pending_action` is omitted when nothing is proposed. Keep `thread_id` and send it on the next message so "and last month?" keeps the subject of the question before it and only changes the period.
 
-`kind` is `create_expense`, `delete_expense`, or `set_budget`. `payload` for an expense matches `ExpenseDraft` (`total_minor`, `category`, `items`, `source: "chat"`). The date may be null until confirm; the server uses today in Asia/Jakarta's calendar date if you approve without one.
+Text is for people: amounts are formatted as `Rp 342.500`, and the answers read like "You spent Rp 342.500 on food this week, about 12% less than last week." Show it as is (the amounts can be set in a medium weight).
+
+`kind` is `create_expense`, `delete_expense`, or `set_budget`.
+- `create_expense`: `payload` matches `ExpenseDraft`: `merchant` (from "di warteg", else null), `date` (today in Asia/Jakarta, or yesterday for "kemarin"), `total_minor`, `category`, `items`, `source: "chat"`. A bare number under 1000 is a quantity, not rupiah, so "2 packs of tea" proposes nothing.
+- `delete_expense`: `payload` is `{ transaction_id, merchant }`.
+- `set_budget`: `payload` is `{ month, total_minor }`; the month is the one named in the message (this month by default).
+
+Questions understand `today`, `yesterday`, `this week`, `last week`, `this month`, `last month`, a month name or `YYYY-MM`, and the Indonesian equivalents (`hari ini`, `kemarin`, `minggu ini`, `bulan lalu`). With no period it means this month. Weeks run Monday to Sunday in Asia/Jakarta. Food, makan, groceries, belanja, transport, shopping, bills and similar words pick a category.
 
 Nothing is written until:
 
@@ -163,14 +170,16 @@ Nothing is written until:
 { "decision": "approve" }
 ```
 
-`decision` is `approve`, `reject`, or `edit`. `edit` includes `"payload"` with the replacement body (the same shape as `pending_action.payload`).
+`decision` is `approve`, `reject`, or `edit`. `edit` includes `"payload"`; the fields you send replace the proposed ones and anything you leave out keeps its proposed value, so `{ "category": "Dining" }` is enough.
 
-`200`: `{ "status": "approved", "transaction_id": "uuid" }` or `{ "status": "rejected" }`. Reject leaves the database unchanged.
+`200`: `{ "status": "approved", "transaction_id": "uuid" }` (no `transaction_id` for budgets and deletes) or `{ "status": "rejected" }`. Reject leaves the database unchanged. An edit that is not valid (a total that is not a number, a date too far away, a month that is not `YYYY-MM`) is `422` `validation_error` with a `message`, and the proposal is kept so it can be corrected and sent again.
 
 `429` `rate_limited` means wait a minute. `429` `budget_exceeded` means the daily token budget is used up. Show `message` and do not retry in a loop.
 
-Routes you can ignore in the UI, but they explain the answer: `capture`, `insights`, `budget`, `smalltalk`, `refuse`. A message that both logs an amount and asks a question is handled as `capture` only. The amount is proposed; the question is not answered in the same turn.
+Routes you can ignore in the UI, but they explain the answer: `capture`, `insights`, `budget`, `smalltalk`, `refuse`. A message that both logs an amount and asks a question is handled as `capture` only. The amount is proposed; the question is not answered in the same turn. A short message about food with no price ("nasi goreng") is `capture` too, and the answer asks how much.
+
+Limits: amounts (`total_minor`, item totals and budgets) are at most 10,000,000,000,000 rupiah; larger is `422`. `month` is always `YYYY-MM` with a month from 01 to 12.
 
 ## What is not in this API yet
 
-There is no live camera upload from the phone, no chart, and no chat screen. Those are steps 14, 16, and 21. Receipt photos of real spending are not in the repo. Extraction calls OpenRouter only when `OPENROUTER_API_KEY` is set; without it, `POST /receipts` returns a validation-style model failure unless a test double is installed.
+There is no chart, and chat history is not stored for reading back: the conversation lives on the phone until the thread is dropped. Receipt photos of real spending are not in the repo. Extraction calls OpenRouter only when `OPENROUTER_API_KEY` is set; without it, `POST /receipts` returns a validation-style model failure unless a test double is installed.

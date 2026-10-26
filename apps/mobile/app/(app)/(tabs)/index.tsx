@@ -65,7 +65,7 @@ export default function HomeScreen() {
             subtitle="Ask anything about your spending"
             icon={<LogoMark width={32} height={28} />}
             variant="subtle"
-            onPress={() => router.push('/(app)/chat')}
+            onPress={() => router.push('/chat')}
           />
         </View>
         
@@ -131,7 +131,7 @@ export default function HomeScreen() {
               <SuggestionChip
                 key={i}
                 text={text}
-                onPress={() => router.push('/(app)/chat')}
+                onPress={() => router.push({ pathname: '/chat', params: { prompt: text } })}
               />
             ))}
           </ScrollView>

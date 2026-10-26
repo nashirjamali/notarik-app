@@ -10,6 +10,8 @@ Category = Literal[
     "Groceries", "Dining", "Transport", "Shopping", "Bills", "Other"
 ]
 Source = Literal["photo", "pdf", "manual", "chat"]
+# Rp 10 trillion: far beyond any real receipt, and safely inside a bigint column.
+MAX_MINOR = 10_000_000_000_000
 
 
 def _sane_date(value: Date) -> Date:
@@ -22,7 +24,7 @@ def _sane_date(value: Date) -> Date:
 class ItemIn(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     qty: Decimal | None = Field(default=None, gt=0)
-    line_total_minor: int = Field(ge=0)
+    line_total_minor: int = Field(ge=0, le=MAX_MINOR)
 
 
 class ItemRead(BaseModel):
@@ -35,7 +37,7 @@ class ItemRead(BaseModel):
 class TransactionCreate(BaseModel):
     merchant: str = Field(min_length=1, max_length=200)
     date: Date
-    total_minor: int = Field(ge=0)
+    total_minor: int = Field(ge=0, le=MAX_MINOR)
     category: Category
     source: Source = "manual"
     note: str | None = Field(default=None, max_length=500)
@@ -50,7 +52,7 @@ class TransactionCreate(BaseModel):
 class TransactionUpdate(BaseModel):
     merchant: str | None = Field(default=None, min_length=1, max_length=200)
     date: Date | None = None
-    total_minor: int | None = Field(default=None, ge=0)
+    total_minor: int | None = Field(default=None, ge=0, le=MAX_MINOR)
     category: Category | None = None
     source: Source | None = None
     note: str | None = Field(default=None, max_length=500)

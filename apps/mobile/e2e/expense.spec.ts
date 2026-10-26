@@ -83,6 +83,60 @@ test("add expense: category override, missing amount, close and receipt shortcut
   await expect(page.getByText("Fit the whole receipt in the frame")).toBeVisible();
 });
 
+test("chat: log an expense by talking, then ask about it", async ({ page }) => {
+  await signUp(page, `e2e-chat-${Date.now()}@example.com`, "Ada");
+  await tab(page, "Chat").click();
+  await expect(page.getByText(/Hi Ada! Ask me about your spending/)).toBeVisible();
+
+  const message = textbox(page, "Message");
+  await message.fill("kopi 25rb tadi pagi");
+  await button(page, "Send").click();
+  await expect(page.getByText("Got it. Here's what I'll log:")).toBeVisible();
+  await expect(page.getByText("Rp 25.000").first()).toBeVisible();
+  // Nothing is saved until Save is pressed.
+  await button(page, "Save").click();
+  await expect(page.getByText("Saved. It's in your transactions.")).toBeVisible();
+
+  await message.fill("How much did I spend on food this month?");
+  await message.press("Enter");
+  await expect(page.getByText(/You spent Rp 25.000 on food this month/)).toBeVisible();
+});
+
+test("chat: edit a proposal, cancel a budget and start a new chat", async ({ page }) => {
+  await signUp(page, `e2e-chat2-${Date.now()}@example.com`);
+  await tab(page, "Chat").click();
+  const message = textbox(page, "Message");
+
+  await message.fill("makan siang 35rb di warteg");
+  await message.press("Enter");
+  await expect(page.getByText("Warteg").first()).toBeVisible();
+  await button(page, "Edit").click();
+  await textbox(page, "Amount").fill("40000");
+  await button(page, "Save").click();
+  await expect(page.getByText("Saved. It's in your transactions.")).toBeVisible();
+  await message.fill("berapa pengeluaran bulan ini");
+  await message.press("Enter");
+  await expect(page.getByText(/You spent Rp 40.000 this month/)).toBeVisible();
+
+  await message.fill("set budget 4 juta");
+  await message.press("Enter");
+  await expect(page.getByText("Rp 4.000.000").first()).toBeVisible();
+  await button(page, "Cancel").click();
+  await expect(page.getByText("Nothing was saved.")).toBeVisible();
+
+  await button(page, "New chat").click();
+  await expect(page.getByText("Nothing was saved.")).toBeHidden();
+  await expect(page.getByText(/Ask me about your spending/)).toBeVisible();
+});
+
+test("chat: a Home suggestion opens the chat with the answer, and the camera opens Snap receipt", async ({ page }) => {
+  await signUp(page, `e2e-chat3-${Date.now()}@example.com`);
+  await page.getByText("Am I on track this month?").first().click();
+  await expect(page.getByText(/No budget is set for/)).toBeVisible();
+  await button(page, "Scan a receipt").click();
+  await expect(page.getByText("Fit the whole receipt in the frame")).toBeVisible();
+});
+
 test("add expense: the close button returns to home", async ({ page }) => {
   await signUp(page, `e2e-sheet-${Date.now()}@example.com`);
   await tab(page, "Add").click();

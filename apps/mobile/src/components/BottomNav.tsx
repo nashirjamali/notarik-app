@@ -87,7 +87,7 @@ export function BottomNav() {
       <TabButton
         label="Chat"
         active={isActive(pathname, '/chat')}
-        onPress={() => router.push('/(app)/(tabs)/chat')}
+        onPress={() => router.push('/chat')}
         ActiveIcon={NavChatActive}
         InactiveIcon={NavChatInactive}
       />

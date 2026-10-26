@@ -70,7 +70,7 @@ async function refreshSession(): Promise<boolean> {
   return true;
 }
 
-export async function api<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
+async function authorizedFetch(path: string, init: RequestInit = {}, retry = true): Promise<Response> {
   const headers = new Headers(init.headers);
   // FormData needs fetch to set its own multipart boundary header.
   const isForm = typeof FormData !== "undefined" && init.body instanceof FormData;
@@ -82,12 +82,24 @@ export async function api<T>(path: string, init: RequestInit = {}, retry = true)
   const response = await fetch(`${API_URL}${path}`, { ...init, headers });
   if (response.status === 401 && retry && current) {
     const refreshed = await refreshGate(refreshSession);
-    if (refreshed) return api<T>(path, init, false);
+    if (refreshed) return authorizedFetch(path, init, false);
     await clearSession();
   }
+  return response;
+}
+
+export async function api<T>(path: string, init: RequestInit = {}, retry = true): Promise<T> {
+  const response = await authorizedFetch(path, init, retry);
   if (!response.ok) throw await parseError(response);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
+}
+
+/** For responses that are not JSON, such as the chat event stream. */
+export async function apiText(path: string, init: RequestInit = {}): Promise<string> {
+  const response = await authorizedFetch(path, init);
+  if (!response.ok) throw await parseError(response);
+  return response.text();
 }
 
 export async function bootstrapSession(): Promise<Session | null> {

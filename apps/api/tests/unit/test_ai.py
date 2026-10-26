@@ -155,3 +155,54 @@ def test_projection_refuses_an_empty_month():
     body = projection(Conn(), uuid4(), "2026-10", today=date(2026, 10, 17))
     assert body["ready"] is False
     assert "estimate" in body["method"]
+
+
+def test_find_amount_prefers_a_suffixed_number_and_ignores_quantities():
+    from app.ai.money import find_amount, format_idr
+
+    assert find_amount("kopi 25rb")[0] == 25_000
+    assert find_amount("2 nasi goreng 30rb")[0] == 30_000
+    assert find_amount("nasi 25.000")[0] == 25_000
+    assert find_amount("beli 1,5jt")[0] == 1_500_000
+    assert find_amount("2 packs of tea") is None
+    assert find_amount("35 kopi") is None
+    assert format_idr(342_500) == "Rp 342.500"
+    assert format_idr(-1_500) == "-Rp 1.500"
+
+
+def test_capture_reads_merchant_date_and_category():
+    today = date(2026, 10, 27)
+    draft = draft_from_text("makan siang 35rb di warteg kemarin", today)
+    assert (draft.merchant, str(draft.date), draft.total_minor, draft.category) == (
+        "Warteg",
+        "2026-10-26",
+        35_000,
+        "Dining",
+    )
+    assert draft.items[0].name == "Makan siang"
+    later = draft_from_text("kopi 25rb tadi pagi", today)
+    assert (later.merchant, str(later.date), later.items[0].name) == (None, "2026-10-27", "Kopi")
+    assert draft_from_text("bayar listrik 450rb", today).category == "Bills"
+    assert draft_from_text("2 packs of tea", today).total_minor is None
+
+
+def test_router_asks_for_a_missing_price_but_does_not_log_quantities():
+    assert route_message("nasi goreng") == "capture"
+    assert route_message("2 packs of tea") == "smalltalk"
+    assert route_message("beli baju 150k") == "capture"
+    assert route_message("how much did I spend on food this week?") == "insights"
+
+
+def test_periods_for_week_month_and_named_months():
+    from app.ai.period import resolve_period
+
+    today = date(2026, 10, 27)  # a Tuesday
+    week = resolve_period("food this week", today)
+    assert (str(week.start), str(week.end), week.previous_label) == ("2026-10-26", "2026-11-02", "last week")
+    last_month = resolve_period("bulan lalu", today)
+    assert (str(last_month.start), str(last_month.end)) == ("2026-09-01", "2026-10-01")
+    assert str(resolve_period("in March 2025", today).start) == "2025-03-01"
+    default = resolve_period("how much did I spend", today)
+    assert (default.label, str(default.start)) == ("this month", "2026-10-01")
+    january = resolve_period("last month", date(2026, 1, 15))
+    assert (str(january.start), str(january.end)) == ("2025-12-01", "2026-01-01")

@@ -3,9 +3,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy.engine import Connection
 
+from app.schemas.transaction import MAX_MINOR
 from app.dependencies import current_user, settings, user_connection
 from app.services.receipts import confirm_run, create_run, get_run, image_path
 
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/receipts", tags=["receipts"])
 class ConfirmBody(BaseModel):
     merchant: str | None = None
     date: str | None = None
-    total_minor: int | None = None
+    total_minor: int | None = Field(default=None, ge=0, le=MAX_MINOR)
     category: str | None = None
     note: str | None = Field(default=None, max_length=500)
     items: list[dict] | None = None
@@ -102,6 +103,12 @@ def confirm(
 ):
     try:
         result = confirm_run(connection, user_id, run_id, body.model_dump(exclude_none=True))
+    except ValidationError as exc:
+        first = exc.errors()[0]
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "validation_error", "message": f"{'.'.join(str(p) for p in first['loc'])}: {first['msg']}"},
+        )
     except ValueError:
         raise HTTPException(
             status_code=422,
