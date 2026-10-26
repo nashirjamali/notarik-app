@@ -431,6 +431,8 @@ export interface components {
              * @enum {string}
              */
             source: "photo" | "pdf" | "manual" | "chat";
+            /** Note */
+            note?: string | null;
             /** Items */
             items?: components["schemas"]["ItemIn"][];
         };
@@ -469,6 +471,8 @@ export interface components {
              * @enum {string}
              */
             source: "photo" | "pdf" | "manual" | "chat";
+            /** Note */
+            note: string | null;
             /** Items */
             items: components["schemas"]["ItemRead"][];
             /**
@@ -489,6 +493,8 @@ export interface components {
             category?: ("Groceries" | "Dining" | "Transport" | "Shopping" | "Bills" | "Other") | null;
             /** Source */
             source?: ("photo" | "pdf" | "manual" | "chat") | null;
+            /** Note */
+            note?: string | null;
             /** Items */
             items?: components["schemas"]["ItemIn"][] | null;
         };
@@ -524,6 +530,8 @@ export interface components {
             total_minor?: number | null;
             /** Category */
             category?: string | null;
+            /** Note */
+            note?: string | null;
             /** Items */
             items?: {
                 [key: string]: unknown;
