@@ -14,12 +14,12 @@ from app.schemas.transaction import (
 
 _INSERT = """
 INSERT INTO transactions (
-  user_id, merchant, date, total_minor, category, source
+  user_id, merchant, date, total_minor, category, source, note
 )
 VALUES (
-  :user_id, :merchant, :date, :total_minor, :category, :source
+  :user_id, :merchant, :date, :total_minor, :category, :source, :note
 )
-RETURNING id, merchant, date, total_minor, currency, category, source, created_at
+RETURNING id, merchant, date, total_minor, currency, category, source, note, created_at
 """
 
 _INSERT_ITEM = """
@@ -90,6 +90,7 @@ def create_transaction(
             "total_minor": body.total_minor,
             "category": body.category,
             "source": body.source,
+            "note": (body.note or "").strip() or None,
         },
     ).mappings().one()
     _insert_items(connection, user_id, row["id"], body.items)
@@ -102,7 +103,7 @@ def get_transaction(
     row = connection.execute(
         text(
             """
-            SELECT id, merchant, date, total_minor, currency, category, source, created_at
+            SELECT id, merchant, date, total_minor, currency, category, source, note, created_at
             FROM transactions
             WHERE id = :id AND user_id = :user_id
             """
@@ -128,7 +129,7 @@ def list_transactions(
     rows = connection.execute(
         text(
             """
-            SELECT id, merchant, date, total_minor, currency, category, source, created_at
+            SELECT id, merchant, date, total_minor, currency, category, source, note, created_at
             FROM transactions
             WHERE user_id = :user_id
             AND (CAST(:month AS date) IS NULL OR (
@@ -176,8 +177,10 @@ def update_transaction(
         return None
     fields = body.model_dump(exclude_unset=True)
     items = fields.pop("items", None)
-    allowed = {"merchant", "date", "total_minor", "category", "source"}
+    allowed = {"merchant", "date", "total_minor", "category", "source", "note"}
     fields = {key: value for key, value in fields.items() if key in allowed}
+    if "note" in fields:
+        fields["note"] = (fields["note"] or "").strip() or None
     if fields:
         assignments = ", ".join(f"{column} = :{column}" for column in fields)
         connection.execute(

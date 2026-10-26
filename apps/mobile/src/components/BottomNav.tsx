@@ -80,7 +80,7 @@ export function BottomNav() {
         accessibilityRole="tab"
         accessibilityLabel="Add"
         style={styles.addButton}
-        onPress={() => router.push('/(app)/(tabs)/add')}
+        onPress={() => router.push('/quick-add')}
       >
         <NavPlusButton width={56} height={56} />
       </Pressable>

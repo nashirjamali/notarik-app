@@ -109,3 +109,38 @@ def _done(body: str) -> dict:
         if block.startswith("event: done"):
             return json.loads(block.split("data: ", 1)[1])
     raise AssertionError(body)
+
+
+def test_confirm_stores_the_note_without_counting_it_as_an_edit(api_client, make_user, receipt_dir):
+    with api_client(make_user()) as client:
+        created = client.post("/receipts", files={"file": ("receipt.png", PNG, "image/png")})
+        run_id = created.json()["id"]
+        confirmed = client.post(
+            f"/receipts/{run_id}/confirm",
+            json={
+                "merchant": "Warung",
+                "date": "2026-10-17",
+                "total_minor": 25000,
+                "category": "Dining",
+                "note": "  lunch with Ada ",
+            },
+        )
+        assert confirmed.status_code == 200, confirmed.text
+        assert "note" not in confirmed.json()["user_edited_fields"]
+        listed = client.get("/transactions?month=2026-10")
+        assert listed.json()["items"][0]["note"] == "lunch with Ada"
+
+
+def test_note_can_be_set_updated_and_cleared(api_client, make_user):
+    with api_client(make_user()) as client:
+        body = {"merchant": "Kopi", "date": "2026-10-17", "total_minor": 18000, "category": "Dining"}
+        created = client.post("/transactions", json={**body, "note": "morning"})
+        assert created.status_code == 201, created.text
+        assert created.json()["note"] == "morning"
+        tx_id = created.json()["id"]
+        updated = client.patch(f"/transactions/{tx_id}", json={"note": "afternoon"})
+        assert updated.json()["note"] == "afternoon"
+        cleared = client.patch(f"/transactions/{tx_id}", json={"note": "  "})
+        assert cleared.json()["note"] is None
+        assert client.post("/transactions", json={**body, "note": "x" * 501}).status_code == 422
+        assert client.post("/transactions", json=body).json()["note"] is None

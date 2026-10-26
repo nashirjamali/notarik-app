@@ -3,7 +3,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import FileResponse, StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.engine import Connection
 
 from app.dependencies import current_user, settings, user_connection
@@ -17,6 +17,7 @@ class ConfirmBody(BaseModel):
     date: str | None = None
     total_minor: int | None = None
     category: str | None = None
+    note: str | None = Field(default=None, max_length=500)
     items: list[dict] | None = None
 
 

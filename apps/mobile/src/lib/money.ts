@@ -23,6 +23,10 @@ export function parseAmount(input: string): number | null {
     multiplier = 1_000;
     rest = rest.slice(0, -2);
   }
+  if (multiplier === 1 && rest.endsWith("k")) {
+    multiplier = 1_000;
+    rest = rest.slice(0, -1);
+  }
   const parsed = parseDecimal(rest, multiplier !== 1);
   if (parsed == null) return null;
   const value = parsed * multiplier;

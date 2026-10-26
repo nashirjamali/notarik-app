@@ -1502,6 +1502,18 @@
             "title": "Source",
             "default": "manual"
           },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/ItemIn"
@@ -1593,6 +1605,17 @@
             ],
             "title": "Source"
           },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/ItemRead"
@@ -1615,6 +1638,7 @@
           "currency",
           "category",
           "source",
+          "note",
           "items",
           "created_at"
         ],
@@ -1694,6 +1718,18 @@
               }
             ],
             "title": "Source"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
           },
           "items": {
             "anyOf": [
@@ -1823,6 +1859,18 @@
               }
             ],
             "title": "Category"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
           },
           "items": {
             "anyOf": [

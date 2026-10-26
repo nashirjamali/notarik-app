@@ -38,6 +38,7 @@ class TransactionCreate(BaseModel):
     total_minor: int = Field(ge=0)
     category: Category
     source: Source = "manual"
+    note: str | None = Field(default=None, max_length=500)
     items: list[ItemIn] = Field(default_factory=list)
 
     @field_validator("date")
@@ -52,6 +53,7 @@ class TransactionUpdate(BaseModel):
     total_minor: int | None = Field(default=None, ge=0)
     category: Category | None = None
     source: Source | None = None
+    note: str | None = Field(default=None, max_length=500)
     items: list[ItemIn] | None = None
 
     @field_validator("date")
@@ -70,6 +72,7 @@ class TransactionRead(BaseModel):
     currency: str
     category: Category
     source: Source
+    note: str | None
     items: list[ItemRead]
     created_at: datetime
 

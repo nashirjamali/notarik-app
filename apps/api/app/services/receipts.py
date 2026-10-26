@@ -160,6 +160,7 @@ def confirm_run(connection: Connection, user_id: UUID, run_id: UUID, edits: dict
     row = get_run(connection, user_id, run_id)
     if row is None or row["status"] != "needs_review":
         return None
+    note = edits.pop("note", None)
     draft = ExpenseDraft.model_validate(row["draft"] or {})
     edited = _edited_fields(draft, edits)
     merged = draft.model_dump()
@@ -176,6 +177,7 @@ def confirm_run(connection: Connection, user_id: UUID, run_id: UUID, edits: dict
             total_minor=final.total_minor,
             category=final.category,
             source=final.source if final.source in {"photo", "pdf"} else "photo",
+            note=note,
             items=[
                 ItemIn(name=item.name, qty=item.qty, line_total_minor=item.line_total_minor or 0)
                 for item in final.items

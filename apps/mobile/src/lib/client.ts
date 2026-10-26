@@ -1,5 +1,9 @@
+import { File } from "expo-file-system";
+import { Platform } from "react-native";
+
 import { api } from "@/lib/api";
 import type { components } from "@/lib/schema";
+import type { ReceiptFile, ReceiptRun, TransactionInput } from "@/lib/types";
 
 type Schemas = components["schemas"];
 
@@ -73,4 +77,26 @@ export function updateTransaction(id: string, body: Schemas["TransactionUpdate"]
 
 export function deleteTransaction(id: string) {
   return api<void>(`/transactions/${id}`, { method: "DELETE" });
+}
+
+export async function uploadReceipt(file: ReceiptFile) {
+  const form = new FormData();
+  if (Platform.OS === "web") {
+    form.append("file", await (await fetch(file.uri)).blob(), file.name);
+  } else {
+    // Expo's fetch only accepts Blob-like parts (not RN's { uri } objects); File reads the local file.
+    form.append("file", new File(file.uri) as unknown as Blob, file.name);
+  }
+  return api<ReceiptRun>("/receipts", { method: "POST", body: form });
+}
+
+export function getReceipt(id: string) {
+  return api<ReceiptRun>(`/receipts/${id}`);
+}
+
+export function confirmReceipt(id: string, body: TransactionInput) {
+  return api<{ transaction_id: string; user_edited_fields: string[] }>(
+    `/receipts/${id}/confirm`,
+    { method: "POST", body: JSON.stringify(body) },
+  );
 }
