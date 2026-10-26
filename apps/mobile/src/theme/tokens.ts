@@ -9,6 +9,16 @@ export const categories = [
 
 export type Category = (typeof categories)[number];
 
+// Shown to people; the API keeps the stable key on the left.
+export const categoryLabels: Record<Category, string> = {
+  Groceries: "Groceries",
+  Dining: "Food & Drink",
+  Transport: "Transport",
+  Shopping: "Shopping",
+  Bills: "Bills",
+  Other: "Other",
+};
+
 const primitives = {
   neutral: {
     '01': { '100': '#FEFEFE', '95': '#FEFEFEF2', '20': '#FEFEFE33', '10': '#FEFEFE1A' },
@@ -112,6 +122,13 @@ const type = {
     letterSpacing: 0,
     fontWeight: '600' as const,
   },
+  body1: {
+    fontFamily: 'Poppins_400Regular',
+    fontSize: 24,
+    lineHeight: 32,
+    letterSpacing: -0.24,
+    fontWeight: '400' as const,
+  },
   body2Bold: {
     fontFamily: 'Poppins_500Medium',
     fontSize: 16,
@@ -193,6 +210,8 @@ export const light = {
   scrim: primitives.neutral['07']['50'],
   glass: primitives.neutral['01']['20'],
   borderStrong: primitives.neutral['04']['25'],
+  warningSubtle: primitives.status.warningSubtle,
+  accentSubtle: primitives.primary['01']['10'],
   category,
   spacing,
   radius,
@@ -214,6 +233,8 @@ export const dark = {
   scrim: primitives.neutral['07']['90'],
   glass: primitives.neutral['07']['50'],
   borderStrong: primitives.neutral['04']['50'],
+  warningSubtle: primitives.status.warningSubtle,
+  accentSubtle: primitives.primary['01']['10'],
   category,
   spacing,
   radius,
@@ -235,6 +256,8 @@ export type Theme = {
   scrim: string;
   glass: string;
   borderStrong: string;
+  warningSubtle: string;
+  accentSubtle: string;
   category: typeof category;
   spacing: typeof spacing;
   radius: typeof radius;

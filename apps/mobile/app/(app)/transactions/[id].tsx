@@ -85,6 +85,7 @@ export default function TransactionDetail() {
                 {item.name} · {formatIdr(item.line_total_minor)}
               </Text>
             ))}
+            {row.note ? <Text variant="muted">{row.note}</Text> : null}
             <Button label="Edit" variant="ghost" onPress={() => setEditing(true)} />
             {confirming ? (
               <Button label="Confirm delete" variant="danger" onPress={() => void remove.mutateAsync()} />
