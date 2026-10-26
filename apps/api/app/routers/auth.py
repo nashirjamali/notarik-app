@@ -18,7 +18,7 @@ def _unauthorized() -> HTTPException:
 @router.post("/signup", response_model=TokenPair, status_code=201)
 def signup(body: SignupRequest, connection: Connection = Depends(write_connection)):
     pair = auth_service.create_account(
-        connection, body.email, body.password, settings
+        connection, body.email, body.password, settings, body.name
     )
     if pair is None:
         raise HTTPException(

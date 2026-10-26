@@ -1,4 +1,5 @@
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/theme/Theme';
 import { HomeHeader } from '@/components/HomeHeader';
@@ -19,7 +20,10 @@ export default function HomeScreen() {
   ];
   
   return (
-    <View style={[styles.container, { backgroundColor: theme.surface }]}>
+    <SafeAreaView
+      edges={['top']}
+      style={[styles.container, { backgroundColor: theme.surface }]}
+    >
       <ScrollView 
         style={styles.scroll}
         contentContainerStyle={[
@@ -102,8 +106,8 @@ export default function HomeScreen() {
           />
         </ScrollView>
         
-        <View style={[styles.section, { paddingHorizontal: theme.spacing[24] }]}>
-          <View style={styles.sectionHeader}>
+        <View style={styles.section}>
+          <View style={[styles.sectionHeader, { paddingHorizontal: theme.spacing[24] }]}>
             <LogoMark width={16} height={14} />
             <Text style={[
               styles.sectionLabel,
@@ -118,7 +122,10 @@ export default function HomeScreen() {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={[styles.suggestions, { gap: theme.spacing[8] }]}
+            contentContainerStyle={[
+              styles.suggestions,
+              { gap: theme.spacing[8], paddingLeft: theme.spacing[24] },
+            ]}
           >
             {suggestions.map((text, i) => (
               <SuggestionChip
@@ -130,7 +137,7 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 

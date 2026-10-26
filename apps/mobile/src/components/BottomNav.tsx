@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import { View, Pressable, StyleSheet, Platform } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { useTheme } from '@/theme/Theme';
@@ -11,13 +12,48 @@ import NavSettingsActive from '../../assets/svg/nav-settings-active_8816.svg';
 import NavSettingsInactive from '../../assets/svg/nav-settings-inactive_4cb0.svg';
 import NavPlusButton from '../../assets/svg/nav-plus-button_a419.svg';
 
+function isActive(pathname: string, path: string) {
+  if (path === '/') return pathname === '/' || pathname === '/index';
+  return pathname === path || pathname.startsWith(`${path}/`);
+}
+
+function TabButton({
+  label,
+  active,
+  onPress,
+  ActiveIcon,
+  InactiveIcon,
+}: {
+  label: string;
+  active: boolean;
+  onPress: () => void;
+  ActiveIcon: ComponentType<{ width: number; height: number }>;
+  InactiveIcon: ComponentType<{ width: number; height: number }>;
+}) {
+  return (
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: active }}
+      style={styles.navItem}
+      onPress={onPress}
+    >
+      {active ? (
+        <View style={styles.activeCircle}>
+          <ActiveIcon width={24} height={24} />
+        </View>
+      ) : (
+        <InactiveIcon width={24} height={24} />
+      )}
+    </Pressable>
+  );
+}
+
 export function BottomNav() {
   const theme = useTheme();
   const router = useRouter();
   const pathname = usePathname();
-  
-  const isActive = (path: string) => pathname === path;
-  
+
   return (
     <View style={[
       styles.container,
@@ -26,58 +62,42 @@ export function BottomNav() {
         bottom: theme.spacing[34],
       }
     ]}>
-      <Pressable
-        style={styles.navItem}
+      <TabButton
+        label="Home"
+        active={isActive(pathname, '/')}
         onPress={() => router.push('/(app)/(tabs)/')}
-      >
-        {isActive('/(app)/(tabs)/') ? (
-          <View style={styles.activeCircle}>
-            <NavHomeActive width={24} height={24} />
-          </View>
-        ) : (
-          <NavHomeInactive width={24} height={24} />
-        )}
-      </Pressable>
-      
-      <Pressable
-        style={styles.navItem}
+        ActiveIcon={NavHomeActive}
+        InactiveIcon={NavHomeInactive}
+      />
+      <TabButton
+        label="Transactions"
+        active={isActive(pathname, '/transactions')}
         onPress={() => router.push('/(app)/(tabs)/transactions')}
-      >
-        {isActive('/(app)/(tabs)/transactions') ? (
-          <NavTransactionsActive width={24} height={24} />
-        ) : (
-          <NavTransactionsInactive width={24} height={24} />
-        )}
-      </Pressable>
-      
+        ActiveIcon={NavTransactionsActive}
+        InactiveIcon={NavTransactionsInactive}
+      />
       <Pressable
+        accessibilityRole="tab"
+        accessibilityLabel="Add"
         style={styles.addButton}
         onPress={() => router.push('/(app)/(tabs)/add')}
       >
         <NavPlusButton width={56} height={56} />
       </Pressable>
-      
-      <Pressable
-        style={styles.navItem}
+      <TabButton
+        label="Chat"
+        active={isActive(pathname, '/chat')}
         onPress={() => router.push('/(app)/(tabs)/chat')}
-      >
-        {isActive('/(app)/(tabs)/chat') ? (
-          <NavChatActive width={24} height={24} />
-        ) : (
-          <NavChatInactive width={24} height={24} />
-        )}
-      </Pressable>
-      
-      <Pressable
-        style={styles.navItem}
+        ActiveIcon={NavChatActive}
+        InactiveIcon={NavChatInactive}
+      />
+      <TabButton
+        label="Settings"
+        active={isActive(pathname, '/settings')}
         onPress={() => router.push('/(app)/(tabs)/settings')}
-      >
-        {isActive('/(app)/(tabs)/settings') ? (
-          <NavSettingsActive width={24} height={24} />
-        ) : (
-          <NavSettingsInactive width={24} height={24} />
-        )}
-      </Pressable>
+        ActiveIcon={NavSettingsActive}
+        InactiveIcon={NavSettingsInactive}
+      />
     </View>
   );
 }

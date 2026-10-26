@@ -41,11 +41,19 @@ def _issue(connection: Connection, user_id: UUID, settings: Settings) -> TokenPa
 
 
 def create_account(
-    connection: Connection, email: str, password: str, settings: Settings
+    connection: Connection,
+    email: str,
+    password: str,
+    settings: Settings,
+    name: str | None = None,
 ) -> TokenPair | None:
     user_id = connection.execute(
-        text("SELECT auth.create_user(:email, :password_hash)"),
-        {"email": email, "password_hash": hash_password(password)},
+        text("SELECT auth.create_user(:email, :password_hash, :name)"),
+        {
+            "email": email,
+            "password_hash": hash_password(password),
+            "name": name,
+        },
     ).scalar_one()
     if user_id is None:
         return None
