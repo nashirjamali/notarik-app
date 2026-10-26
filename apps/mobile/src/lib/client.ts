@@ -31,6 +31,12 @@ export function logout(body: Schemas["RefreshRequest"]) {
   return api<void>("/auth/logout", { method: "POST", body: JSON.stringify(body) });
 }
 
+export type Me = { user_id: string; name: string | null };
+
+export function getMe() {
+  return api<Me>("/me");
+}
+
 export function listTransactions(query: {
   month?: string;
   category?: Schemas["TransactionRead"]["category"];

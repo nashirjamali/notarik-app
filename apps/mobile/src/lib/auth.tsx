@@ -8,7 +8,7 @@ import type { TokenPair } from "@/lib/types";
 type AuthContextValue = {
   ready: boolean;
   session: Session | null;
-  signup: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, name?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -34,8 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setReady(true));
   }, []);
 
-  async function signup(email: string, password: string) {
-    const pair = await signupRequest({ email, password });
+  async function signup(email: string, password: string, name?: string) {
+    const pair = await signupRequest({ email, password, name: name?.trim() || undefined });
     await storePair(pair);
   }
 
