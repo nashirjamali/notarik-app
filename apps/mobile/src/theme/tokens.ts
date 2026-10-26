@@ -171,6 +171,13 @@ const type = {
     letterSpacing: 0,
     fontWeight: '400' as const,
   },
+  composer: {
+    fontFamily: 'Karla_400Regular',
+    fontSize: 17,
+    lineHeight: 24,
+    letterSpacing: 0,
+    fontWeight: '400' as const,
+  },
   button1: {
     fontFamily: 'DMSans_700Bold',
     fontSize: 16,
