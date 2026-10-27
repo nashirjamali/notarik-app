@@ -23,11 +23,11 @@ import {
   type ReviewItem,
 } from "@/lib/receipt";
 import type { ReceiptRun, TransactionInput } from "@/lib/types";
+import { TopBar } from "@/components/TopBar";
 import { useTheme } from "@/theme/Theme";
 import { categories, type Category } from "@/theme/tokens";
 import Alert from "../../assets/svg/review-alert.svg";
 import ChevronDown from "../../assets/svg/review-chevron-down.svg";
-import ChevronLeft from "../../assets/svg/login-chevron-left.svg";
 import Mark from "../../assets/svg/review-mark.svg";
 import Note from "../../assets/svg/review-note.svg";
 import Pencil from "../../assets/svg/review-pencil.svg";
@@ -131,26 +131,18 @@ export function ReceiptReview({
 
   return (
     <View style={[styles.root, { backgroundColor: theme.surface }]}>
-      <View style={[styles.topBar, { paddingTop: Math.max(insets.top, 47) + 5 }]}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          onPress={onBack}
-          style={[styles.back, { backgroundColor: theme.border }]}
-        >
-          <ChevronLeft />
-        </Pressable>
-        <Text style={{ color: theme.text, ...theme.type.body2Bold }}>Review receipt</Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Retake"
-          onPress={onRetake}
-          style={styles.retake}
-        >
-          <Text numberOfLines={1} style={{ color: theme.accent, ...theme.type.captionBold }}>
-            Retake
-          </Text>
-        </Pressable>
+      <View style={{ paddingTop: insets.top }}>
+        <TopBar
+          title="Review receipt"
+          onBack={onBack}
+          right={
+            <Pressable accessibilityRole="button" accessibilityLabel="Retake" onPress={onRetake}>
+              <Text numberOfLines={1} style={{ color: theme.accent, ...theme.type.captionBold }}>
+                Retake
+              </Text>
+            </Pressable>
+          }
+        />
       </View>
 
       <KeyboardAvoidingView
@@ -473,22 +465,7 @@ export function ReceiptReview({
 
 const styles = StyleSheet.create({
   root: { flex: 1, width: "100%", maxWidth: 430, alignSelf: "center" },
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingBottom: 16,
-  },
-  back: {
-    width: 48,
-    height: 48,
-    borderRadius: 48,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  retake: { minWidth: 48, alignItems: "flex-end" },
-  content: { paddingHorizontal: 24, paddingBottom: 24, gap: 16 },
+  content: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24, gap: 16 },
   summary: { flexDirection: "row", alignItems: "center", gap: 14 },
   thumb: { width: 56, height: 72, borderRadius: 12, borderWidth: 1, overflow: "hidden" },
   thumbImage: { width: "100%", height: "100%" },

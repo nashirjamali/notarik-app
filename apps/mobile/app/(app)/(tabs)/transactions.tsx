@@ -23,6 +23,7 @@ import { formatIdr } from "@/lib/money";
 import { currentMonth, dayHeading, timeOf } from "@/lib/months";
 import { localToday } from "@/lib/receipt";
 import type { Transaction } from "@/lib/types";
+import { TopBar, TopBarButton } from "@/components/TopBar";
 import { useTheme } from "@/theme/Theme";
 import { categoryLabels, type Category } from "@/theme/tokens";
 import Mark from "../../../assets/svg/review-mark.svg";
@@ -57,22 +58,21 @@ export default function TransactionsScreen() {
 
   return (
     <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: theme.surface }}>
-      <View style={styles.header}>
-        <Text accessibilityRole="header" style={{ color: theme.text, ...theme.type.body1Bold }}>
-          Transactions
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={searching ? "Close search" : "Search"}
-          onPress={() => {
-            setSearching((value) => !value);
-            if (searching) setSearch("");
-          }}
-          style={[styles.round, { backgroundColor: theme.border }]}
-        >
-          <Search />
-        </Pressable>
-      </View>
+      <TopBar
+        align="start"
+        title="Transactions"
+        right={
+          <TopBarButton
+            label={searching ? "Close search" : "Search"}
+            onPress={() => {
+              setSearching((value) => !value);
+              if (searching) setSearch("");
+            }}
+          >
+            <Search />
+          </TopBarButton>
+        }
+      />
 
       {searching ? (
         <View style={[styles.searchBox, { backgroundColor: theme.bg }]}>
@@ -230,14 +230,6 @@ export default function TransactionsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  round: { width: 48, height: 48, borderRadius: 48, alignItems: "center", justifyContent: "center" },
   searchBox: { marginHorizontal: 24, marginBottom: 12, paddingHorizontal: 16, borderRadius: 16 },
   searchInput: { height: 44, padding: 0 },
   monthRow: {
@@ -245,6 +237,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 24,
+    paddingTop: 12,
     paddingBottom: 12,
   },
   total: { alignItems: "flex-end" },
