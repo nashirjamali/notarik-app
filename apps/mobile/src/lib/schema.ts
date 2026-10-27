@@ -159,6 +159,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/transactions/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Batch */
+        post: operations["create_batch_transactions_batch_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/transactions/export": {
         parameters: {
             query?: never;
@@ -516,6 +533,16 @@ export interface components {
              * Format: uuid
              */
             user_id: string;
+        };
+        /** TransactionBatchCreate */
+        TransactionBatchCreate: {
+            /** Transactions */
+            transactions: components["schemas"]["TransactionCreate"][];
+        };
+        /** TransactionBatchRead */
+        TransactionBatchRead: {
+            /** Items */
+            items: components["schemas"]["TransactionRead"][];
         };
         /** TransactionCreate */
         TransactionCreate: {
@@ -1001,6 +1028,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TransactionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_batch_transactions_batch_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionBatchCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionBatchRead"];
                 };
             };
             /** @description Validation Error */
