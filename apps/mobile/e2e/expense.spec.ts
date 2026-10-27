@@ -42,6 +42,52 @@ test("sign up, add an expense, see it, and delete it", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("quick add: several expenses are listed, one is recategorised, and all are saved at once", async ({ page }) => {
+  await signUp(page, `e2e-many-${Date.now()}@example.com`);
+  await tab(page, "Add").click();
+  await textbox(page, "What did you spend?").fill("kopi 25rb, parkir 5rb");
+  await expect(page.getByText("Notarik understood 2 expenses")).toBeVisible();
+  await expect(page.getByText("Rp 30.000").first()).toBeVisible();
+
+  await button(page, "Change category of Kopi").click();
+  await radio(page, "Shopping").click();
+
+  await button(page, "Save 2 expenses").click();
+  await expect(page.getByText("Kopi").filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText("Parkir").filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText("Rp 25.000").filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText("Rp 5.000").filter({ visible: true }).first()).toBeVisible();
+});
+
+test("quick add: an expense without an amount blocks saving until it is removed", async ({ page }) => {
+  await signUp(page, `e2e-missing-${Date.now()}@example.com`);
+  await tab(page, "Add").click();
+  await textbox(page, "What did you spend?").fill("kopi 25rb, parkir");
+  await expect(page.getByText("Notarik understood 2 expenses")).toBeVisible();
+  await expect(textbox(page, "Amount of Parkir")).toBeVisible();
+
+  await button(page, "Save 2 expenses").click();
+  await expect(page.getByRole("alert")).toContainText("Add an amount");
+
+  await button(page, "Remove Parkir").click();
+  await expect(page.getByText("Notarik understood 2 expenses")).toHaveCount(0);
+  await button(page, "Save expense").click();
+  await expect(page.getByText("Kopi", { exact: true })).toBeVisible();
+});
+
+test("quick add: save the lines as one expense with items", async ({ page }) => {
+  await signUp(page, `e2e-one-${Date.now()}@example.com`);
+  await tab(page, "Add").click();
+  await textbox(page, "What did you spend?").fill("nasi 20rb, teh 5rb di warteg");
+  await expect(page.getByText("Notarik understood 2 expenses")).toBeVisible();
+
+  await page.getByRole("switch", { name: "Save as one expense" }).filter({ visible: true }).click();
+  await button(page, "Save as one expense").click();
+  await expect(page.getByText("Warteg", { exact: true })).toBeVisible();
+  await expect(page.getByText("Rp 25.000").first()).toBeVisible();
+  await expect(page.getByText("2 items")).toBeVisible();
+});
+
 test("sign up stores the name and shows it in settings", async ({ page }) => {
   const email = `e2e-name-${Date.now()}@example.com`;
   await signUp(page, email, "Ada Lovelace");
