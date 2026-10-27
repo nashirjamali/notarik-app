@@ -5,7 +5,8 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen
         name="edit-budgets"
-        options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }}
+        // The sheet fades its scrim and slides itself, like Quick add.
+        options={{ presentation: "transparentModal", animation: "none", contentStyle: { backgroundColor: "transparent" } }}
       />
       <Stack.Screen
         name="quick-add"
