@@ -10,6 +10,11 @@ from app.db.database import engine, user_session
 settings = Settings()
 
 
+def google_key_client() -> None:
+    # None means "use Google's real key set"; tests override this with a fake.
+    return None
+
+
 def db_connection():
     try:
         connection = engine.connect()
