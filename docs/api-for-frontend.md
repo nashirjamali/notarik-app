@@ -92,6 +92,15 @@ Receipt text is data. Show item names as text. Do not treat them as instructions
 
 `GET /transactions/export` returns every expense of the caller as `text/csv` (`date, merchant, category, amount_idr, payment_method, source, note`, newest first) with a `Content-Disposition` attachment name. Amounts are whole IDR. Text cells that start with `=`, `+`, `-` or `@` get a leading `'` so spreadsheets do not run them as formulas.
 
+## Sign in with Google
+
+`POST /auth/social` (no bearer token). Body: `{"provider": "google", "id_token": "...", "nonce": "..."}`. The app gets the ID token from Google with a random `nonce` it generated, and sends both. Response is the same `TokenPair` as `/auth/login`.
+
+- `401 unauthorized`, message `Google sign-in failed`: bad signature, wrong audience or issuer, expired, nonce mismatch, or Google is not configured.
+- `401 unauthorized`, message `Google did not confirm this email address`: the Google email is not verified, so no account is created or linked.
+- `422`: unknown `provider` (only `google` exists).
+- A verified email that already has a password account is linked to it. An account made with Google has no password, so `/auth/login` for it returns the usual `Wrong email or password`.
+
 ## Transactions list, details and search
 
 `GET /transactions` is ordered by the day the expense happened (`date`), newest first, then by when it was entered. So an expense typed in today for last week sits with last week. Paging uses `next_cursor` as before; a cursor from an older build is `422`. New query parameter `q` (at most 100 characters) matches the merchant, the note, or an item name, ignoring case. `%` and `_` in `q` are taken literally. `month` must be `YYYY-MM`.
