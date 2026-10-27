@@ -1,22 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
-import { useState, useSyncExternalStore, type ComponentType, type ReactNode } from "react";
+import { useState, type ComponentType, type ReactNode } from "react";
 import { Platform, Pressable, ScrollView, Share, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { InfoSheet } from "@/components/InfoSheet";
-import { OptionSheet } from "@/components/OptionSheet";
 import { Toggle } from "@/components/Toggle";
 import { useAuth } from "@/lib/auth";
 import { exportTransactionsCsv, getMe, getSettings, patchSettings, type UserSettings } from "@/lib/client";
-import {
-  getThemePreference,
-  setThemePreference,
-  subscribeThemePreference,
-  themeLabel,
-  themePreferences,
-} from "@/lib/themePreference";
 import { useTheme } from "@/theme/Theme";
 import { categories, categoryLabels } from "@/theme/tokens";
 import Bell from "../../../assets/svg/settings-bell.svg";
@@ -29,12 +21,11 @@ import Help from "../../../assets/svg/settings-help.svg";
 import Info from "../../../assets/svg/settings-info.svg";
 import Lock from "../../../assets/svg/settings-lock.svg";
 import Receipt from "../../../assets/svg/settings-receipt.svg";
-import Sun from "../../../assets/svg/settings-sun.svg";
 import Tag from "../../../assets/svg/settings-tag.svg";
 import Target from "../../../assets/svg/settings-target.svg";
 
 type Icon = ComponentType<{ width?: number; height?: number }>;
-type Sheet = "categories" | "help" | "privacy" | "theme" | null;
+type Sheet = "categories" | "help" | "privacy" | null;
 
 const HELP = [
   "Tap + to snap a receipt or type a sentence like “kopi 25rb”.",
@@ -121,7 +112,6 @@ export default function SettingsScreen() {
   const [sheet, setSheet] = useState<Sheet>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
-  const preference = useSyncExternalStore(subscribeThemePreference, getThemePreference, getThemePreference);
 
   const me = useQuery({ queryKey: ["me", session?.userId], queryFn: getMe, enabled: Boolean(session) });
   const settingsKey = ["settings", session?.userId];
@@ -202,7 +192,6 @@ export default function SettingsScreen() {
         <Group title="Preferences">
           <Row icon={Coin} title="Currency" value="IDR (Rp)" />
           <Row icon={Globe} title="Language" value="English" />
-          <Row icon={Sun} title="Theme" value={themeLabel(preference)} onPress={() => setSheet("theme")} />
           <Row
             last
             icon={Bell}
@@ -249,17 +238,6 @@ export default function SettingsScreen() {
         </Pressable>
       </ScrollView>
 
-      <OptionSheet
-        visible={sheet === "theme"}
-        title="Theme"
-        options={themePreferences.map((value) => ({ value, label: themeLabel(value) }))}
-        selected={preference}
-        onSelect={(value) => {
-          void setThemePreference(value);
-          setSheet(null);
-        }}
-        onClose={() => setSheet(null)}
-      />
       <InfoSheet
         visible={sheet === "categories"}
         title="Categories"

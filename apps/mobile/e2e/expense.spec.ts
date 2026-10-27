@@ -50,7 +50,7 @@ test("sign up stores the name and shows it in settings", async ({ page }) => {
   await expect(page.getByText(email).filter({ visible: true })).toBeVisible();
 });
 
-test("settings: switches persist, theme can change, sheets open and data exports", async ({ page }) => {
+test("settings: switches persist, sheets open and data exports", async ({ page }) => {
   const email = `e2e-settings-${Date.now()}@example.com`;
   await signUp(page, email, "Ada Lovelace");
 
@@ -77,13 +77,12 @@ test("settings: switches persist, theme can change, sheets open and data exports
   await expect(sw("Auto-read receipts")).toHaveAttribute("aria-checked", "false");
   await expect(sw("Notifications")).toHaveAttribute("aria-checked", "false");
 
-  await button(page, "Theme").click();
-  await radio(page, "Dark").click();
-  await expect(page.getByText("Dark").filter({ visible: true }).first()).toBeVisible();
+  // Light only for now: there is no theme choice.
+  await expect(button(page, "Theme")).toHaveCount(0);
 
   await button(page, "Categories").click();
   await expect(page.getByText(/Groceries, Food & Drink/).filter({ visible: true })).toBeVisible();
-  await button(page, "Close").last().click();
+  await button(page, "Close").click();
 
   const download = page.waitForEvent("download");
   await button(page, "Export data").click();
