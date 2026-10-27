@@ -48,7 +48,7 @@ The Google token is used once and thrown away. The app keeps only our pair, so r
 1. **Dependencies:** `expo-auth-session`, `expo-crypto` (nonce), `expo-web-browser`. The free native Google Sign-In library has no nonce option, so both platforms use `expo-auth-session`. iOS needs a **development build** (`npx expo run:ios`) because the Google redirect scheme is registered in `app.json`.
 2. **`src/lib/google.ts`:** `signInWithGoogle()` returns `{idToken, nonce}` (iOS: code + PKCE then token exchange; web: `id_token` response). Cancelling returns `null`, not an error. Pure helpers are in `googleConfig.ts` with jest tests.
 3. **`useAuth`:** add `socialLogin("google")`: helper, then `POST /auth/social`, then `storePair`, like `login`.
-4. **Screens:** replace `comingSoon("Google sign-in")` on Login and Signup, with a busy state. The Apple button keeps "not available yet" until Apple is built.
+4. **Screens:** replace `comingSoon("Google sign-in")` on Login and Signup, with a busy state. The Apple button was removed from both screens; it comes back with the Apple work. "Continue with Google" keeps the outlined button, with the four-colour Google G (`login-google-color.svg`).
 5. **`app.json`:** plugin for Google Sign-In, the iOS URL scheme, and `ios.bundleIdentifier` (not set today; the owner chooses it before the iOS client ID is created).
 6. **Env:** `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`, `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID`.
 

@@ -17,10 +17,9 @@ import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { GoogleSignInError } from "@/lib/google";
 import { useTheme } from "@/theme/Theme";
-import Apple from "../../assets/svg/login-apple.svg";
 import ChevronLeft from "../../assets/svg/login-chevron-left.svg";
 import Eye from "../../assets/svg/login-eye.svg";
-import Google from "../../assets/svg/login-google.svg";
+import Google from "../../assets/svg/login-google-color.svg";
 import Lock from "../../assets/svg/login-lock.svg";
 import Mail from "../../assets/svg/login-mail.svg";
 import User from "../../assets/svg/signup-user.svg";
@@ -79,11 +78,6 @@ export default function SignupScreen() {
     } finally {
       setGoogleBusy(false);
     }
-  }
-
-  // Apple sign-in comes later; say so instead of failing silently.
-  function comingSoon(feature: string) {
-    setError(`${feature} is not available yet`);
   }
 
   const inputRow = [
@@ -245,14 +239,6 @@ export default function SignupScreen() {
               >
                 <Google />
                 <Text style={{ color: theme.text, ...theme.type.button2 }}>Continue with Google</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => comingSoon("Apple sign-in")}
-                style={({ pressed }) => [outlined, { opacity: pressed ? 0.6 : 1 }]}
-              >
-                <Apple />
-                <Text style={{ color: theme.text, ...theme.type.button2 }}>Continue with Apple</Text>
               </Pressable>
             </View>
 
