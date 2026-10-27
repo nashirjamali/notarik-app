@@ -374,3 +374,52 @@ test("login screen links: back to onboarding and over to sign up", async ({ page
   await page.getByRole("link", { name: "Log in" }).click();
   await expect(page.getByText("Welcome back")).toBeVisible();
 });
+
+test("onboarding: reduce motion shows the final layout at once", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const cta = button(page, "Get started");
+  await expect(cta).toBeVisible();
+  // No entrance: the buttons are fully opaque as soon as they exist.
+  await expect
+    .poll(() => cta.evaluate((node) => getComputedStyle(node.parentElement as HTMLElement).opacity))
+    .toBe("1");
+  await cta.click();
+  await expect(page.getByText("Create account").first()).toBeVisible();
+});
+
+test("onboarding: tapping the mascot and the icons plays a reaction and stays on the screen", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.getByText("Your money,").first()).toBeVisible();
+  await page.waitForTimeout(1800);
+  // Mascot, then camera and receipt icons.
+  for (const [x, y] of [
+    [195, 265],
+    [95, 160],
+    [310, 370],
+  ]) {
+    await page.mouse.click(x, y);
+    await page.waitForTimeout(150);
+  }
+  await expect(page.getByText("Your money,").first()).toBeVisible();
+  await expect(button(page, "Get started")).toBeVisible();
+  // The decorative hero is not exposed as buttons or images to a screen reader.
+  await expect(page.getByRole("button")).toHaveCount(2);
+});
+
+test("onboarding: the entrance plays again when the screen is opened again", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const cta = button(page, "Get started");
+  const opacity = () => cta.evaluate((node) => getComputedStyle(node.parentElement as HTMLElement).opacity);
+  await expect.poll(opacity, { timeout: 8000 }).toBe("1");
+
+  await cta.click();
+  await expect(page.getByText("Create your account").first()).toBeVisible();
+  await button(page, "Back").click();
+
+  // Coming back starts the entrance from the beginning, so the buttons are not fully shown at first.
+  await expect.poll(async () => Number(await opacity()), { timeout: 3000 }).toBeLessThan(1);
+  await expect.poll(opacity, { timeout: 8000 }).toBe("1");
+});
