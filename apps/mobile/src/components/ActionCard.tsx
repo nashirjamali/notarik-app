@@ -1,6 +1,7 @@
 import { View, Text, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 import { useTheme } from '@/theme/Theme';
-import ArrowIcon from '../../assets/svg/icon-arrow-up-right.svg';
+import ArrowLight from '../../assets/svg/icon-arrow-up-right.svg';
+import ArrowDark from '../../assets/svg/icon-arrow-up-right-dark.svg';
 
 interface ActionCardProps {
   title: string;
@@ -13,55 +14,46 @@ interface ActionCardProps {
 
 export function ActionCard({ title, subtitle, icon, variant, onPress, style }: ActionCardProps) {
   const theme = useTheme();
-  
-  const backgroundColor = variant === 'primary' ? theme.accent : theme.bg;
-  const textColor = variant === 'primary' ? theme.accentText : theme.text;
-  const subtitleColor = variant === 'primary' ? theme.accentText : theme.muted;
-  const arrowColor = variant === 'primary' ? theme.accentText : '#141718';
-  const iconCircleBg = variant === 'primary' ? 'rgba(255, 255, 255, 0.2)' : theme.surface;
-  
+  const primary = variant === 'primary';
+
   return (
     <Pressable
+      accessibilityRole="button"
       onPress={onPress}
       style={[
         styles.card,
         {
-          backgroundColor,
+          backgroundColor: primary ? theme.accent : theme.bg,
           borderRadius: theme.radius[24],
-          padding: theme.spacing[16],
         },
         style,
       ]}
     >
       <View style={styles.header}>
-        <View style={[
-          styles.iconCircle,
-          { backgroundColor: iconCircleBg, borderRadius: 24 }
-        ]}>
+        <View
+          style={[
+            styles.iconCircle,
+            { backgroundColor: primary ? theme.glass : theme.surface },
+          ]}
+        >
           {icon}
         </View>
-        <View style={styles.arrowContainer}>
-          <ArrowIcon width={20} height={20} color={arrowColor} />
-        </View>
+        {primary ? <ArrowLight /> : <ArrowDark />}
       </View>
-      
+
       <View style={styles.content}>
-        <Text style={[
-          styles.title,
-          {
-            color: textColor,
-            ...theme.type.body1Bold,
-          }
-        ]}>
+        <Text style={[{ color: primary ? theme.accentText : theme.text, ...theme.type.body1Bold }]}>
           {title}
         </Text>
-        <Text style={[
-          styles.subtitle,
-          {
-            color: subtitleColor,
-            ...theme.type.caption,
-          }
-        ]}>
+        <Text
+          style={[
+            {
+              color: primary ? theme.accentText : theme.muted,
+              ...theme.type.captionSmall,
+            },
+            primary && styles.onAccentSubtitle,
+          ]}
+        >
           {subtitle}
         </Text>
       </View>
@@ -72,7 +64,12 @@ export function ActionCard({ title, subtitle, icon, variant, onPress, style }: A
 const styles = StyleSheet.create({
   card: {
     flex: 1,
-    minHeight: 200,
+    height: 224,
+    justifyContent: 'space-between',
+    overflow: 'hidden',
+    paddingTop: 16,
+    paddingBottom: 18,
+    paddingHorizontal: 16,
   },
   header: {
     flexDirection: 'row',
@@ -82,23 +79,15 @@ const styles = StyleSheet.create({
   iconCircle: {
     width: 48,
     height: 48,
+    borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  arrowContainer: {
-    width: 20,
-    height: 20,
-  },
   content: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    gap: 8,
-    marginTop: 16,
+    gap: 6,
   },
-  title: {
-    fontWeight: '600',
-  },
-  subtitle: {
-    fontWeight: '400',
+  // Figma: white at 95% on the purple card.
+  onAccentSubtitle: {
+    opacity: 0.95,
   },
 });
