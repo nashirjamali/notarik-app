@@ -10,3 +10,12 @@ export function groupByDay<T extends { date: string }>(rows: T[]): { date: strin
   }
   return groups;
 }
+
+export function groupWithTotals<T extends { date: string; total_minor: number }>(
+  rows: T[],
+): { date: string; total: number; items: T[] }[] {
+  return groupByDay(rows).map((group) => ({
+    ...group,
+    total: group.items.reduce((sum, item) => sum + item.total_minor, 0),
+  }));
+}

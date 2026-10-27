@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 
 import { api } from "@/lib/api";
 import type { components } from "@/lib/schema";
-import type { ReceiptFile, ReceiptRun, TransactionInput } from "@/lib/types";
+import type { Budget, CategoryBudget, ReceiptFile, ReceiptRun, Recap, TransactionInput } from "@/lib/types";
 
 type Schemas = components["schemas"];
 
@@ -44,12 +44,14 @@ export function getMe() {
 export function listTransactions(query: {
   month?: string;
   category?: Schemas["TransactionRead"]["category"];
+  q?: string;
   cursor?: string | null;
   limit?: number;
 }) {
   const params = new URLSearchParams();
   if (query.month) params.set("month", query.month);
   if (query.category) params.set("category", query.category);
+  if (query.q?.trim()) params.set("q", query.q.trim());
   if (query.cursor) params.set("cursor", query.cursor);
   if (query.limit) params.set("limit", String(query.limit));
   const queryString = params.toString();
@@ -99,4 +101,27 @@ export function confirmReceipt(id: string, body: TransactionInput) {
     `/receipts/${id}/confirm`,
     { method: "POST", body: JSON.stringify(body) },
   );
+}
+
+export function getRecap(month: string) {
+  return api<Recap>(`/recap?month=${month}`);
+}
+
+export function getBudget(month: string) {
+  return api<Budget>(`/budget?month=${month}`);
+}
+
+export function putBudget(month: string, totalMinor: number) {
+  return api<Budget>("/budget", { method: "PUT", body: JSON.stringify({ month, total_minor: totalMinor }) });
+}
+
+export function getCategoryBudgets(month: string) {
+  return api<CategoryBudget[]>(`/budget/categories?month=${month}`);
+}
+
+export function putCategoryBudget(month: string, category: CategoryBudget["category"], totalMinor: number | null) {
+  return api<CategoryBudget[]>("/budget/categories", {
+    method: "PUT",
+    body: JSON.stringify({ month, category, total_minor: totalMinor }),
+  });
 }

@@ -32,3 +32,43 @@ export type ReceiptRun = {
 };
 
 export type ReceiptFile = { uri: string; name: string; mimeType: string };
+
+export type PaymentMethod = NonNullable<Transaction["payment_method"]>;
+
+export const paymentMethods: PaymentMethod[] = [
+  "Cash",
+  "QRIS",
+  "Debit card",
+  "Credit card",
+  "E-wallet",
+  "Bank transfer",
+  "Other",
+];
+
+export type Recap = {
+  month: string;
+  total_minor: number;
+  count: number;
+  previous_total_minor: number;
+  insight: { category: Transaction["category"]; change_percent: number; text: string } | null;
+  categories: { category: Transaction["category"]; total_minor: number; count: number; share: number }[];
+};
+
+export type Budget = {
+  month: string;
+  limit_minor: number | null;
+  spent_minor: number;
+  remaining_minor: number | null;
+  percent_used: number;
+  status: "unset" | "on-track" | "near-limit" | "over";
+  label: string;
+  days_left: number;
+};
+
+export type CategoryBudget = {
+  category: Transaction["category"];
+  spent_minor: number;
+  limit_minor: number | null;
+  over_minor: number | null;
+  percent_used: number | null;
+};
