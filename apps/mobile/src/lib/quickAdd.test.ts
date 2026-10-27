@@ -1,4 +1,4 @@
-import { guessCategory, parseQuickAdd } from "@/lib/quickAdd";
+import { guessCategory, MAX_ROWS, parseMany, parseQuickAdd, splitEntries } from "@/lib/quickAdd";
 
 const TODAY = "2026-10-27";
 
@@ -54,5 +54,98 @@ describe("guessCategory", () => {
     expect(guessCategory("belanja bulanan")).toBe("Groceries");
     expect(guessCategory("ke bank")).toBe("Other");
     expect(guessCategory("tasting")).toBe("Other");
+  });
+});
+
+describe("splitEntries", () => {
+  const cases: [string, string[]][] = [
+    ["kopi 25rb, nasi goreng 30rb, parkir 5rb", ["kopi 25rb", "nasi goreng 30rb", "parkir 5rb"]],
+    ["kopi 25rb; teh 5rb", ["kopi 25rb", "teh 5rb"]],
+    ["kopi 25rb\nparkir 5rb", ["kopi 25rb", "parkir 5rb"]],
+    ["kopi 25rb\r\nparkir 5rb", ["kopi 25rb", "parkir 5rb"]],
+    ["kopi 25rb + parkir 5rb", ["kopi 25rb", "parkir 5rb"]],
+    ["kopi 25rb,teh 5rb", ["kopi 25rb", "teh 5rb"]],
+    ["bayar kos 1,5jt", ["bayar kos 1,5jt"]],
+    ["bensin 25,000, kopi 18k", ["bensin 25,000", "kopi 18k"]],
+    ["kopi 25rb nasi goreng 30rb", ["kopi 25rb", "nasi goreng 30rb"]],
+    ["kopi 25rb nasi goreng 30rb parkir 5rb", ["kopi 25rb", "nasi goreng 30rb", "parkir 5rb"]],
+    ["kopi 25.000 nasi 30.000", ["kopi 25.000", "nasi 30.000"]],
+    ["2 nasi goreng 30rb teh 5rb", ["2 nasi goreng 30rb", "teh 5rb"]],
+    ["makan siang 35rb di warteg", ["makan siang 35rb di warteg"]],
+    ["kopi 25rb di starbucks nasi goreng 30rb", ["kopi 25rb di starbucks nasi goreng 30rb"]],
+    ["Indomaret, 187rb", ["Indomaret 187rb"]],
+    ["kopi 25rb,  ,teh 5rb", ["kopi 25rb", "teh 5rb"]],
+    ["  ", []],
+    ["", []],
+    [",,;;", []],
+    ["--- ,  ...", []],
+    ["makan di warteg", ["makan di warteg"]],
+  ];
+
+  it.each(cases)("splits %j", (input, expected) => {
+    expect(splitEntries(input)).toEqual(expected);
+  });
+
+  it("does not cap the pieces", () => {
+    const text = Array.from({ length: 30 }, (_, index) => `item${index} ${index + 1}rb`).join(", ");
+    expect(splitEntries(text)).toHaveLength(30);
+  });
+});
+
+describe("parseMany", () => {
+  it("parses each piece on its own", () => {
+    const rows = parseMany("kopi 25rb, nasi goreng 30rb di warteg, parkir 5rb", TODAY);
+    expect(rows).toEqual([
+      { total: 25000, merchant: null, description: "Kopi", category: "Dining", date: TODAY },
+      { total: 30000, merchant: "Warteg", description: "Nasi goreng", category: "Dining", date: TODAY },
+      { total: 5000, merchant: null, description: "Parkir", category: "Transport", date: TODAY },
+    ]);
+  });
+
+  it("gives one row for one expense, the same as parseQuickAdd", () => {
+    const text = "makan siang 35rb di warteg";
+    expect(parseMany(text, TODAY)).toEqual([parseQuickAdd(text, TODAY)]);
+  });
+
+  it("never copies a place from one row to another", () => {
+    const rows = parseMany("nasi 20rb, teh 5rb di warteg", TODAY);
+    expect(rows[0].merchant).toBeNull();
+    expect(rows[1].merchant).toBe("Warteg");
+  });
+
+  it("shares a date word at the very start with rows that have none", () => {
+    const rows = parseMany("kemarin kopi 25rb, parkir 5rb", TODAY);
+    expect(rows.map((row) => row.date)).toEqual(["2026-10-26", "2026-10-26"]);
+  });
+
+  it("keeps a date word inside one row to that row", () => {
+    const rows = parseMany("kopi 25rb, kemarin parkir 5rb", TODAY);
+    expect(rows.map((row) => row.date)).toEqual([TODAY, "2026-10-26"]);
+  });
+
+  it("keeps a row without an amount, with a null total", () => {
+    const rows = parseMany("kopi 25rb, makan di warteg", TODAY);
+    expect(rows).toHaveLength(2);
+    expect(rows[1].total).toBeNull();
+    expect(rows[1].merchant).toBe("Warteg");
+  });
+
+  it("returns no rows for empty input", () => {
+    expect(parseMany("", TODAY)).toEqual([]);
+    expect(parseMany("  , ; ", TODAY)).toEqual([]);
+  });
+
+  it("caps the rows at MAX_ROWS", () => {
+    const text = Array.from({ length: MAX_ROWS + 5 }, (_, index) => `item${index} ${index + 1}rb`).join(", ");
+    expect(parseMany(text, TODAY)).toHaveLength(MAX_ROWS);
+  });
+
+  it("reads Indonesian and English lines together", () => {
+    const rows = parseMany("lunch at the cafe 50k\ngrab 24rb\nbayar listrik 350.000", TODAY);
+    expect(rows.map((row) => [row.total, row.category])).toEqual([
+      [50000, "Dining"],
+      [24000, "Transport"],
+      [350000, "Bills"],
+    ]);
   });
 });
