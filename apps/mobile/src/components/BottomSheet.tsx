@@ -18,16 +18,20 @@ import { keyboardCover, sheetMaxHeight, shouldCloseOnPull } from "@/lib/sheet";
 import { useTheme } from "@/theme/Theme";
 import Close from "../../assets/svg/sheet-x.svg";
 
+/** What a sheet's content can call: `close` slides the sheet away and then calls `onClosed`. */
+export type SheetApi = { close: () => void };
+type Slot = ReactNode | ((api: SheetApi) => ReactNode);
+
 type Props = {
   title: string;
   subtitle?: string;
   /** Called once the sheet has slid away. Leave the screen here. */
   onClosed: () => void;
   /** The sticky bar under the content, usually the Save button. */
-  footer?: ReactNode;
+  footer?: Slot;
   /** The space between the content blocks. */
   gap?: number;
-  children: ReactNode;
+  children: Slot;
 };
 
 /**
@@ -105,6 +109,8 @@ export function BottomSheet({ title, subtitle, onClosed, footer, gap = 20, child
   );
 
   const close = () => setClosing(true);
+  const api: SheetApi = { close };
+  const slot = (value: Slot) => (typeof value === "function" ? value(api) : value);
 
   return (
     <View style={styles.root}>
@@ -158,7 +164,7 @@ export function BottomSheet({ title, subtitle, onClosed, footer, gap = 20, child
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {children}
+            {slot(children)}
           </ScrollView>
           {footer ? (
             <View
@@ -167,7 +173,7 @@ export function BottomSheet({ title, subtitle, onClosed, footer, gap = 20, child
                 { backgroundColor: theme.surface, paddingBottom: keyboard > 0 ? 12 : Math.max(insets.bottom, 0) + 24 },
               ]}
             >
-              {footer}
+              {slot(footer)}
             </View>
           ) : null}
         </Animated.View>
