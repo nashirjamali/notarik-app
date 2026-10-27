@@ -260,3 +260,80 @@ def test_receipt_confirm_with_an_invalid_total_is_a_422(api_client, make_user, r
             json={"merchant": "x", "date": "2099-01-01", "total_minor": 5000},
         )
         assert future.status_code == 422
+
+
+def test_a_confirmed_receipt_links_its_image_to_the_transaction(api_client, make_user, receipt_dir):
+    with api_client(make_user()) as client:
+        run_id = client.post("/receipts", files={"file": ("receipt.png", PNG, "image/png")}).json()["id"]
+        client.post(
+            f"/receipts/{run_id}/confirm",
+            json={"merchant": "Warung", "date": "2026-10-17", "total_minor": 25000, "category": "Dining"},
+        )
+        saved = client.get("/transactions", params={"month": "2026-10"}).json()["items"][0]
+        assert saved["receipt_run_id"] == run_id
+        assert saved["source"] == "photo"
+        image = client.get(f"/receipts/{saved['receipt_run_id']}/image")
+        assert image.status_code == 200
+        assert image.content == PNG
+
+
+def test_category_budgets_can_be_set_changed_and_removed(api_client, make_user, receipt_dir):
+    with api_client(make_user()) as client:
+        _expense(client, "Warteg", 0, 120_000)
+        _expense(client, "Bus", 0, 30_000, "Transport")
+        from app.core.clock import today_jakarta
+
+        month = today_jakarta().strftime("%Y-%m")
+        rows = {row["category"]: row for row in client.get(f"/budget/categories?month={month}").json()}
+        assert rows["Dining"]["limit_minor"] is None and rows["Dining"]["over_minor"] is None
+        put = client.put("/budget/categories", json={"month": month, "category": "Dining", "total_minor": 100_000})
+        assert put.status_code == 200, put.text
+        dining = next(row for row in put.json() if row["category"] == "Dining")
+        assert (dining["spent_minor"], dining["limit_minor"], dining["over_minor"], dining["percent_used"]) == (
+            120_000,
+            100_000,
+            20_000,
+            120,
+        )
+        # A category with a limit but no spending still shows up.
+        added = client.put("/budget/categories", json={"month": month, "category": "Bills", "total_minor": 500_000})
+        bills = next(row for row in added.json() if row["category"] == "Bills")
+        assert (bills["spent_minor"], bills["percent_used"], bills["over_minor"]) == (0, 0, 0)
+        # Biggest spender first.
+        assert [row["category"] for row in added.json()][0] == "Dining"
+        cleared = client.put("/budget/categories", json={"month": month, "category": "Dining", "total_minor": None})
+        assert next(row for row in cleared.json() if row["category"] == "Dining")["limit_minor"] is None
+        assert client.put("/budget/categories", json={"month": month, "category": "Nope", "total_minor": 5}).status_code == 422
+        assert client.put("/budget/categories", json={"month": month, "category": "Dining", "total_minor": -1}).status_code == 422
+        assert client.put("/budget/categories", json={"month": "2026-13", "category": "Dining", "total_minor": 1}).status_code == 422
+
+
+def test_budget_reports_days_left_and_the_recap_compares_with_last_month(api_client, make_user, receipt_dir):
+    from datetime import timedelta
+
+    from app.core.clock import today_jakarta
+
+    today = today_jakarta()
+    this_month = today.strftime("%Y-%m")
+    with api_client(make_user()) as client:
+        body = client.get(f"/budget?month={this_month}").json()
+        assert body["days_left"] >= 0
+        assert client.get("/budget?month=2020-01").json()["days_left"] == 0
+        assert client.get("/budget?month=2099-01").json()["days_left"] == 31
+
+        first_of_last_month = (today.replace(day=1) - timedelta(days=1)).replace(day=1)
+        for merchant, amount in (("Warteg", 200_000), ("Kopi", 100_000)):
+            response = client.post(
+                "/transactions",
+                json={"merchant": merchant, "date": first_of_last_month.isoformat(), "total_minor": amount, "category": "Dining"},
+            )
+            assert response.status_code == 201, response.text
+        _expense(client, "Warteg", 0, 150_000)
+        recap = client.get(f"/recap?month={this_month}").json()
+        assert recap["total_minor"] == 150_000
+        assert recap["previous_total_minor"] == 300_000
+        assert recap["insight"] == {
+            "category": "Dining",
+            "change_percent": -50,
+            "text": "Food is down 50% vs last month. Nice!",
+        }

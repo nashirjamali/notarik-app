@@ -328,6 +328,23 @@
             }
           },
           {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
             "name": "cursor",
             "in": "query",
             "required": false,
@@ -1034,6 +1051,117 @@
         }
       }
     },
+    "/budget/categories": {
+      "get": {
+        "tags": [
+          "recap"
+        ],
+        "summary": "Read Category Budgets",
+        "operationId": "read_category_budgets_budget_categories_get",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Month"
+            }
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "recap"
+        ],
+        "summary": "Write Category Budget",
+        "operationId": "write_category_budget_budget_categories_put",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CategoryBudgetBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/projection": {
       "get": {
         "tags": [
@@ -1239,6 +1367,7 @@
           },
           "total_minor": {
             "type": "integer",
+            "maximum": 10000000000000.0,
             "minimum": 0.0,
             "title": "Total Minor"
           }
@@ -1249,6 +1378,45 @@
           "total_minor"
         ],
         "title": "BudgetBody"
+      },
+      "CategoryBudgetBody": {
+        "properties": {
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "Groceries",
+              "Dining",
+              "Transport",
+              "Shopping",
+              "Bills",
+              "Other"
+            ],
+            "title": "Category"
+          },
+          "total_minor": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000000000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total Minor"
+          }
+        },
+        "type": "object",
+        "required": [
+          "month",
+          "category"
+        ],
+        "title": "CategoryBudgetBody"
       },
       "ChatBody": {
         "properties": {
@@ -1316,6 +1484,7 @@
           },
           "line_total_minor": {
             "type": "integer",
+            "maximum": 10000000000000.0,
             "minimum": 0.0,
             "title": "Line Total Minor"
           }
@@ -1476,6 +1645,7 @@
           },
           "total_minor": {
             "type": "integer",
+            "maximum": 10000000000000.0,
             "minimum": 0.0,
             "title": "Total Minor"
           },
@@ -1501,6 +1671,26 @@
             ],
             "title": "Source",
             "default": "manual"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "Cash",
+                  "QRIS",
+                  "Debit card",
+                  "Credit card",
+                  "E-wallet",
+                  "Bank transfer",
+                  "Other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method"
           },
           "note": {
             "anyOf": [
@@ -1605,6 +1795,26 @@
             ],
             "title": "Source"
           },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "Cash",
+                  "QRIS",
+                  "Debit card",
+                  "Credit card",
+                  "E-wallet",
+                  "Bank transfer",
+                  "Other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method"
+          },
           "note": {
             "anyOf": [
               {
@@ -1615,6 +1825,18 @@
               }
             ],
             "title": "Note"
+          },
+          "receipt_run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Receipt Run Id"
           },
           "items": {
             "items": {
@@ -1638,7 +1860,9 @@
           "currency",
           "category",
           "source",
+          "payment_method",
           "note",
+          "receipt_run_id",
           "items",
           "created_at"
         ],
@@ -1675,6 +1899,7 @@
             "anyOf": [
               {
                 "type": "integer",
+                "maximum": 10000000000000.0,
                 "minimum": 0.0
               },
               {
@@ -1718,6 +1943,26 @@
               }
             ],
             "title": "Source"
+          },
+          "payment_method": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "Cash",
+                  "QRIS",
+                  "Debit card",
+                  "Credit card",
+                  "E-wallet",
+                  "Bank transfer",
+                  "Other"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Payment Method"
           },
           "note": {
             "anyOf": [
@@ -1841,7 +2086,9 @@
           "total_minor": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "integer",
+                "maximum": 10000000000000.0,
+                "minimum": 0.0
               },
               {
                 "type": "null"

@@ -263,6 +263,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/budget/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Category Budgets */
+        get: operations["read_category_budgets_budget_categories_get"];
+        /** Write Category Budget */
+        put: operations["write_category_budget_budget_categories_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projection": {
         parameters: {
             query?: never;
@@ -329,6 +347,18 @@ export interface components {
             month: string;
             /** Total Minor */
             total_minor: number;
+        };
+        /** CategoryBudgetBody */
+        CategoryBudgetBody: {
+            /** Month */
+            month: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "Groceries" | "Dining" | "Transport" | "Shopping" | "Bills" | "Other";
+            /** Total Minor */
+            total_minor?: number | null;
         };
         /** ChatBody */
         ChatBody: {
@@ -431,6 +461,8 @@ export interface components {
              * @enum {string}
              */
             source: "photo" | "pdf" | "manual" | "chat";
+            /** Payment Method */
+            payment_method?: ("Cash" | "QRIS" | "Debit card" | "Credit card" | "E-wallet" | "Bank transfer" | "Other") | null;
             /** Note */
             note?: string | null;
             /** Items */
@@ -471,8 +503,12 @@ export interface components {
              * @enum {string}
              */
             source: "photo" | "pdf" | "manual" | "chat";
+            /** Payment Method */
+            payment_method: ("Cash" | "QRIS" | "Debit card" | "Credit card" | "E-wallet" | "Bank transfer" | "Other") | null;
             /** Note */
             note: string | null;
+            /** Receipt Run Id */
+            receipt_run_id: string | null;
             /** Items */
             items: components["schemas"]["ItemRead"][];
             /**
@@ -493,6 +529,8 @@ export interface components {
             category?: ("Groceries" | "Dining" | "Transport" | "Shopping" | "Bills" | "Other") | null;
             /** Source */
             source?: ("photo" | "pdf" | "manual" | "chat") | null;
+            /** Payment Method */
+            payment_method?: ("Cash" | "QRIS" | "Debit card" | "Credit card" | "E-wallet" | "Bank transfer" | "Other") | null;
             /** Note */
             note?: string | null;
             /** Items */
@@ -732,6 +770,7 @@ export interface operations {
             query?: {
                 month?: string | null;
                 category?: ("Groceries" | "Dining" | "Transport" | "Shopping" | "Bills" | "Other") | null;
+                q?: string | null;
                 cursor?: string | null;
                 limit?: number;
             };
@@ -1148,6 +1187,74 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["BudgetBody"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_category_budgets_budget_categories_get: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    write_category_budget_budget_categories_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryBudgetBody"];
             };
         };
         responses: {

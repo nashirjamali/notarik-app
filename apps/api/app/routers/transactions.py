@@ -1,10 +1,10 @@
-from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.engine import Connection
 
+from app.core.validation import parse_month
 from app.dependencies import current_user, user_connection
 from app.schemas.transaction import (
     Category,
@@ -32,17 +32,8 @@ def _not_found() -> HTTPException:
     )
 
 
-def parse_month(value: str | None):
-    if value is None:
-        return None
-    try:
-        parsed = datetime.strptime(value, "%Y-%m").date()
-    except ValueError:
-        raise HTTPException(
-            status_code=422,
-            detail={"code": "validation_error", "message": "month must be YYYY-MM"},
-        )
-    return parsed
+def _month_or_none(value: str | None):
+    return None if value is None else parse_month(value)
 
 
 @router.post("", response_model=TransactionRead, status_code=201)
@@ -60,6 +51,7 @@ def list_rows(
     user_id: UUID = Depends(current_user),
     month: Annotated[str | None, Query()] = None,
     category: Category | None = None,
+    q: Annotated[str | None, Query(max_length=100)] = None,
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
 ):
@@ -76,8 +68,9 @@ def list_rows(
         connection,
         user_id=user_id,
         limit=limit,
-        month=parse_month(month),
+        month=_month_or_none(month),
         category=category,
+        search=q,
         cursor=decoded,
     )
     return TransactionPage(items=items, next_cursor=next_cursor)

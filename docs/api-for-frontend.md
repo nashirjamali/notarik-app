@@ -81,6 +81,15 @@ Step messages, in order: Preparing the receipt, Reading receipt, Checking totals
 
 Receipt text is data. Show item names as text. Do not treat them as instructions.
 
+## Transactions list, details and search
+
+`GET /transactions` is ordered by the day the expense happened (`date`), newest first, then by when it was entered. So an expense typed in today for last week sits with last week. Paging uses `next_cursor` as before; a cursor from an older build is `422`. New query parameter `q` (at most 100 characters) matches the merchant, the note, or an item name, ignoring case. `%` and `_` in `q` are taken literally. `month` must be `YYYY-MM`.
+
+A transaction now also has:
+- `payment_method`: `Cash`, `QRIS`, `Debit card`, `Credit card`, `E-wallet`, `Bank transfer`, `Other`, or `null`. Send it on create, or with `PATCH` (`null` clears it).
+- `receipt_run_id`: the receipt run it came from, or `null`. Fetch the picture with `GET /receipts/{receipt_run_id}/image` and the bearer token.
+- `note` (see above) and `created_at`, which the app shows as the time of day.
+
 ## Home: recap, budget, projection (step 16)
 
 All three take `month=YYYY-MM`. The expense `date` is a calendar date, so a late night does not move it into another month. "Today" for the projection uses Asia/Jakarta.
@@ -93,13 +102,15 @@ All three take `month=YYYY-MM`. The expense `date` is a calendar date, so a late
   "currency": "IDR",
   "total_minor": 25000,
   "count": 1,
+  "previous_total_minor": 40000,
+  "insight": { "category": "Dining", "change_percent": -12, "text": "Food is down 12% vs last month. Nice!" },
   "categories": [
     { "category": "Dining", "total_minor": 25000, "count": 1, "share": 1 }
   ]
 }
 ```
 
-Categories with no spend are omitted. `share` is `0..1`.
+Categories with no spend are omitted. `share` is `0..1`. `previous_total_minor` and `insight` compare with last month. For the current month that means the same number of days so far, so a half-finished month is not set against a whole one. `insight` is the biggest move (5% or more, on a category that had at least Rp 50.000 last month) or `null`; show `text` as is.
 
 `GET /budget?month=2026-10` and `PUT /budget` with `{ "month": "2026-10", "total_minor": 100000 }`.
 
@@ -116,7 +127,15 @@ Categories with no spend are omitted. `share` is `0..1`.
 }
 ```
 
-`limit_minor` is `null` when unset (`status` `unset`, `label` `No budget`). Otherwise `status` is `on-track` (under 80%), `near-limit` (80–100), or `over` (above 100). Show `label` as text next to the color.
+`days_left` is the days left in the month in Asia/Jakarta (0 for a past month, the whole month for a future one). `limit_minor` is `null` when unset (`status` `unset`, `label` `No budget`). Otherwise `status` is `on-track` (under 80%), `near-limit` (80–100), or `over` (above 100). Show `label` as text next to the color.
+
+`GET /budget/categories?month=2026-10` lists every category that has spending or a limit that month, biggest spender first:
+
+```json
+[{ "category": "Groceries", "spent_minor": 816000, "limit_minor": 750000, "over_minor": 66000, "percent_used": 109 }]
+```
+
+`limit_minor`, `over_minor` and `percent_used` are `null` when the category has no limit. `PUT /budget/categories` with `{ "month": "2026-10", "category": "Dining", "total_minor": 1000000 }` sets a limit (`null` removes it) and returns the same list.
 
 `GET /projection?month=2026-10`
 

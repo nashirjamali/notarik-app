@@ -206,3 +206,31 @@ def test_periods_for_week_month_and_named_months():
     assert (default.label, str(default.start)) == ("this month", "2026-10-01")
     january = resolve_period("last month", date(2026, 1, 15))
     assert (str(january.start), str(january.end)) == ("2025-12-01", "2026-01-01")
+
+
+def test_recap_insight_picks_the_biggest_meaningful_move():
+    from app.services.recap import _insight
+
+    previous = {"Dining": (1_000_000, 10), "Groceries": (400_000, 4), "Bills": (10_000, 1)}
+    current = {"Dining": (880_000, 9), "Groceries": (600_000, 5), "Bills": (500_000, 1)}
+    # Bills moved most, but its base is too small to compare with.
+    assert _insight(current, previous) == {
+        "category": "Groceries",
+        "change_percent": 50,
+        "text": "Groceries is up 50% vs last month.",
+    }
+    assert _insight({"Dining": (960_000, 9)}, {"Dining": (1_000_000, 10)}) is None  # -4%: not worth saying
+    assert _insight({"Dining": (500, 1)}, {}) is None
+
+
+def test_days_left_and_the_like_for_like_window():
+    from app.services.recap import _previous_window, days_left
+
+    assert days_left("2026-10", date(2026, 10, 22)) == 9
+    assert days_left("2026-10", date(2026, 10, 31)) == 0
+    assert days_left("2026-10", date(2026, 11, 3)) == 0
+    assert days_left("2026-10", date(2026, 9, 3)) == 31
+    # Midway through October is compared with the first 22 days of September, not all of it.
+    assert _previous_window("2026-10", date(2026, 10, 22)) == (date(2026, 9, 1), date(2026, 9, 23))
+    assert _previous_window("2026-03", date(2026, 3, 31)) == (date(2026, 2, 1), date(2026, 3, 1))
+    assert _previous_window("2026-09", date(2026, 10, 22)) == (date(2026, 8, 1), date(2026, 9, 1))
