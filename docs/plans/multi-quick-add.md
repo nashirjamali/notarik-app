@@ -1,6 +1,6 @@
 # Plan: Quick add with many expenses in one go
 
-Status: **decisions taken (below); step 1 built (`parseMany` in `apps/mobile/src/lib/quickAdd.ts` with tests), the rest is not.** Today Quick add (`apps/mobile/app/(app)/quick-add.tsx`) turns one sentence into one expense with `parseQuickAdd` in `apps/mobile/src/lib/quickAdd.ts`. This plan lets someone type several expenses in one box, see them as a list, and save them all at once.
+Status: **decisions taken (below); steps 1 and 2 built (`parseMany` with tests; `POST /transactions/batch` with tests), the rest is not.** Today Quick add (`apps/mobile/app/(app)/quick-add.tsx`) turns one sentence into one expense with `parseQuickAdd` in `apps/mobile/src/lib/quickAdd.ts`. This plan lets someone type several expenses in one box, see them as a list, and save them all at once.
 
 ## Decisions taken (2026-10-27)
 
@@ -91,7 +91,7 @@ The parser handles tidy lists. Messy input (`tadi beli kopi sama roti total 40rb
 |---|------|-----------|
 | 0 | Decide A/B and the open questions below | Written in this file |
 | 1 | `parseMany` and its table of phrases (**done**) | All phrases pass; `parseQuickAdd` tests untouched and green |
-| 2 | API `POST /transactions/batch` with tests, OpenAPI and `schema.ts` | `make test` green, atomic failure proven |
+| 2 | API `POST /transactions/batch` with tests, OpenAPI and `schema.ts` (**done**) | `make test` green, atomic failure proven |
 | 3 | Sheet: list preview, per-row category, remove, flagged rows, Save label | One row works as before; several rows work in the simulator |
 | 4 | Save wiring and navigation after saving | Several rows land in Transactions |
 | 5 | "Save as one expense" switch (meaning B) | Total and items correct in Details |
