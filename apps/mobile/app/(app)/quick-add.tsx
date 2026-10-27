@@ -20,11 +20,23 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, type FieldError } from "@/lib/api";
-import { createTransaction } from "@/lib/client";
+import { createTransaction, createTransactionsBatch } from "@/lib/client";
 import { formatIdr } from "@/lib/money";
-import { parseQuickAdd } from "@/lib/quickAdd";
+import { MAX_ROWS, parseQuickAdd, splitEntries } from "@/lib/quickAdd";
+import {
+  applyEdit,
+  oneExpense,
+  rowIndexFromLoc,
+  rowsFromText,
+  rowTitle,
+  toInput,
+  type Row,
+  type RowEdit,
+} from "@/lib/quickAddRows";
 import { dateLabel } from "@/lib/receipt";
 import type { TransactionInput } from "@/lib/types";
+import { OptionSheet } from "@/components/OptionSheet";
+import { QuickAddRows } from "@/features/QuickAddRows";
 import { useTheme } from "@/theme/Theme";
 import { categoryLabels, type Category } from "@/theme/tokens";
 import Close from "../../assets/svg/sheet-x.svg";
@@ -92,10 +104,25 @@ export default function QuickAddScreen() {
   const roomAbove = height - insets.top - keyboard - 12;
   const maxSheetHeight = Math.min(Math.max(height - 180, 480), roomAbove);
   const [measuredHeight, setMeasuredHeight] = useState(0);
-  const parsed = useMemo(() => parseQuickAdd(text), [text]);
+  const entries = useMemo(() => rowsFromText(text), [text]);
+  const cutOff = useMemo(() => splitEntries(text).length > MAX_ROWS, [text]);
+  const [edits, setEdits] = useState<Record<string, RowEdit>>({});
+  const [removed, setRemoved] = useState<Record<string, true>>({});
+  const [asOne, setAsOne] = useState(false);
+  const [pickingKey, setPickingKey] = useState<string | null>(null);
+  const rows = useMemo(
+    () => entries.filter((row) => !removed[row.key]).map((row) => applyEdit(row, edits[row.key])),
+    [entries, removed, edits],
+  );
+  // One expense (or none) is the single-expense sheet exactly as it was.
+  const many = rows.length > 1;
+  const missingAmount = many && rows.some((row) => row.total == null);
+  const allRemoved = entries.length > 0 && rows.length === 0;
+  const parsed = rows[0] ?? parseQuickAdd(allRemoved ? "" : text);
   const category = picked ?? parsed.category;
   const typed = text.trim().length > 0;
   const now = new Date();
+  const pickingRow = rows.find((row) => row.key === pickingKey);
 
   const save = useMutation({
     mutationFn: (input: TransactionInput) => createTransaction(input),
@@ -108,6 +135,26 @@ export default function QuickAddScreen() {
       setMessage(error instanceof ApiError ? error.message : "Could not reach the API");
     },
   });
+
+  const saveMany = useMutation({
+    mutationFn: (inputs: TransactionInput[]) => createTransactionsBatch({ transactions: inputs }),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: ["transactions"] });
+      router.replace("/(app)/(tabs)/transactions");
+    },
+    onError: (error) => {
+      setServerErrors(error instanceof ApiError ? error.details : []);
+      if (!(error instanceof ApiError)) {
+        setMessage("Could not reach the API");
+        return;
+      }
+      // The API names the row that failed ("transactions.2.total_minor"); say which one it was.
+      const detail = error.details[0];
+      const index = detail ? rowIndexFromLoc(detail.loc) : null;
+      setMessage(detail && index != null && rows[index] ? `${rowTitle(rows[index])}: ${detail.message}` : error.message);
+    },
+  });
+  const busy = save.isPending || saveMany.isPending;
 
   function leave() {
     if (router.canGoBack()) router.back();
@@ -143,8 +190,23 @@ export default function QuickAddScreen() {
   );
 
   function submit() {
-    if (save.isPending) return;
+    if (busy) return;
     setServerErrors([]);
+    if (many) {
+      if (missingAmount) {
+        setMessage("Add an amount to the highlighted expenses, or remove them");
+        return;
+      }
+      setMessage(null);
+      const complete = rows.filter((row): row is Row & { total: number } => row.total != null);
+      if (asOne) save.mutate(oneExpense(complete));
+      else saveMany.mutate(complete.map(toInput));
+      return;
+    }
+    if (allRemoved) {
+      setMessage("Nothing left to save");
+      return;
+    }
     if (parsed.total == null) {
       setMessage(typed ? "Add an amount, like 35rb or 35.000" : "Type what you spent, like “makan siang 35rb di warteg”");
       return;
@@ -161,6 +223,7 @@ export default function QuickAddScreen() {
     });
   }
 
+  const saveLabel = many ? (asOne ? "Save as one expense" : `Save ${rows.length} expenses`) : "Save expense";
   const caption = { color: theme.muted, ...theme.type.captionSmall };
   const title = parsed.merchant ?? (parsed.description || "Expense");
   const subtitle = parsed.merchant ? parsed.description || categoryLabels[category] : categoryLabels[category];
@@ -244,7 +307,16 @@ export default function QuickAddScreen() {
               ]}
             />
 
-            {typed && parsed.total != null ? (
+            {many ? (
+              <QuickAddRows
+                rows={rows}
+                asOne={asOne}
+                onAsOne={setAsOne}
+                onPickCategory={setPickingKey}
+                onRemove={(key) => setRemoved((current) => ({ ...current, [key]: true }))}
+                onAmount={(key, total) => setEdits((current) => ({ ...current, [key]: { ...current[key], total } }))}
+              />
+            ) : typed && parsed.total != null ? (
               <View style={[styles.preview, { backgroundColor: theme.bg }]}>
                 <View style={styles.label}>
                   <Mark />
@@ -292,45 +364,49 @@ export default function QuickAddScreen() {
               </Text>
             ) : null}
 
-            <View style={{ gap: 8 }}>
-              <Text style={caption}>Category</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ gap: 8, paddingRight: 24 }}
-                style={styles.chipScroll}
-              >
-                {CATEGORY_ORDER.map((name) => {
-                  const selected = name === category;
-                  const color = theme.category[name];
-                  return (
-                    <Pressable
-                      key={name}
-                      accessibilityRole="radio"
-                      accessibilityLabel={categoryLabels[name]}
-                      aria-checked={selected}
-                      onPress={() => setPicked(name)}
-                      style={[
-                        styles.category,
-                        selected
-                          ? { backgroundColor: color, borderColor: color }
-                          : { backgroundColor: theme.surface, borderColor: theme.border },
-                      ]}
-                    >
-                      <View style={[styles.dot, { backgroundColor: selected ? theme.accentText : color }]} />
-                      <Text
-                        style={{
-                          color: selected ? theme.accentText : theme.text,
-                          ...(selected ? theme.type.captionBold : theme.type.caption),
-                        }}
+            {cutOff ? <Text style={caption}>Only the first {MAX_ROWS} expenses are used.</Text> : null}
+
+            {!many ? (
+              <View style={{ gap: 8 }}>
+                <Text style={caption}>Category</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8, paddingRight: 24 }}
+                  style={styles.chipScroll}
+                >
+                  {CATEGORY_ORDER.map((name) => {
+                    const selected = name === category;
+                    const color = theme.category[name];
+                    return (
+                      <Pressable
+                        key={name}
+                        accessibilityRole="radio"
+                        accessibilityLabel={categoryLabels[name]}
+                        aria-checked={selected}
+                        onPress={() => setPicked(name)}
+                        style={[
+                          styles.category,
+                          selected
+                            ? { backgroundColor: color, borderColor: color }
+                            : { backgroundColor: theme.surface, borderColor: theme.border },
+                        ]}
                       >
-                        {categoryLabels[name]}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </ScrollView>
-            </View>
+                        <View style={[styles.dot, { backgroundColor: selected ? theme.accentText : color }]} />
+                        <Text
+                          style={{
+                            color: selected ? theme.accentText : theme.text,
+                            ...(selected ? theme.type.captionBold : theme.type.caption),
+                          }}
+                        >
+                          {categoryLabels[name]}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            ) : null}
 
             <View style={{ gap: 8 }}>
               <Text style={caption}>Or add another way</Text>
@@ -370,23 +446,36 @@ export default function QuickAddScreen() {
           <View style={[styles.bottom, { backgroundColor: theme.surface, paddingBottom: keyboard > 0 ? 12 : Math.max(insets.bottom, 0) + 24 }]}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Save expense"
-              accessibilityState={{ busy: save.isPending }}
+              accessibilityLabel={saveLabel}
+              accessibilityState={{ busy, disabled: missingAmount }}
               onPress={submit}
               style={({ pressed }) => [
                 styles.save,
-                { backgroundColor: theme.accent, opacity: save.isPending ? 0.6 : pressed ? 0.85 : 1 },
+                { backgroundColor: theme.accent, opacity: busy ? 0.6 : missingAmount ? 0.5 : pressed ? 0.85 : 1 },
               ]}
             >
-              {save.isPending ? (
+              {busy ? (
                 <ActivityIndicator color={theme.accentText} />
               ) : (
-                <Text style={{ color: theme.accentText, ...theme.type.button1 }}>Save expense</Text>
+                <Text style={{ color: theme.accentText, ...theme.type.button1 }}>{saveLabel}</Text>
               )}
             </Pressable>
           </View>
         </Animated.View>
       </View>
+      <OptionSheet<Category>
+        visible={pickingKey != null}
+        title="Category"
+        options={CATEGORY_ORDER.map((name) => ({ value: name, label: categoryLabels[name], color: theme.category[name] }))}
+        selected={pickingRow?.category}
+        onClose={() => setPickingKey(null)}
+        onSelect={(value) => {
+          if (pickingKey) {
+            setEdits((current) => ({ ...current, [pickingKey]: { ...current[pickingKey], category: value } }));
+          }
+          setPickingKey(null);
+        }}
+      />
     </View>
   );
 }
