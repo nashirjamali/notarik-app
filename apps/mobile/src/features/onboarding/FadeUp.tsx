@@ -7,12 +7,15 @@ import { ENTRANCE } from "./motion";
 export function FadeUp({
   ready,
   reduce,
+  visits,
   delay,
   style,
   children,
 }: {
   ready: boolean;
   reduce: boolean;
+  /** Changes every time the screen is opened, which replays the fade. */
+  visits: number;
   delay: number;
   style?: StyleProp<ViewStyle>;
   children: ReactNode;
@@ -25,6 +28,7 @@ export function FadeUp({
       progress.setValue(1);
       return;
     }
+    progress.setValue(0);
     const animation = Animated.timing(progress, {
       toValue: 1,
       duration: ENTRANCE.fadeMs,
@@ -34,7 +38,7 @@ export function FadeUp({
     });
     animation.start();
     return () => animation.stop();
-  }, [ready, reduce, delay, progress]);
+  }, [ready, reduce, visits, delay, progress]);
 
   return (
     <Animated.View

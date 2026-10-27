@@ -1,14 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { Animated, Easing } from "react-native";
 
-import { BLINK, ENTRANCE, eyeOffset, IDLE, leanDegrees, nextBlinkDelay, TAP } from "./motion";
+import { BLINK, ENTRANCE, eyeOffset, IDLE, isDoubleBlink, leanDegrees, nextBlinkDelay, TAP } from "./motion";
 
-type Options = { ready: boolean; reduce: boolean; active: boolean };
+type Options = {
+  ready: boolean;
+  reduce: boolean;
+  active: boolean;
+  /** Changes every time the screen is opened; each new value replays the entrance. */
+  visits: number;
+};
 
 const sine = Easing.inOut(Easing.sin);
 
 /** All the animated values of the soft circle and the mascot, plus what to call on a tap or touch. */
-export function useHeroMotion({ ready, reduce, active }: Options) {
+export function useHeroMotion({ ready, reduce, active, visits }: Options) {
   const [circle] = useState(() => new Animated.Value(0));
   const [drop] = useState(() => new Animated.Value(0));
   const [land] = useState(() => new Animated.Value(0));
@@ -21,9 +27,10 @@ export function useHeroMotion({ ready, reduce, active }: Options) {
   const [lookY] = useState(() => new Animated.Value(0));
   const [lean] = useState(() => new Animated.Value(0));
   const [nudge] = useState(() => new Animated.Value(0));
-  const [finished, setFinished] = useState(false);
+  // The visit whose entrance has finished; a new visit starts out not entered again.
+  const [finishedVisit, setFinishedVisit] = useState(0);
   // With reduce motion there is no entrance to wait for.
-  const entered = ready && (reduce || finished);
+  const entered = ready && (reduce || finishedVisit === visits);
 
   // Entrance: soft circle grows while the mascot drops, lands with a squash and settles.
   useEffect(() => {
@@ -33,6 +40,10 @@ export function useHeroMotion({ ready, reduce, active }: Options) {
       drop.setValue(1);
       return;
     }
+    // A later visit starts from the hidden state again.
+    circle.setValue(0);
+    drop.setValue(0);
+    land.setValue(0);
     const animation = Animated.parallel([
       Animated.timing(circle, {
         toValue: 1,
@@ -51,9 +62,9 @@ export function useHeroMotion({ ready, reduce, active }: Options) {
         Animated.spring(land, { toValue: 0, friction: 4, tension: 160, useNativeDriver: true }),
       ]),
     ]);
-    animation.start((result) => result.finished && setFinished(true));
+    animation.start((result) => result.finished && setFinishedVisit(visits));
     return () => animation.stop();
-  }, [ready, reduce, circle, drop, land]);
+  }, [ready, reduce, visits, circle, drop, land]);
 
   const looping = ready && !reduce && entered && active;
 
@@ -84,10 +95,14 @@ export function useHeroMotion({ ready, reduce, active }: Options) {
     let blinking: Animated.CompositeAnimation | null = null;
     const schedule = () => {
       timer = setTimeout(() => {
-        blinking = Animated.sequence([
+        const once = () => [
           Animated.timing(blink, { toValue: BLINK.closedScale, duration: BLINK.closeMs, useNativeDriver: true }),
           Animated.timing(blink, { toValue: 1, duration: BLINK.openMs, useNativeDriver: true }),
-        ]);
+        ];
+        // Now and then it blinks twice in a row.
+        blinking = Animated.sequence(
+          isDoubleBlink() ? [...once(), Animated.delay(BLINK.doubleGapMs), ...once()] : once(),
+        );
         blinking.start(({ finished }) => finished && schedule());
       }, nextBlinkDelay());
     };

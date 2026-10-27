@@ -4,6 +4,7 @@ import {
   EYES,
   eyeOffset,
   ICON_ORDER,
+  isDoubleBlink,
   leanDegrees,
   nextBlinkDelay,
   staggerDelay,
@@ -38,6 +39,15 @@ describe("nextBlinkDelay", () => {
       expect(value).toBeGreaterThanOrEqual(BLINK.minMs);
       expect(value).toBeLessThanOrEqual(BLINK.maxMs);
     }
+  });
+});
+
+describe("isDoubleBlink", () => {
+  it("is a double blink only for the lowest part of the range", () => {
+    expect(isDoubleBlink(() => 0)).toBe(true);
+    expect(isDoubleBlink(() => BLINK.doubleChance - 0.001)).toBe(true);
+    expect(isDoubleBlink(() => BLINK.doubleChance)).toBe(false);
+    expect(isDoubleBlink(() => 0.99)).toBe(false);
   });
 });
 

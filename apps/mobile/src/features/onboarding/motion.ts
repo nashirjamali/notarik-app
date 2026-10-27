@@ -47,11 +47,14 @@ export const ICON_DIRECTION: Record<IconName, { x: -1 | 1; y: -1 | 1 }> = {
 };
 
 export const BLINK = {
-  minMs: 3000,
-  maxMs: 6000,
+  minMs: 1500,
+  maxMs: 3500,
   closeMs: 60,
   openMs: 90,
   closedScale: 0.1,
+  /** Chance that a blink is followed by a second one right after it. */
+  doubleChance: 0.25,
+  doubleGapMs: 110,
 } as const;
 
 export const TAP = {
@@ -83,6 +86,11 @@ export function staggerDelay(index: number): number {
 export function nextBlinkDelay(random: () => number = Math.random): number {
   const clamped = Math.min(Math.max(random(), 0), 0.999999);
   return Math.round(BLINK.minMs + clamped * (BLINK.maxMs - BLINK.minMs));
+}
+
+/** Whether this blink is a double one; `random` is injectable so tests are deterministic. */
+export function isDoubleBlink(random: () => number = Math.random): boolean {
+  return random() < BLINK.doubleChance;
 }
 
 /**

@@ -19,6 +19,8 @@ type Props = {
   ready: boolean;
   reduce: boolean;
   active: boolean;
+  /** Changes every time the screen is opened, which replays the pop out. */
+  visits: number;
   /** True once the entrance is over, when the idle bob may start. */
   settled: boolean;
 };
@@ -39,6 +41,7 @@ export function FloatingIcon({
   ready,
   reduce,
   active,
+  visits,
   settled,
 }: Props) {
   const [enter] = useState(() => new Animated.Value(0));
@@ -52,13 +55,14 @@ export function FloatingIcon({
       enter.setValue(1);
       return;
     }
+    enter.setValue(0);
     const animation = Animated.sequence([
       Animated.delay(enterDelay),
       Animated.spring(enter, { toValue: 1, friction: 5, tension: 90, useNativeDriver: true }),
     ]);
     animation.start();
     return () => animation.stop();
-  }, [ready, reduce, enterDelay, enter]);
+  }, [ready, reduce, visits, enterDelay, enter]);
 
   const idle = ICON_IDLE[name];
   const looping = ready && !reduce && settled && active;

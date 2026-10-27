@@ -6,7 +6,6 @@ import { FloatingIcon, type Slot } from "./FloatingIcon";
 import { Mascot } from "./Mascot";
 import { ICON_ORDER, staggerDelay, type IconName } from "./motion";
 import { useHeroMotion } from "./useHeroMotion";
-import { useScreenActive } from "./useMotionState";
 
 const camera = require("../../../assets/icons/onboarding-camera.png");
 const coffee = require("../../../assets/icons/onboarding-coffee.png");
@@ -24,9 +23,19 @@ const ICONS: Record<IconName, { source: number; slot: Slot; imageSize: number; t
 };
 
 /** The hero of the onboarding screen: soft circle, mascot and four icons that move and react to touch. */
-export function OnboardingHero({ ready, reduce }: { ready: boolean; reduce: boolean }) {
-  const active = useScreenActive();
-  const motion = useHeroMotion({ ready, reduce, active });
+export function OnboardingHero({
+  ready,
+  reduce,
+  active,
+  visits,
+}: {
+  ready: boolean;
+  reduce: boolean;
+  active: boolean;
+  /** Changes every time the screen is opened, which replays the entrance. */
+  visits: number;
+}) {
+  const motion = useHeroMotion({ ready, reduce, active, visits });
   const heroRef = useRef<ComponentRef<typeof View>>(null);
   const origin = useRef({ x: 0, y: 0 });
   const [measured, setMeasured] = useState(false);
@@ -95,6 +104,7 @@ export function OnboardingHero({ ready, reduce }: { ready: boolean; reduce: bool
           ready={ready}
           reduce={reduce}
           active={active}
+          visits={visits}
           settled={motion.entered}
         />
       ))}

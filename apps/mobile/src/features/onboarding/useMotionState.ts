@@ -22,14 +22,20 @@ export function useReduceMotion(): { ready: boolean; reduce: boolean } {
   return state;
 }
 
-/** True while the screen is focused and the app is in the foreground; loops stop otherwise. */
-export function useScreenActive(): boolean {
-  const [focused, setFocused] = useState(true);
+/**
+ * `active` is true while the screen is focused and the app is in the foreground; loops stop otherwise.
+ * `visits` counts how many times the screen came into focus (1 on the first open); each new visit
+ * replays the entrance.
+ */
+export function useScreenActive(): { active: boolean; visits: number } {
+  const [focused, setFocused] = useState(false);
+  const [visits, setVisits] = useState(0);
   const [foreground, setForeground] = useState(AppState.currentState === "active");
 
   useFocusEffect(
     useCallback(() => {
       setFocused(true);
+      setVisits((count) => count + 1);
       return () => setFocused(false);
     }, []),
   );
@@ -38,5 +44,5 @@ export function useScreenActive(): boolean {
     return () => subscription.remove();
   }, []);
 
-  return focused && foreground;
+  return { active: focused && foreground, visits };
 }

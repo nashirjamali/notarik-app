@@ -4,13 +4,17 @@ import { useRouter } from 'expo-router';
 import { FadeUp } from '@/features/onboarding/FadeUp';
 import { ENTRANCE } from '@/features/onboarding/motion';
 import { OnboardingHero } from '@/features/onboarding/OnboardingHero';
-import { useReduceMotion } from '@/features/onboarding/useMotionState';
+import { useReduceMotion, useScreenActive } from '@/features/onboarding/useMotionState';
 import { useTheme } from '@/theme/Theme';
 
 export default function OnboardingScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { ready, reduce } = useReduceMotion();
+  const motion = useReduceMotion();
+  const { active, visits } = useScreenActive();
+  const reduce = motion.reduce;
+  // The entrance plays on the first focus and again every time the screen is opened.
+  const ready = motion.ready && visits > 0;
 
   return (
     <ScrollView
@@ -20,9 +24,9 @@ export default function OnboardingScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.frame, { backgroundColor: theme.surface }]}>
-        <OnboardingHero ready={ready} reduce={reduce} />
+        <OnboardingHero ready={ready} reduce={reduce} active={active} visits={visits} />
 
-        <FadeUp ready={ready} reduce={reduce} delay={ENTRANCE.copyStartMs} style={styles.copy}>
+        <FadeUp ready={ready} reduce={reduce} visits={visits} delay={ENTRANCE.copyStartMs} style={styles.copy}>
           <Text style={[styles.headline, { color: theme.text, ...theme.type.headline.hero }]}>
             Your money,{'\n'}sorted.
           </Text>
@@ -31,7 +35,7 @@ export default function OnboardingScreen() {
           </Text>
         </FadeUp>
 
-        <FadeUp ready={ready} reduce={reduce} delay={ENTRANCE.buttonsStartMs} style={styles.actions}>
+        <FadeUp ready={ready} reduce={reduce} visits={visits} delay={ENTRANCE.buttonsStartMs} style={styles.actions}>
           <Pressable
             accessibilityRole="button"
             onPress={() => router.push('/signup')}
