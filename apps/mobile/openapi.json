@@ -247,6 +247,47 @@
         }
       }
     },
+    "/auth/social": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Social",
+        "operationId": "social_auth_social_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SocialLoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPair"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/auth/refresh": {
       "post": {
         "tags": [
@@ -1793,6 +1834,34 @@
           "password"
         ],
         "title": "SignupRequest"
+      },
+      "SocialLoginRequest": {
+        "properties": {
+          "provider": {
+            "type": "string",
+            "const": "google",
+            "title": "Provider"
+          },
+          "id_token": {
+            "type": "string",
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Id Token"
+          },
+          "nonce": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Nonce"
+          }
+        },
+        "type": "object",
+        "required": [
+          "provider",
+          "id_token",
+          "nonce"
+        ],
+        "title": "SocialLoginRequest"
       },
       "TokenPair": {
         "properties": {

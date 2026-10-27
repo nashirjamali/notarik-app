@@ -15,11 +15,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { GoogleSignInError } from "@/lib/google";
 import { useTheme } from "@/theme/Theme";
-import Apple from "../../assets/svg/login-apple.svg";
 import ChevronLeft from "../../assets/svg/login-chevron-left.svg";
 import Eye from "../../assets/svg/login-eye.svg";
-import Google from "../../assets/svg/login-google.svg";
+import Google from "../../assets/svg/login-google-color.svg";
 import Lock from "../../assets/svg/login-lock.svg";
 import Mail from "../../assets/svg/login-mail.svg";
 import User from "../../assets/svg/signup-user.svg";
@@ -30,15 +30,16 @@ const MIN_PASSWORD_LENGTH = 8;
 export default function SignupScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { signup } = useAuth();
+  const { signup, loginWithGoogle } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [googleBusy, setGoogleBusy] = useState(false);
 
-  const canSubmit = email.trim().length > 0 && password.length > 0 && !submitting;
+  const canSubmit = email.trim().length > 0 && password.length > 0 && !submitting && !googleBusy;
 
   async function submit() {
     if (!canSubmit) return;
@@ -62,9 +63,21 @@ export default function SignupScreen() {
     else router.replace("/");
   }
 
-  // No backend endpoint exists yet for social sign-in; say so instead of failing silently.
-  function comingSoon(feature: string) {
-    setError(`${feature} is not available yet`);
+  async function continueWithGoogle() {
+    if (googleBusy || submitting) return;
+    setError(null);
+    setGoogleBusy(true);
+    try {
+      await loginWithGoogle();
+    } catch (caught) {
+      setError(
+        caught instanceof ApiError || caught instanceof GoogleSignInError
+          ? caught.message
+          : "Could not reach the API",
+      );
+    } finally {
+      setGoogleBusy(false);
+    }
   }
 
   const inputRow = [
@@ -219,19 +232,13 @@ export default function SignupScreen() {
 
               <Pressable
                 accessibilityRole="button"
-                onPress={() => comingSoon("Google sign-in")}
+                accessibilityState={{ disabled: googleBusy, busy: googleBusy }}
+                disabled={googleBusy}
+                onPress={() => void continueWithGoogle()}
                 style={({ pressed }) => [outlined, { opacity: pressed ? 0.6 : 1 }]}
               >
                 <Google />
                 <Text style={{ color: theme.text, ...theme.type.button2 }}>Continue with Google</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => comingSoon("Apple sign-in")}
-                style={({ pressed }) => [outlined, { opacity: pressed ? 0.6 : 1 }]}
-              >
-                <Apple />
-                <Text style={{ color: theme.text, ...theme.type.button2 }}>Continue with Apple</Text>
               </Pressable>
             </View>
 

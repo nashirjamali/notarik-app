@@ -23,6 +23,14 @@ export function login(body: Schemas["LoginRequest"]) {
   );
 }
 
+export function socialLogin(body: Schemas["SocialLoginRequest"]) {
+  return api<Schemas["TokenPair"]>(
+    "/auth/social",
+    { method: "POST", body: JSON.stringify(body) },
+    false,
+  );
+}
+
 export function refresh(body: Schemas["RefreshRequest"]) {
   return api<Schemas["TokenPair"]>(
     "/auth/refresh",

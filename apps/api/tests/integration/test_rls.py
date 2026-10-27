@@ -18,6 +18,7 @@ TABLES = (
 RLS_TABLES = TABLES + (
     "users",
     "refresh_tokens",
+    "user_identities",
     "spending_memory",
     "chat_threads",
     "chat_messages",

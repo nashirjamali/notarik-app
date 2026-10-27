@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, Field
@@ -16,6 +17,12 @@ class LoginRequest(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str = Field(min_length=1)
+
+
+class SocialLoginRequest(BaseModel):
+    provider: Literal["google"]
+    id_token: str = Field(min_length=1, max_length=4096)
+    nonce: str = Field(min_length=1, max_length=200)
 
 
 class TokenPair(BaseModel):
