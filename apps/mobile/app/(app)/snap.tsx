@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
 import { ApiError } from "@/lib/api";
-import { uploadReceipt } from "@/lib/client";
+import { getSettings, uploadReceipt } from "@/lib/client";
 import type { ReceiptFile } from "@/lib/types";
 import { useTheme } from "@/theme/Theme";
 import { light } from "@/theme/tokens";
@@ -91,6 +91,13 @@ export default function SnapReceiptScreen() {
     setBusy(true);
     setError(null);
     try {
+      // Read fresh: the switch may have just been changed in Settings.
+      const settings = await getSettings().catch(() => null);
+      if (settings && !settings.auto_read_receipts) {
+        setError("Auto-read receipts is off in Settings. Add this expense with + instead.");
+        setBusy(false);
+        return;
+      }
       const run = await uploadReceipt(file);
       router.replace(`/receipt/${run.id}`);
     } catch (caught) {
