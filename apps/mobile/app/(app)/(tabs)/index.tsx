@@ -70,42 +70,40 @@ export default function HomeScreen() {
           />
         </View>
         
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[
+        <View
+          style={[
             styles.shortcuts,
             {
               paddingHorizontal: theme.spacing[24],
-              gap: theme.spacing[16],
+              gap: theme.spacing[8],
             }
           ]}
         >
           <ShortcutTile
             label="Quick add"
             icon={require('../../../assets/icons/quick-add.png')}
-            tintColor="#E9E3F4"
+            tintColor="#F0E6FF"
             onPress={() => router.push('/quick-add')}
           />
           <ShortcutTile
             label="Recap"
             icon={require('../../../assets/icons/recap.png')}
-            tintColor="#D9EAF4"
+            tintColor="#CFE5FF"
             onPress={() => router.push('/recap')}
           />
           <ShortcutTile
             label="Budget"
             icon={require('../../../assets/icons/budget.png')}
-            tintColor="#D9F2E6"
+            tintColor="#DAFBE6"
             onPress={() => router.push('/recap')}
           />
           <ShortcutTile
             label="Transactions"
             icon={require('../../../assets/icons/transactions.png')}
-            tintColor="#FEF0DC"
+            tintColor="#F8E8C9"
             onPress={() => router.push('/(app)/transactions')}
           />
-        </ScrollView>
+        </View>
         
         <View style={styles.section}>
           <View style={[styles.sectionHeader, { paddingHorizontal: theme.spacing[24] }]}>
@@ -167,6 +165,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   shortcuts: {
+    flexDirection: 'row',
     paddingVertical: 8,
   },
   sectionLabel: {

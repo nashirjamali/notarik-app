@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet, Image, type ImageSourcePropType } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Image, Platform, type ImageSourcePropType } from 'react-native';
 import { useTheme } from '@/theme/Theme';
 
 interface ShortcutTileProps {
@@ -8,27 +8,35 @@ interface ShortcutTileProps {
   onPress?: () => void;
 }
 
+/** One of the four equal shortcuts on Home (Figma "Menu Tiles"): a 60 tile and a one line label. */
+const web = Platform.OS === 'web';
+const webLabel = { whiteSpace: 'nowrap', alignSelf: 'center' } as object;
+
 export function ShortcutTile({ label, icon, tintColor, onPress }: ShortcutTileProps) {
   const theme = useTheme();
-  
+
   return (
-    <Pressable onPress={onPress} style={styles.container}>
-      <View style={[
-        styles.iconTile,
-        {
-          backgroundColor: tintColor,
-          borderRadius: theme.radius[14],
-        }
-      ]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.container}>
+      <View
+        style={[
+          styles.iconTile,
+          {
+            backgroundColor: tintColor,
+            borderRadius: theme.radius[12],
+          },
+        ]}
+      >
         <Image source={icon} style={styles.icon} resizeMode="contain" />
       </View>
-      <Text style={[
-        styles.label,
-        {
-          color: theme.text,
-          ...theme.type.captionSmallBold,
-        }
-      ]}>
+      {/* One line, like the design. On a phone a long label shrinks a little instead of breaking; the
+          browser cannot shrink text to fit, so there it stays on one line and may reach past its column. */}
+      <Text
+        numberOfLines={web ? undefined : 1}
+        adjustsFontSizeToFit={!web}
+        minimumFontScale={0.8}
+        maxFontSizeMultiplier={1.2}
+        style={[styles.label, web && webLabel, { color: theme.text, ...theme.type.captionSmallBold }]}
+      >
         {label}
       </Text>
     </Pressable>
@@ -37,22 +45,23 @@ export function ShortcutTile({ label, icon, tintColor, onPress }: ShortcutTilePr
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    minWidth: 0,
     alignItems: 'center',
     gap: 8,
-    width: 72,
   },
   iconTile: {
-    width: 64,
-    height: 64,
+    width: 60,
+    height: 60,
     alignItems: 'center',
     justifyContent: 'center',
   },
   icon: {
-    width: 48,
-    height: 48,
+    width: 46,
+    height: 46,
   },
   label: {
+    alignSelf: 'stretch',
     textAlign: 'center',
-    fontWeight: '600',
   },
 });
