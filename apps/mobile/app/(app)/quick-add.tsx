@@ -6,7 +6,8 @@ import {
   Animated,
   Easing,
   Image,
-  KeyboardAvoidingView,
+  Keyboard,
+  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -36,6 +37,8 @@ const rice = require("../../assets/icons/3d-rice.png");
 // Web only: the accent border already shows focus, so drop the browser ring.
 const noOutline = Platform.OS === "web" ? ({ outlineStyle: "none" } as object) : null;
 
+// The field has 12 of padding above and below its text.
+const INPUT_PADDING = 24;
 const MIN_INPUT_HEIGHT = 56;
 
 const CATEGORY_ORDER: Category[] = ["Dining", "Groceries", "Transport", "Bills", "Shopping", "Other"];
@@ -59,6 +62,8 @@ export default function QuickAddScreen() {
   const [serverErrors, setServerErrors] = useState<FieldError[]>([]);
   const [inputHeight, setInputHeight] = useState(MIN_INPUT_HEIGHT);
   const [slide] = useState(() => new Animated.Value(0));
+  const [drag] = useState(() => new Animated.Value(0));
+  const [keyboard, setKeyboard] = useState(0);
 
   useEffect(() => {
     Animated.timing(slide, {
@@ -69,7 +74,22 @@ export default function QuickAddScreen() {
     }).start();
   }, [slide]);
 
-  const sheetHeight = Math.max(Math.min(664, height - 180), Math.min(520, height - 40));
+  // The sheet sits on top of the keyboard and shrinks to the room left under the status bar.
+  useEffect(() => {
+    const ios = Platform.OS === "ios";
+    const show = Keyboard.addListener(ios ? "keyboardWillChangeFrame" : "keyboardDidShow", (event) =>
+      setKeyboard(Math.max(0, height - event.endCoordinates.screenY)),
+    );
+    const hide = Keyboard.addListener(ios ? "keyboardWillHide" : "keyboardDidHide", () => setKeyboard(0));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, [height]);
+
+  // Figma: the sheet starts 180 from the top of an 844 high screen.
+  const roomAbove = height - insets.top - keyboard - 12;
+  const sheetHeight = Math.min(Math.max(height - 180, 480), roomAbove);
   const parsed = useMemo(() => parseQuickAdd(text), [text]);
   const category = picked ?? parsed.category;
   const typed = text.trim().length > 0;
@@ -87,10 +107,38 @@ export default function QuickAddScreen() {
     },
   });
 
-  function close() {
+  function leave() {
     if (router.canGoBack()) router.back();
     else router.replace("/");
   }
+
+  function close() {
+    Keyboard.dismiss();
+    Animated.timing(slide, {
+      toValue: 0,
+      duration: 200,
+      easing: Easing.in(Easing.cubic),
+      useNativeDriver: true,
+    }).start(leave);
+  }
+
+  // Pulling the top of the sheet down closes it; letting go early springs it back.
+  const [panResponder] = useState(() =>
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_event, gesture) =>
+        gesture.dy > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+      onPanResponderMove: (_event, gesture) => drag.setValue(Math.max(0, gesture.dy)),
+      onPanResponderRelease: (_event, gesture) => {
+        if (gesture.dy > 100 || gesture.vy > 0.8) {
+          close();
+          Animated.timing(drag, { toValue: 0, duration: 0, useNativeDriver: true }).start();
+        } else {
+          Animated.spring(drag, { toValue: 0, friction: 8, useNativeDriver: true }).start();
+        }
+      },
+      onPanResponderTerminate: () => Animated.spring(drag, { toValue: 0, useNativeDriver: true }).start(),
+    }),
+  );
 
   function submit() {
     if (save.isPending) return;
@@ -118,35 +166,31 @@ export default function QuickAddScreen() {
 
   return (
     <View style={styles.root}>
-      <Pressable
-        accessibilityLabel="Close"
-        accessibilityRole="button"
-        onPress={close}
-        style={[StyleSheet.absoluteFill, { backgroundColor: theme.scrim }]}
-      />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.avoid}
-        pointerEvents="box-none"
-      >
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: slide }]}>
+        <Pressable
+          accessibilityLabel="Close"
+          accessibilityRole="button"
+          onPress={close}
+          style={[StyleSheet.absoluteFill, { backgroundColor: theme.scrim }]}
+        />
+      </Animated.View>
+      <View style={styles.avoid} pointerEvents="box-none">
         <Animated.View
           style={[
             styles.sheet,
             {
               height: sheetHeight,
+              marginBottom: keyboard,
               backgroundColor: theme.surface,
               transform: [
                 { translateY: slide.interpolate({ inputRange: [0, 1], outputRange: [sheetHeight, 0] }) },
+                { translateY: drag },
               ],
             },
           ]}
         >
-          <View style={[styles.grabber, { backgroundColor: theme.border }]} />
-          <ScrollView
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
+          <View {...panResponder.panHandlers}>
+            <View style={[styles.grabber, { backgroundColor: theme.border }]} />
             <View style={styles.header}>
               <Text accessibilityRole="header" style={{ color: theme.text, ...theme.type.body1Bold }}>
                 Add expense
@@ -160,7 +204,12 @@ export default function QuickAddScreen() {
                 <Close />
               </Pressable>
             </View>
-
+          </View>
+          <ScrollView
+            contentContainerStyle={styles.content}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <TextInput
               accessibilityLabel="What did you spend?"
               autoFocus
@@ -182,7 +231,7 @@ export default function QuickAddScreen() {
                 Platform.OS === "web"
                   ? undefined
                   : (event) =>
-                      setInputHeight(Math.max(MIN_INPUT_HEIGHT, event.nativeEvent.contentSize.height))
+                      setInputHeight(Math.max(MIN_INPUT_HEIGHT, event.nativeEvent.contentSize.height + INPUT_PADDING))
               }
               style={[
                 styles.input,
@@ -315,7 +364,7 @@ export default function QuickAddScreen() {
             </View>
           </ScrollView>
 
-          <View style={[styles.bottom, { backgroundColor: theme.surface, paddingBottom: Math.max(insets.bottom, 0) + 24 }]}>
+          <View style={[styles.bottom, { backgroundColor: theme.surface, paddingBottom: keyboard > 0 ? 12 : Math.max(insets.bottom, 0) + 24 }]}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Save expense"
@@ -334,7 +383,7 @@ export default function QuickAddScreen() {
             </Pressable>
           </View>
         </Animated.View>
-      </KeyboardAvoidingView>
+      </View>
     </View>
   );
 }
@@ -351,7 +400,13 @@ const styles = StyleSheet.create({
   },
   grabber: { alignSelf: "center", width: 36, height: 4, borderRadius: 2, marginTop: 8 },
   content: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 16, gap: 20 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    paddingTop: 20,
+  },
   closeButton: {
     width: 40,
     height: 40,
