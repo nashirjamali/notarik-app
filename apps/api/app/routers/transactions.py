@@ -1,7 +1,11 @@
 from typing import Annotated
 from uuid import UUID
 
+import csv
+import io
+
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 from sqlalchemy.engine import Connection
 
 from app.core.validation import parse_month
@@ -18,6 +22,7 @@ from app.services.transactions import (
     decode_cursor,
     delete_transaction,
     get_transaction,
+    export_rows,
     list_transactions,
     update_transaction,
 )
@@ -74,6 +79,33 @@ def list_rows(
         cursor=decoded,
     )
     return TransactionPage(items=items, next_cursor=next_cursor)
+
+
+def _safe_cell(value):
+    # A cell starting with = + - or @ would run as a formula in Excel or Sheets,
+    # and merchant and note text is untrusted.
+    if isinstance(value, str) and value[:1] in ("=", "+", "-", "@", "\t", "\r"):
+        return "'" + value
+    return value
+
+
+@router.get("/export")
+def export(
+    connection: Connection = Depends(user_connection),
+    user_id: UUID = Depends(current_user),
+):
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(
+        ["date", "merchant", "category", "amount_idr", "payment_method", "source", "note"]
+    )
+    for row in export_rows(connection, user_id):
+        writer.writerow([_safe_cell(value) if value is not None else "" for value in row])
+    return Response(
+        content=buffer.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="notarik-expenses.csv"'},
+    )
 
 
 @router.get("/{transaction_id}", response_model=TransactionRead)

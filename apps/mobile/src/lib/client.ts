@@ -1,7 +1,7 @@
 import { File } from "expo-file-system";
 import { Platform } from "react-native";
 
-import { api } from "@/lib/api";
+import { api, apiText } from "@/lib/api";
 import type { components } from "@/lib/schema";
 import type { Budget, CategoryBudget, ReceiptFile, ReceiptRun, Recap, TransactionInput } from "@/lib/types";
 
@@ -35,10 +35,23 @@ export function logout(body: Schemas["RefreshRequest"]) {
   return api<void>("/auth/logout", { method: "POST", body: JSON.stringify(body) });
 }
 
-export type Me = { user_id: string; name: string | null };
+export type Me = { user_id: string; name: string | null; email: string | null };
+export type UserSettings = { auto_read_receipts: boolean; notifications: boolean };
 
 export function getMe() {
   return api<Me>("/me");
+}
+
+export function getSettings() {
+  return api<UserSettings>("/me/settings");
+}
+
+export function patchSettings(body: Partial<UserSettings>) {
+  return api<UserSettings>("/me/settings", { method: "PATCH", body: JSON.stringify(body) });
+}
+
+export function exportTransactionsCsv() {
+  return apiText("/transactions/export");
 }
 
 export function listTransactions(query: {

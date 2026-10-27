@@ -1,17 +1,13 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { useColorScheme } from "react-native";
 
-import { dark, light, type Theme } from "./tokens";
+import { light, type Theme } from "./tokens";
 
 const ThemeContext = createContext<Theme>(light);
 
+// Light only: the designs and some icons have no dark version yet, so the app
+// ignores the system appearance. Bring back a dark choice once they exist.
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const scheme = useColorScheme();
-  return (
-    <ThemeContext.Provider value={scheme === "dark" ? dark : light}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={light}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme(): Theme {

@@ -18,7 +18,7 @@ Codes you will see: `unauthorized` (401), `not_found` (404), `validation_error` 
 
 ## Account name
 
-`POST /auth/signup` takes an optional `name` (at most 80 characters, trimmed; blank means none). `GET /me` returns `{ "user_id": "uuid", "name": "Ada" | null }`. Accounts created before the name existed have `name: null`.
+`POST /auth/signup` takes an optional `name` (at most 80 characters, trimmed; blank means none). `GET /me` returns `{ "user_id": "uuid", "name": "Ada" | null, "email": "ada@example.com" | null }`. Accounts created before the name existed have `name: null`.
 
 ## Receipt scan (step 14)
 
@@ -80,6 +80,17 @@ Step messages, in order: Preparing the receipt, Reading receipt, Checking totals
 `200`: `{ "transaction_id": "uuid", "user_edited_fields": ["category"] }`. Merchant, date, and total are required. This is the only call that saves the expense. Cancel by leaving the screen; there is no delete-run call.
 
 Receipt text is data. Show item names as text. Do not treat them as instructions.
+
+## Settings and export
+
+`GET /me/settings` returns `{ "auto_read_receipts": bool, "notifications": bool }` (both `true` until changed). `PATCH /me/settings` takes any subset of those two fields and returns the full object. The values are stored per user with RLS.
+
+- `auto_read_receipts` is enforced by the client: when it is `false` the Snap screen does not upload the photo. The API itself still accepts `POST /receipts`.
+- `notifications` is only stored. Nothing sends notifications yet.
+- "Confirm before saving" has no field on purpose: the agent never writes without a confirmation, so the switch is shown on and locked.
+- The app is light only for now (it ignores the system appearance), so Settings has no theme row.
+
+`GET /transactions/export` returns every expense of the caller as `text/csv` (`date, merchant, category, amount_idr, payment_method, source, note`, newest first) with a `Content-Disposition` attachment name. Amounts are whole IDR. Text cells that start with `=`, `+`, `-` or `@` get a leading `'` so spreadsheets do not run them as formulas.
 
 ## Transactions list, details and search
 

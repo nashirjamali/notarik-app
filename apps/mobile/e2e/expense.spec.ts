@@ -43,9 +43,53 @@ test("sign up, add an expense, see it, and delete it", async ({ page }) => {
 });
 
 test("sign up stores the name and shows it in settings", async ({ page }) => {
-  await signUp(page, `e2e-name-${Date.now()}@example.com`, "Ada Lovelace");
+  const email = `e2e-name-${Date.now()}@example.com`;
+  await signUp(page, email, "Ada Lovelace");
   await tab(page, "Settings").click();
-  await expect(page.getByText("Signed in as Ada Lovelace")).toBeVisible();
+  await expect(page.getByText("Ada Lovelace").filter({ visible: true })).toBeVisible();
+  await expect(page.getByText(email).filter({ visible: true })).toBeVisible();
+});
+
+test("settings: switches persist, sheets open and data exports", async ({ page }) => {
+  const email = `e2e-settings-${Date.now()}@example.com`;
+  await signUp(page, email, "Ada Lovelace");
+
+  // One expense so the export has a row, with a formula-like merchant.
+  await tab(page, "Add").click();
+  await textbox(page, "What did you spend?").fill("makan siang 25rb di warung");
+  await button(page, "Save expense").click();
+  await expect(page.getByText("Warung", { exact: true })).toBeVisible();
+  await button(page, "Back").click();
+
+  await tab(page, "Settings").click();
+  const sw = (name: string) => page.getByRole("switch", { name }).filter({ visible: true });
+  await expect(sw("Auto-read receipts")).toHaveAttribute("aria-checked", "true");
+  // The safety rule: saving always needs a confirmation, so this one cannot be turned off.
+  await expect(sw("Confirm before saving")).toHaveAttribute("aria-checked", "true");
+  await expect(sw("Confirm before saving")).toHaveAttribute("aria-disabled", "true");
+
+  await sw("Auto-read receipts").click();
+  await sw("Notifications").click();
+  await expect(sw("Auto-read receipts")).toHaveAttribute("aria-checked", "false");
+  await expect(sw("Notifications")).toHaveAttribute("aria-checked", "false");
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await tab(page, "Settings").click();
+  await expect(sw("Auto-read receipts")).toHaveAttribute("aria-checked", "false");
+  await expect(sw("Notifications")).toHaveAttribute("aria-checked", "false");
+
+  // Light only for now: there is no theme choice.
+  await expect(button(page, "Theme")).toHaveCount(0);
+
+  await button(page, "Categories").click();
+  await expect(page.getByText(/Groceries, Food & Drink/).filter({ visible: true })).toBeVisible();
+  await button(page, "Close").click();
+
+  const download = page.waitForEvent("download");
+  await button(page, "Export data").click();
+  expect((await download).suggestedFilename()).toBe("notarik-expenses.csv");
+
+  await button(page, "Budgets").click();
+  await expect(page.getByText("Recap").filter({ visible: true }).first()).toBeVisible();
 });
 
 test("sign up rejects a short password before calling the API", async ({ page }) => {
@@ -280,7 +324,7 @@ test("review receipt: validation, retake and discard", async ({ page }) => {
 test("snap receipt: close returns to home", async ({ page }) => {
   await signUp(page, `e2e-close-${Date.now()}@example.com`);
   await page.getByText("Snap receipt").first().click();
-  await button(page, "Close").click();
+  await button(page, "Close").last().click();
   await expect(page.getByText("Snap it.").first()).toBeVisible();
 });
 

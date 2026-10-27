@@ -246,3 +246,19 @@ def delete_transaction(
         {"id": transaction_id, "user_id": user_id},
     ).scalar_one_or_none()
     return deleted is not None
+
+
+def export_rows(connection: Connection, user_id: UUID) -> list[tuple]:
+    """Every expense of the caller, newest first, as plain tuples for the CSV export."""
+    rows = connection.execute(
+        text(
+            """
+            SELECT date, merchant, category, total_minor, payment_method, source, note
+            FROM transactions
+            WHERE user_id = :user_id
+            ORDER BY date DESC, created_at DESC, id DESC
+            """
+        ),
+        {"user_id": user_id},
+    ).all()
+    return [tuple(row) for row in rows]
