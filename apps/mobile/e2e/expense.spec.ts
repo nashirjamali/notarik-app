@@ -407,3 +407,19 @@ test("onboarding: tapping the mascot and the icons plays a reaction and stays on
   // The decorative hero is not exposed as buttons or images to a screen reader.
   await expect(page.getByRole("button")).toHaveCount(2);
 });
+
+test("onboarding: the entrance plays again when the screen is opened again", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const cta = button(page, "Get started");
+  const opacity = () => cta.evaluate((node) => getComputedStyle(node.parentElement as HTMLElement).opacity);
+  await expect.poll(opacity, { timeout: 8000 }).toBe("1");
+
+  await cta.click();
+  await expect(page.getByText("Create your account").first()).toBeVisible();
+  await button(page, "Back").click();
+
+  // Coming back starts the entrance from the beginning, so the buttons are not fully shown at first.
+  await expect.poll(async () => Number(await opacity()), { timeout: 3000 }).toBeLessThan(1);
+  await expect.poll(opacity, { timeout: 8000 }).toBe("1");
+});
