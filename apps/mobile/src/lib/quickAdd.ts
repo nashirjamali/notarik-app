@@ -88,3 +88,105 @@ export function parseQuickAdd(input: string, today = localToday()): QuickParse {
     date,
   };
 }
+
+/** The most expenses one Quick add can save at once. */
+export const MAX_ROWS = 20;
+
+const DATE_AT_START = /^(kemarin|yesterday|hari ini|today)\b/i;
+const HAS_DATE_WORD = /\b(kemarin|yesterday|hari ini|today)\b/i;
+// "di warteg", "at the cafe", "@ kantin": the words after an amount that still belong to it.
+const MERCHANT_START = /^\s*(?:(?:di|at)\b|@)/i;
+// An amount that cannot be a quantity: it has rb/k/jt, or dots like 25.000.
+const SURE_AMOUNT = /^(?:\d{1,3}(?:\.\d{3})+|.*(?:juta|jt|ribu|rb|k))$/i;
+
+/** Splits on new lines, ";", " + " and commas, but not on the comma inside a number like 1,5jt. */
+function splitOnSeparators(text: string): string[] {
+  const pieces: string[] = [];
+  let current = "";
+  for (let index = 0; index < text.length; index++) {
+    const char = text[index];
+    const isNumberComma =
+      char === "," && /\d/.test(text[index - 1] ?? "") && /\d/.test(text[index + 1] ?? "");
+    if (char === "\n" || char === ";" || (char === "," && !isNumberComma)) {
+      pieces.push(current);
+      current = "";
+    } else if (char === "+" && /\s/.test(text[index - 1] ?? "") && /\s/.test(text[index + 1] ?? "")) {
+      pieces.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  pieces.push(current);
+  return pieces;
+}
+
+/**
+ * Cuts one piece after each sure amount that is followed by more words ("kopi 25rb nasi 30rb"),
+ * unless those words start a place ("kopi 25rb di starbucks"). When unsure it keeps one piece.
+ */
+function cutAtAmounts(piece: string): string[] {
+  const sure = [...piece.matchAll(AMOUNT)].filter((match) => {
+    const token = `${match[1]}${match[2] ?? ""}`;
+    return SURE_AMOUNT.test(token) && (parseAmount(token) ?? 0) > 0;
+  });
+  const cuts: number[] = [];
+  for (const match of sure.slice(0, -1)) {
+    const end = (match.index ?? 0) + match[0].length;
+    if (!MERCHANT_START.test(piece.slice(end))) cuts.push(end);
+  }
+  const parts: string[] = [];
+  let start = 0;
+  for (const cut of cuts) {
+    parts.push(piece.slice(start, cut));
+    start = cut;
+  }
+  parts.push(piece.slice(start));
+  return parts;
+}
+
+function isAmountOnly(piece: string): boolean {
+  const amount = pickAmount(piece);
+  if (!amount) return false;
+  const rest = `${piece.slice(0, amount.start)} ${piece.slice(amount.end)}`;
+  return !/[\p{L}]/u.test(rest.replace(/\b(rp|idr)\b/gi, ""));
+}
+
+/** "Indomaret, 187rb": a name with no amount followed by a piece that is only an amount. */
+function mergeOrphans(pieces: string[]): string[] {
+  const merged: string[] = [];
+  for (let index = 0; index < pieces.length; index++) {
+    const next = pieces[index + 1];
+    if (next !== undefined && !pickAmount(pieces[index]) && isAmountOnly(next)) {
+      merged.push(`${pieces[index]} ${next}`);
+      index++;
+    } else {
+      merged.push(pieces[index]);
+    }
+  }
+  return merged;
+}
+
+/** Every expense written in the text, as separate pieces (not capped). */
+export function splitEntries(input: string): string[] {
+  const separated = splitOnSeparators(input.replace(/\r\n?/g, "\n"))
+    .map((piece) => piece.replace(/\s+/g, " ").trim())
+    .filter((piece) => /[\p{L}\p{N}]/u.test(piece));
+  return mergeOrphans(separated.flatMap(cutAtAmounts).map((piece) => piece.trim()).filter(Boolean));
+}
+
+/**
+ * Reads several expenses from one text, at most MAX_ROWS. A date word at the very start
+ * ("kemarin kopi 25rb, parkir 5rb") is shared by every row that has no date word of its own;
+ * a place is never copied from one row to another. A row without an amount has `total: null`.
+ */
+export function parseMany(input: string, today = localToday()): QuickParse[] {
+  const entries = splitEntries(input);
+  if (entries.length === 0) return [];
+  const leading = DATE_AT_START.exec(input.trim());
+  const shared = leading ? parseQuickAdd(leading[0], today).date : null;
+  return entries.slice(0, MAX_ROWS).map((entry) => {
+    const row = parseQuickAdd(entry, today);
+    return shared && !HAS_DATE_WORD.test(entry) ? { ...row, date: shared } : row;
+  });
+}

@@ -216,3 +216,112 @@ def test_list_is_ordered_by_the_day_it_happened_and_pages_without_gaps(api_clien
                 break
         assert seen == [row["id"] for row in everything]
         assert client.get("/transactions", params={"cursor": "bm9wZQ"}).status_code == 422
+
+
+def _row(merchant: str, total: int = 25000, **extra):
+    body = {"merchant": merchant, "date": "2026-10-15", "total_minor": total, "category": "Dining"}
+    body.update(extra)
+    return body
+
+
+def test_batch_creates_every_row_in_order_as_manual(api_client, make_user):
+    owner = make_user()
+    rows = [
+        _row("Kopi", 25000),
+        _row("Parkir", 5000, category="Transport", source="chat"),
+        _row("Nasi goreng", 30000, items=[{"name": "Nasi goreng", "line_total_minor": 30000}]),
+    ]
+    with api_client(owner) as client:
+        created = client.post("/transactions/batch", json={"transactions": rows})
+        assert created.status_code == 201
+        items = created.json()["items"]
+        assert [item["merchant"] for item in items] == ["Kopi", "Parkir", "Nasi goreng"]
+        assert [item["total_minor"] for item in items] == [25000, 5000, 30000]
+        assert {item["source"] for item in items} == {"manual"}
+        assert items[2]["items"][0]["name"] == "Nasi goreng"
+
+        listed = client.get("/transactions").json()["items"]
+        assert sorted(item["merchant"] for item in listed) == ["Kopi", "Nasi goreng", "Parkir"]
+
+
+def test_batch_with_a_bad_row_names_the_row_and_saves_nothing(api_client, make_user):
+    owner = make_user()
+    rows = [_row("Kopi"), _row("Parkir", -1), _row("Teh")]
+    with api_client(owner) as client:
+        response = client.post("/transactions/batch", json={"transactions": rows})
+        assert response.status_code == 422
+        assert response.json()["code"] == "validation_error"
+        assert "transactions.1.total_minor" in response.json()["message"]
+        assert client.get("/transactions").json()["items"] == []
+
+
+def test_batch_size_is_limited_to_one_to_twenty_rows(api_client, make_user):
+    owner = make_user()
+    with api_client(owner) as client:
+        assert client.post("/transactions/batch", json={"transactions": []}).status_code == 422
+        too_many = [_row(f"Item {index}") for index in range(21)]
+        assert client.post("/transactions/batch", json={"transactions": too_many}).status_code == 422
+        assert client.get("/transactions").json()["items"] == []
+
+        exactly_twenty = [_row(f"Item {index}", 1000) for index in range(20)]
+        created = client.post("/transactions/batch", json={"transactions": exactly_twenty})
+        assert created.status_code == 201
+        assert len(created.json()["items"]) == 20
+
+
+def test_batch_rejects_rows_that_add_up_to_too_much(api_client, make_user):
+    owner = make_user()
+    huge = 6_000_000_000_000
+    with api_client(owner) as client:
+        response = client.post(
+            "/transactions/batch",
+            json={"transactions": [_row("A", huge), _row("B", huge)]},
+        )
+        assert response.status_code == 422
+        assert client.get("/transactions").json()["items"] == []
+
+
+def test_batch_is_all_or_nothing_when_an_insert_fails_midway(api_client, make_user, monkeypatch):
+    from app.services import transactions as service
+
+    real = service.create_transaction
+    calls = {"count": 0}
+
+    def fail_on_the_third(connection, user_id, body):
+        calls["count"] += 1
+        if calls["count"] == 3:
+            raise RuntimeError("the database went away")
+        return real(connection, user_id, body)
+
+    monkeypatch.setattr(service, "create_transaction", fail_on_the_third)
+    owner = make_user()
+    rows = [_row("Kopi"), _row("Parkir"), _row("Teh"), _row("Roti")]
+    with api_client(owner) as client:
+        with pytest.raises(RuntimeError):
+            client.post("/transactions/batch", json={"transactions": rows})
+    assert calls["count"] == 3
+
+    monkeypatch.undo()
+    with api_client(owner) as client:
+        assert client.get("/transactions").json()["items"] == []
+
+
+def test_batch_rows_belong_to_the_caller_whatever_the_body_says(api_client, make_user):
+    owner = make_user()
+    other = make_user()
+    rows = [_row("Kopi", user_id=str(other)), _row("Parkir", user_id=str(other))]
+    with api_client(owner) as client:
+        assert client.post("/transactions/batch", json={"transactions": rows}).status_code == 201
+        assert len(client.get("/transactions").json()["items"]) == 2
+    with api_client(other) as client:
+        assert client.get("/transactions").json()["items"] == []
+
+
+def test_batch_needs_a_token():
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    with TestClient(app) as client:
+        response = client.post("/transactions/batch", json={"transactions": [_row("Kopi")]})
+    assert response.status_code == 401

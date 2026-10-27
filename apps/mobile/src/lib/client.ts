@@ -91,6 +91,14 @@ export function createTransaction(body: Omit<Schemas["TransactionCreate"], "sour
   });
 }
 
+/** Several expenses in one request: all are saved, or none. */
+export function createTransactionsBatch(body: { transactions: Omit<Schemas["TransactionCreate"], "source">[] }) {
+  return api<Schemas["TransactionBatchRead"]>("/transactions/batch", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 export function updateTransaction(id: string, body: Schemas["TransactionUpdate"]) {
   return api<Schemas["TransactionRead"]>(`/transactions/${id}`, {
     method: "PATCH",
