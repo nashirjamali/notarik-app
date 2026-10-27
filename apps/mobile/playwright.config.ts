@@ -12,6 +12,8 @@ export default defineConfig({
       command: "cd ../api && uv run uvicorn app.main:app --host 127.0.0.1 --port 8000",
       url: "http://127.0.0.1:8000/health",
       reuseExistingServer: false,
+      // The tests expect an API without an LLM key, so a key in the local .env must not leak in.
+      env: { OPENROUTER_API_KEY: "" },
       timeout: 120_000,
     },
     {

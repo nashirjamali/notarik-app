@@ -18,10 +18,10 @@ import { ApiError } from "@/lib/api";
 import { confirmChat, sendChat, type PendingAction } from "@/lib/chat";
 import { getMe } from "@/lib/client";
 import { useAuth } from "@/lib/auth";
+import { TopBar, TopBarButton } from "@/components/TopBar";
 import { useTheme } from "@/theme/Theme";
 import ArrowUp from "../../assets/svg/chat-arrow-up.svg";
 import Camera from "../../assets/svg/chat-camera.svg";
-import ChevronLeft from "../../assets/svg/login-chevron-left.svg";
 import Mark from "../../assets/svg/login-mark.svg";
 import NewChat from "../../assets/svg/chat-new-chat.svg";
 
@@ -158,30 +158,22 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: theme.surface }}>
-      <View style={styles.header}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          onPress={close}
-          style={[styles.round, { backgroundColor: theme.border }]}
-        >
-          <ChevronLeft />
-        </Pressable>
-        <View style={styles.title}>
-          <Mark />
-          <Text accessibilityRole="header" style={{ color: theme.text, ...theme.type.body1Bold }}>
-            Ask Notarik
-          </Text>
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="New chat"
-          onPress={newChat}
-          style={[styles.round, { backgroundColor: theme.border }]}
-        >
-          <NewChat />
-        </Pressable>
-      </View>
+      <TopBar
+        onBack={close}
+        title={
+          <View style={styles.title}>
+            <Mark />
+            <Text accessibilityRole="header" style={{ color: theme.text, ...theme.type.body1Bold }}>
+              Ask Notarik
+            </Text>
+          </View>
+        }
+        right={
+          <TopBarButton label="New chat" onPress={newChat}>
+            <NewChat />
+          </TopBarButton>
+        }
+      />
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
@@ -276,16 +268,8 @@ export default function ChatScreen() {
 const noOutline = Platform.OS === "web" ? ({ outlineStyle: "none" } as object) : null;
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  round: { width: 48, height: 48, borderRadius: 48, alignItems: "center", justifyContent: "center" },
   title: { flexDirection: "row", alignItems: "center", gap: 7 },
-  conversation: { paddingHorizontal: 24, paddingTop: 4, paddingBottom: 16, gap: 14 },
+  conversation: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 16, gap: 14 },
   composer: {
     flexDirection: "row",
     alignItems: "center",

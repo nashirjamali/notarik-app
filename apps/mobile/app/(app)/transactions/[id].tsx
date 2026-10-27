@@ -31,9 +31,9 @@ import {
   type TransactionInput,
   type TransactionPage,
 } from "@/lib/types";
+import { TopBar, TopBarButton } from "@/components/TopBar";
 import { useTheme } from "@/theme/Theme";
 import { categories, categoryLabels, type Category } from "@/theme/tokens";
-import ChevronLeft from "../../../assets/svg/login-chevron-left.svg";
 import ChevronDown from "../../../assets/svg/review-chevron-down.svg";
 import ChevronRight from "../../../assets/svg/detail-chevron-right.svg";
 import Mark from "../../../assets/svg/review-mark.svg";
@@ -142,27 +142,15 @@ export default function TransactionDetail() {
   );
 
   const header = (
-    <View style={styles.topBar}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Back"
-        onPress={back}
-        style={[styles.round, { backgroundColor: theme.border }]}
-      >
-        <ChevronLeft />
-      </Pressable>
-      <Text accessibilityRole="header" style={{ color: theme.text, ...theme.type.body2Bold }}>
-        Details
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="More"
-        onPress={() => setMenu((value) => !value)}
-        style={[styles.round, { backgroundColor: theme.border }]}
-      >
-        <More />
-      </Pressable>
-    </View>
+    <TopBar
+      title="Details"
+      onBack={back}
+      right={
+        <TopBarButton label="More" onPress={() => setMenu((value) => !value)}>
+          <More />
+        </TopBarButton>
+      }
+    />
   );
 
   if (!row) {
@@ -477,15 +465,6 @@ export default function TransactionDetail() {
 }
 
 const styles = StyleSheet.create({
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-  round: { width: 48, height: 48, borderRadius: 48, alignItems: "center", justifyContent: "center" },
   menu: {
     position: "absolute",
     right: 24,
@@ -501,7 +480,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
   },
   menuItem: { paddingHorizontal: 16, paddingVertical: 12 },
-  content: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24, gap: 12 },
+  content: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24, gap: 12 },
   empty: { textAlign: "center", marginTop: 48 },
   hero: { alignItems: "center", gap: 4, paddingBottom: 8 },
   amount: { textAlign: "center" },

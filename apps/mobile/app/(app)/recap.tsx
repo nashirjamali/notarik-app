@@ -10,10 +10,10 @@ import { MonthSwitcher } from "@/components/MonthSwitcher";
 import { getBudget, getCategoryBudgets, getRecap } from "@/lib/client";
 import { formatIdr } from "@/lib/money";
 import { currentMonth } from "@/lib/months";
+import { TopBar } from "@/components/TopBar";
 import { useTheme } from "@/theme/Theme";
 import { categoryLabels } from "@/theme/tokens";
 import AvatarMark from "../../assets/svg/chat-avatar-mark.svg";
-import ChevronLeft from "../../assets/svg/login-chevron-left.svg";
 
 const RING = 112;
 const STROKE = 12;
@@ -71,20 +71,7 @@ export default function RecapScreen() {
 
   return (
     <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: theme.surface }}>
-      <View style={styles.topBar}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          onPress={back}
-          style={[styles.round, { backgroundColor: theme.border }]}
-        >
-          <ChevronLeft />
-        </Pressable>
-        <Text accessibilityRole="header" style={{ color: theme.text, ...theme.type.body2Bold }}>
-          Recap & Budget
-        </Text>
-        <View style={styles.round} />
-      </View>
+      <TopBar title="Recap & Budget" onBack={back} />
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.monthRow}>
@@ -217,16 +204,7 @@ export default function RecapScreen() {
 }
 
 const styles = StyleSheet.create({
-  topBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-  round: { width: 48, height: 48, borderRadius: 48, alignItems: "center", justifyContent: "center" },
-  content: { paddingHorizontal: 24, paddingBottom: 24, gap: 16 },
+  content: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 24, gap: 16 },
   monthRow: { alignItems: "center" },
   message: { textAlign: "center", marginTop: 16 },
   insight: {
