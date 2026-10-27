@@ -8,6 +8,7 @@ import { ShortcutTile } from '@/components/ShortcutTile';
 import { SuggestionChip } from '@/components/SuggestionChip';
 import CameraIcon from '../../../assets/svg/icon-camera.svg';
 import LogoMark from '../../../assets/svg/logo-mark.svg';
+import AskMark from '../../../assets/svg/ask-mark.svg';
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -56,14 +57,14 @@ export default function HomeScreen() {
           <ActionCard
             title="Snap receipt"
             subtitle="Photo a receipt, we'll do the rest"
-            icon={<CameraIcon width={32} height={32} color={theme.accentText} />}
+            icon={<CameraIcon />}
             variant="primary"
             onPress={() => router.push('/snap')}
           />
           <ActionCard
             title="Ask Notarik"
             subtitle="Ask anything about your spending"
-            icon={<LogoMark width={32} height={28} />}
+            icon={<AskMark />}
             variant="subtle"
             onPress={() => router.push('/chat')}
           />
