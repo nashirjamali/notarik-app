@@ -8,6 +8,7 @@ What was built and where it differs from this plan:
 
 - **Mascot layers:** instead of a new Figma export, `onboarding-mark.svg` was split mechanically into `mascot-body.svg`, `mascot-eyes.svg` and `mascot-pupils.svg`. Path data is unchanged and the three keep the same 120 x 102.353 box so they stack exactly. The old combined file was removed.
 - **Entrance, idle float and breathe, random blink, mascot hop with icons pushed outward, icon pop and wiggle, pupils and lean following a touch or the mouse:** all as described below.
+- **Follow-up changes:** the blink is more frequent (every 1.5 to 3.5 s instead of 3 to 6 s, and one blink in four is a double blink), and the entrance now replays every time the onboarding screen is opened again (for example when coming back from Sign up or Log in), not only on the first launch.
 - **Reduce motion** shows the final layout at once and disables loops, taps and tracking. The hero is hidden from screen readers.
 - **Not verified on device:** the eye tracking while a finger is held down on the iPhone (the simulator tool cannot hold a touch); it is verified with the mouse on web.
 - **Tests:** unit tests for the pure helpers (`motion.test.ts`) and two e2e tests (reduce motion, and taps on the mascot and icons).
