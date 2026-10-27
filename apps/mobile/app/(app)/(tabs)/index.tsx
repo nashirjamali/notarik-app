@@ -90,13 +90,13 @@ export default function HomeScreen() {
             label="Recap"
             icon={require('../../../assets/icons/recap.png')}
             tintColor="#D9EAF4"
-            onPress={() => {}}
+            onPress={() => router.push('/recap')}
           />
           <ShortcutTile
             label="Budget"
             icon={require('../../../assets/icons/budget.png')}
             tintColor="#D9F2E6"
-            onPress={() => {}}
+            onPress={() => router.push('/recap')}
           />
           <ShortcutTile
             label="Transactions"

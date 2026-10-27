@@ -75,11 +75,4 @@ export function splitAmounts(text: string): { text: string; amount: boolean }[] 
     .map((part) => ({ text: part, amount: /^-?Rp\s[\d.]+$/.test(part) }));
 }
 
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-/** "2026-10" as "October 2026". */
-export function monthLabel(month: string): string {
-  const match = /^(\d{4})-(\d{2})$/.exec(month);
-  if (!match) return month;
-  return `${MONTHS[Number(match[2]) - 1] ?? match[2]} ${match[1]}`;
-}
+export { monthLabel } from "@/lib/months";

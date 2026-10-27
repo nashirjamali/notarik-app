@@ -14,12 +14,13 @@ from app.schemas.transaction import (
 
 _INSERT = """
 INSERT INTO transactions (
-  user_id, merchant, date, total_minor, category, source, note
+  user_id, merchant, date, total_minor, category, source, payment_method, note
 )
 VALUES (
-  :user_id, :merchant, :date, :total_minor, :category, :source, :note
+  :user_id, :merchant, :date, :total_minor, :category, :source, :payment_method, :note
 )
-RETURNING id, merchant, date, total_minor, currency, category, source, note, created_at
+RETURNING id, merchant, date, total_minor, currency, category, source,
+  payment_method, note, extraction_run_id AS receipt_run_id, created_at
 """
 
 _INSERT_ITEM = """
@@ -28,15 +29,24 @@ VALUES (:user_id, :transaction_id, :name, :qty, :line_total_minor)
 """
 
 
-def encode_cursor(created_at: datetime, transaction_id: UUID) -> str:
-    raw = f"{created_at.isoformat()}|{transaction_id}"
+def _like(search: str | None) -> str | None:
+    """A contains-pattern for ILIKE, with the user's own % and _ taken literally."""
+    term = (search or "").strip()
+    if not term:
+        return None
+    escaped = term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"%{escaped}%"
+
+
+def encode_cursor(day: date, created_at: datetime, transaction_id: UUID) -> str:
+    raw = f"{day.isoformat()}|{created_at.isoformat()}|{transaction_id}"
     return urlsafe_b64encode(raw.encode()).decode().rstrip("=")
 
 
-def decode_cursor(cursor: str) -> tuple[datetime, UUID]:
+def decode_cursor(cursor: str) -> tuple[date, datetime, UUID]:
     padded = cursor + "=" * (-len(cursor) % 4)
-    created_at_raw, id_raw = urlsafe_b64decode(padded.encode()).decode().split("|", 1)
-    return datetime.fromisoformat(created_at_raw), UUID(id_raw)
+    day_raw, created_at_raw, id_raw = urlsafe_b64decode(padded.encode()).decode().split("|", 2)
+    return date.fromisoformat(day_raw), datetime.fromisoformat(created_at_raw), UUID(id_raw)
 
 
 def _load_items(
@@ -90,6 +100,7 @@ def create_transaction(
             "total_minor": body.total_minor,
             "category": body.category,
             "source": body.source,
+            "payment_method": body.payment_method,
             "note": (body.note or "").strip() or None,
         },
     ).mappings().one()
@@ -103,7 +114,8 @@ def get_transaction(
     row = connection.execute(
         text(
             """
-            SELECT id, merchant, date, total_minor, currency, category, source, note, created_at
+            SELECT id, merchant, date, total_minor, currency, category, source, payment_method, note,
+                   extraction_run_id AS receipt_run_id, created_at
             FROM transactions
             WHERE id = :id AND user_id = :user_id
             """
@@ -122,14 +134,17 @@ def list_transactions(
     limit: int,
     month: date | None,
     category: str | None,
-    cursor: tuple[datetime, UUID] | None,
+    cursor: tuple[date, datetime, UUID] | None,
+    search: str | None = None,
 ) -> tuple[list[TransactionRead], str | None]:
-    cursor_created_at = cursor[0] if cursor else None
-    cursor_id = cursor[1] if cursor else None
+    cursor_date = cursor[0] if cursor else None
+    cursor_created_at = cursor[1] if cursor else None
+    cursor_id = cursor[2] if cursor else None
     rows = connection.execute(
         text(
             """
-            SELECT id, merchant, date, total_minor, currency, category, source, note, created_at
+            SELECT id, merchant, date, total_minor, currency, category, source, payment_method, note,
+                   extraction_run_id AS receipt_run_id, created_at
             FROM transactions
             WHERE user_id = :user_id
             AND (CAST(:month AS date) IS NULL OR (
@@ -138,13 +153,25 @@ def list_transactions(
             ))
             AND (CAST(:category AS text) IS NULL OR category = :category)
             AND (
+              CAST(:pattern AS text) IS NULL
+              OR merchant ILIKE :pattern ESCAPE '\\'
+              OR note ILIKE :pattern ESCAPE '\\'
+              OR EXISTS (
+                SELECT 1 FROM transaction_items
+                WHERE transaction_items.transaction_id = transactions.id
+                  AND transaction_items.user_id = :user_id
+                  AND transaction_items.name ILIKE :pattern ESCAPE '\\'
+              )
+            )
+            AND (
               CAST(:cursor_created_at AS timestamptz) IS NULL
-              OR (created_at, id) < (
+              OR (date, created_at, id) < (
+                CAST(:cursor_date AS date),
                 CAST(:cursor_created_at AS timestamptz),
                 CAST(:cursor_id AS uuid)
               )
             )
-            ORDER BY created_at DESC, id DESC
+            ORDER BY date DESC, created_at DESC, id DESC
             LIMIT :limit
             """
         ),
@@ -152,6 +179,8 @@ def list_transactions(
             "user_id": user_id,
             "month": month,
             "category": category,
+            "pattern": _like(search),
+            "cursor_date": cursor_date,
             "cursor_created_at": cursor_created_at,
             "cursor_id": cursor_id,
             "limit": limit + 1,
@@ -161,7 +190,7 @@ def list_transactions(
     page = rows[:limit]
     items = [_read(connection, user_id, row) for row in page]
     next_cursor = (
-        encode_cursor(items[-1].created_at, items[-1].id) if has_more and items else None
+        encode_cursor(items[-1].date, items[-1].created_at, items[-1].id) if has_more and items else None
     )
     return items, next_cursor
 
@@ -177,7 +206,7 @@ def update_transaction(
         return None
     fields = body.model_dump(exclude_unset=True)
     items = fields.pop("items", None)
-    allowed = {"merchant", "date", "total_minor", "category", "source", "note"}
+    allowed = {"merchant", "date", "total_minor", "category", "source", "payment_method", "note"}
     fields = {key: value for key, value in fields.items() if key in allowed}
     if "note" in fields:
         fields["note"] = (fields["note"] or "").strip() or None

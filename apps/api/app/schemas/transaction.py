@@ -10,6 +10,9 @@ Category = Literal[
     "Groceries", "Dining", "Transport", "Shopping", "Bills", "Other"
 ]
 Source = Literal["photo", "pdf", "manual", "chat"]
+PaymentMethod = Literal[
+    "Cash", "QRIS", "Debit card", "Credit card", "E-wallet", "Bank transfer", "Other"
+]
 # Rp 10 trillion: far beyond any real receipt, and safely inside a bigint column.
 MAX_MINOR = 10_000_000_000_000
 
@@ -40,6 +43,7 @@ class TransactionCreate(BaseModel):
     total_minor: int = Field(ge=0, le=MAX_MINOR)
     category: Category
     source: Source = "manual"
+    payment_method: PaymentMethod | None = None
     note: str | None = Field(default=None, max_length=500)
     items: list[ItemIn] = Field(default_factory=list)
 
@@ -55,6 +59,7 @@ class TransactionUpdate(BaseModel):
     total_minor: int | None = Field(default=None, ge=0, le=MAX_MINOR)
     category: Category | None = None
     source: Source | None = None
+    payment_method: PaymentMethod | None = None
     note: str | None = Field(default=None, max_length=500)
     items: list[ItemIn] | None = None
 
@@ -74,7 +79,9 @@ class TransactionRead(BaseModel):
     currency: str
     category: Category
     source: Source
+    payment_method: PaymentMethod | None
     note: str | None
+    receipt_run_id: UUID | None
     items: list[ItemRead]
     created_at: datetime
 

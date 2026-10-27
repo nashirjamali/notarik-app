@@ -11,6 +11,7 @@ TABLES = (
     "transactions",
     "transaction_items",
     "budgets",
+    "category_budgets",
     "merchant_memory",
 )
 RLS_TABLES = TABLES + (
@@ -85,6 +86,17 @@ def insert_row(connection, table: str, user_id) -> None:
                 """
                 INSERT INTO budgets (user_id, month, total_minor)
                 VALUES (:user_id, DATE '2026-10-01', 100000)
+                """
+            ),
+            {"user_id": user_id},
+        )
+        return
+    if table == "category_budgets":
+        connection.execute(
+            text(
+                """
+                INSERT INTO category_budgets (user_id, month, category, total_minor)
+                VALUES (:user_id, DATE '2026-10-01', 'Dining', 100000)
                 """
             ),
             {"user_id": user_id},

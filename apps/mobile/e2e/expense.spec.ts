@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 const textbox = (page: Page, name: string) =>
   page.getByRole("textbox", { name }).filter({ visible: true });
-const button = (page: Page, name: string) =>
+const button = (page: Page, name: string | RegExp) =>
   page.getByRole("button", { name }).filter({ visible: true });
 const radio = (page: Page, name: string) =>
   page.getByRole("radio", { name }).filter({ visible: true });
@@ -35,7 +35,7 @@ test("sign up, add an expense, see it, and delete it", async ({ page }) => {
   await button(page, "Back").click();
   await tab(page, "Transactions").click();
   await page.getByText("Warung").filter({ visible: true }).click();
-  await button(page, "Delete").click();
+  await button(page, "Delete transaction").click();
   await button(page, "Confirm delete").click();
   await expect(
     page.getByText("No expenses this month").filter({ visible: true }).first(),
@@ -73,7 +73,7 @@ test("add expense: category override, missing amount, close and receipt shortcut
   await radio(page, "Shopping").click();
   await expect(radio(page, "Shopping")).toBeChecked();
   await button(page, "Save expense").click();
-  await expect(page.getByText(/· Shopping/)).toBeVisible();
+  await expect(button(page, "Change category")).toContainText("Shopping");
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await tab(page, "Add").click();
@@ -135,6 +135,96 @@ test("chat: a Home suggestion opens the chat with the answer, and the camera ope
   await expect(page.getByText(/No budget is set for/)).toBeVisible();
   await button(page, "Scan a receipt").click();
   await expect(page.getByText("Fit the whole receipt in the frame")).toBeVisible();
+});
+
+async function addByText(page: Page, text: string) {
+  await tab(page, "Add").click();
+  await textbox(page, "What did you spend?").fill(text);
+  await button(page, "Save expense").click();
+  await expect(button(page, "Change category")).toBeVisible();
+}
+
+test("transactions: days with totals, category filter, search and months", async ({ page }) => {
+  await signUp(page, `e2e-list-${Date.now()}@example.com`);
+  await addByText(page, "makan siang 35rb di warteg");
+  await button(page, "Back").click();
+  await addByText(page, "belanja 120rb di indomaret");
+  await button(page, "Back").click();
+  await tab(page, "Transactions").click();
+
+  await expect(page.getByText("Today", { exact: true })).toBeVisible();
+  await expect(page.getByText("Rp 155.000").first()).toBeVisible(); // the day and the month
+  await expect(button(page, /Warteg, Rp 35.000/)).toBeVisible();
+  await expect(button(page, /Indomaret, Rp 120.000/)).toBeVisible();
+
+  await radio(page, "Groceries").click();
+  await expect(button(page, /Indomaret/)).toBeVisible();
+  await expect(button(page, /Warteg/)).toBeHidden();
+  await radio(page, "All").click();
+
+  await button(page, "Search").click();
+  await textbox(page, "Search expenses").fill("warteg");
+  await expect(button(page, /Warteg/)).toBeVisible();
+  await expect(button(page, /Indomaret/)).toBeHidden();
+  await textbox(page, "Search expenses").fill("zzzz");
+  await expect(page.getByText("No matching expenses")).toBeVisible();
+  await button(page, "Close search").click();
+
+  await button(page, "Previous month").click();
+  await expect(page.getByText("No expenses this month")).toBeVisible();
+  await button(page, "Next month").click();
+  await button(page, /Warteg/).click();
+  await expect(page.getByText("Details", { exact: true })).toBeVisible();
+});
+
+test("transaction details: category, payment, note, items and delete from the menu", async ({ page }) => {
+  await signUp(page, `e2e-detail-${Date.now()}@example.com`);
+  await addByText(page, "makan siang 35rb di warteg");
+  await expect(page.getByText("Rp 35.000").first()).toBeVisible();
+  await expect(page.getByText("Add payment")).toBeVisible();
+
+  await button(page, "Change category").click();
+  await radio(page, "Groceries").click();
+  await expect(button(page, "Change category")).toContainText("Groceries");
+
+  await button(page, "Change payment").click();
+  await radio(page, "QRIS").click();
+  await expect(button(page, "Change payment")).toContainText("QRIS");
+
+  await button(page, "Change note").click();
+  await textbox(page, "Note").fill("with Ada");
+  await textbox(page, "Note").press("Enter");
+  await expect(button(page, "Change note")).toContainText("with Ada");
+  // Not from a receipt: no receipt row, and it has no items.
+  await expect(button(page, "View receipt")).toBeHidden();
+
+  await button(page, "More").click();
+  await button(page, "Delete expense").click();
+  await button(page, "Confirm delete").click();
+  await expect(page.getByText("No expenses this month")).toBeVisible();
+});
+
+test("recap and budget: ring, categories and editing the budgets", async ({ page }) => {
+  await signUp(page, `e2e-recap-${Date.now()}@example.com`);
+  await addByText(page, "makan siang 120rb di warteg");
+  await button(page, "Back").click();
+  await page.getByText("Recap", { exact: true }).first().click();
+  await expect(page.getByText("Recap & Budget")).toBeVisible();
+  await expect(page.getByText("Rp 120.000").first()).toBeVisible();
+  await expect(page.getByText("No budget", { exact: true })).toBeVisible();
+
+  await button(page, "Edit budgets").click();
+  await textbox(page, "Monthly budget").fill("1jt");
+  await textbox(page, "Food & Drink budget").fill("100rb");
+  await button(page, "Save budgets").click();
+
+  await expect(page.getByText("12%")).toBeVisible();
+  await expect(page.getByText("of Rp 1.000.000")).toBeVisible();
+  await expect(page.getByText("Rp 20.000 over")).toBeVisible();
+  await expect(page.getByText("of Rp 100.000")).toBeHidden();
+
+  await button(page, "Previous month").click();
+  await expect(page.getByText("No spending this month yet")).toBeVisible();
 });
 
 test("add expense: the close button returns to home", async ({ page }) => {
