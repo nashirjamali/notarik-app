@@ -3,6 +3,8 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
+  // The CI runner is slower than a laptop: a list refetch or a chat answer can take longer than 5 s.
+  expect: { timeout: 10_000 },
   use: {
     ...devices["Desktop Chrome"],
     baseURL: "http://127.0.0.1:4173",

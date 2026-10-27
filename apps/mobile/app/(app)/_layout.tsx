@@ -9,7 +9,8 @@ export default function AppLayout() {
       />
       <Stack.Screen
         name="quick-add"
-        options={{ presentation: "transparentModal", animation: "fade", contentStyle: { backgroundColor: "transparent" } }}
+        // The sheet fades its scrim and slides itself, so the stack adds no animation of its own.
+        options={{ presentation: "transparentModal", animation: "none", contentStyle: { backgroundColor: "transparent" } }}
       />
     </Stack>
   );
