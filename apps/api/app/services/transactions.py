@@ -108,6 +108,21 @@ def create_transaction(
     return _read(connection, user_id, row)
 
 
+def create_transactions(
+    connection: Connection, user_id: UUID, rows: list[TransactionCreate]
+) -> list[TransactionRead]:
+    """Creates every row on the caller's connection, in order.
+
+    The connection's transaction makes it all or nothing: if one insert fails, the request
+    errors out and none of the rows are saved. A batch is always typed in by hand, so the
+    source is `manual` whatever the body says.
+    """
+    return [
+        create_transaction(connection, user_id, row.model_copy(update={"source": "manual"}))
+        for row in rows
+    ]
+
+
 def get_transaction(
     connection: Connection, user_id: UUID, transaction_id: UUID
 ) -> TransactionRead | None:

@@ -12,6 +12,8 @@ from app.core.validation import parse_month
 from app.dependencies import current_user, user_connection
 from app.schemas.transaction import (
     Category,
+    TransactionBatchCreate,
+    TransactionBatchRead,
     TransactionCreate,
     TransactionPage,
     TransactionRead,
@@ -19,6 +21,7 @@ from app.schemas.transaction import (
 )
 from app.services.transactions import (
     create_transaction,
+    create_transactions,
     decode_cursor,
     delete_transaction,
     get_transaction,
@@ -48,6 +51,15 @@ def create(
     user_id: UUID = Depends(current_user),
 ):
     return create_transaction(connection, user_id, body)
+
+
+@router.post("/batch", response_model=TransactionBatchRead, status_code=201)
+def create_batch(
+    body: TransactionBatchCreate,
+    connection: Connection = Depends(user_connection),
+    user_id: UUID = Depends(current_user),
+):
+    return TransactionBatchRead(items=create_transactions(connection, user_id, body.transactions))
 
 
 @router.get("", response_model=TransactionPage)

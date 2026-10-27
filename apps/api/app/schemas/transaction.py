@@ -4,7 +4,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 Category = Literal[
     "Groceries", "Dining", "Transport", "Shopping", "Bills", "Other"
@@ -15,6 +15,8 @@ PaymentMethod = Literal[
 ]
 # Rp 10 trillion: far beyond any real receipt, and safely inside a bigint column.
 MAX_MINOR = 10_000_000_000_000
+# The most rows one batch request may create (Quick add with several expenses).
+MAX_BATCH = 20
 
 
 def _sane_date(value: Date) -> Date:
@@ -53,6 +55,16 @@ class TransactionCreate(BaseModel):
         return _sane_date(value)
 
 
+class TransactionBatchCreate(BaseModel):
+    transactions: list[TransactionCreate] = Field(min_length=1, max_length=MAX_BATCH)
+
+    @model_validator(mode="after")
+    def rows_add_up_in_range(self) -> "TransactionBatchCreate":
+        if sum(row.total_minor for row in self.transactions) > MAX_MINOR:
+            raise ValueError("the rows add up to too much")
+        return self
+
+
 class TransactionUpdate(BaseModel):
     merchant: str | None = Field(default=None, min_length=1, max_length=200)
     date: Date | None = None
@@ -84,6 +96,10 @@ class TransactionRead(BaseModel):
     receipt_run_id: UUID | None
     items: list[ItemRead]
     created_at: datetime
+
+
+class TransactionBatchRead(BaseModel):
+    items: list[TransactionRead]
 
 
 class TransactionPage(BaseModel):
