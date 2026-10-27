@@ -337,3 +337,45 @@ def test_budget_reports_days_left_and_the_recap_compares_with_last_month(api_cli
             "change_percent": -50,
             "text": "Food is down 50% vs last month. Nice!",
         }
+
+
+def test_settings_default_on_and_update_partially(api_client, make_user):
+    with api_client(make_user()) as client:
+        assert client.get("/me/settings").json() == {"auto_read_receipts": True, "notifications": True}
+        off = client.patch("/me/settings", json={"auto_read_receipts": False})
+        assert off.status_code == 200
+        assert off.json() == {"auto_read_receipts": False, "notifications": True}
+        # A second partial update keeps the first change.
+        both = client.patch("/me/settings", json={"notifications": False})
+        assert both.json() == {"auto_read_receipts": False, "notifications": False}
+        assert client.get("/me/settings").json() == both.json()
+        assert client.patch("/me/settings", json={"notifications": "maybe"}).status_code == 422
+
+
+def test_settings_are_per_user(api_client, make_user):
+    first, second = make_user(), make_user()
+    with api_client(first) as client:
+        client.patch("/me/settings", json={"notifications": False})
+    with api_client(second) as client:
+        assert client.get("/me/settings").json()["notifications"] is True
+
+
+def test_export_is_csv_of_own_expenses_and_neutralises_formulas(api_client, make_user):
+    with api_client(make_user()) as client:
+        _expense(client, "Warteg", 0, 25_000)
+        _expense(client, "=HYPERLINK(\"http://x\")", 1, 10_000, "Transport")
+    with api_client(make_user()) as other:
+        _expense(other, "Someone else", 0, 99_000)
+        mine = other.get("/transactions/export")
+    assert mine.status_code == 200
+    assert mine.headers["content-type"].startswith("text/csv")
+    assert "attachment" in mine.headers["content-disposition"]
+    assert "Someone else" in mine.text and "Warteg" not in mine.text
+
+    with api_client(make_user()) as client:
+        _expense(client, "=HYPERLINK(\"http://x\")", 0, 10_000)
+        body = client.get("/transactions/export").text
+    lines = body.strip().splitlines()
+    assert lines[0] == "date,merchant,category,amount_idr,payment_method,source,note"
+    assert "'=HYPERLINK" in lines[1]
+    assert ",10000," in lines[1]

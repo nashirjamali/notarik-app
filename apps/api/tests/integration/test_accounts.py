@@ -19,6 +19,7 @@ def test_signup_login_and_refresh(anon_client, api_client):
         me = client.get("/me")
     assert me.status_code == 200
     assert me.json()["user_id"] == body["user_id"]
+    assert me.json()["email"] == email
 
     logged_in = anon_client.post(
         "/auth/login", json={"email": email, "password": "correct-horse"}
