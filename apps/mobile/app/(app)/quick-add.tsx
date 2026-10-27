@@ -87,9 +87,11 @@ export default function QuickAddScreen() {
     };
   }, [height]);
 
-  // Figma: the sheet starts 180 from the top of an 844 high screen.
+  // The sheet is as tall as its content and never taller than Figma's 664 (it starts 180 from the
+  // top of an 844 high screen) or the room left above the keyboard.
   const roomAbove = height - insets.top - keyboard - 12;
-  const sheetHeight = Math.min(Math.max(height - 180, 480), roomAbove);
+  const maxSheetHeight = Math.min(Math.max(height - 180, 480), roomAbove);
+  const [measuredHeight, setMeasuredHeight] = useState(0);
   const parsed = useMemo(() => parseQuickAdd(text), [text]);
   const category = picked ?? parsed.category;
   const typed = text.trim().length > 0;
@@ -176,14 +178,15 @@ export default function QuickAddScreen() {
       </Animated.View>
       <View style={styles.avoid} pointerEvents="box-none">
         <Animated.View
+          onLayout={(event) => setMeasuredHeight(event.nativeEvent.layout.height)}
           style={[
             styles.sheet,
             {
-              height: sheetHeight,
+              maxHeight: maxSheetHeight,
               marginBottom: keyboard,
               backgroundColor: theme.surface,
               transform: [
-                { translateY: slide.interpolate({ inputRange: [0, 1], outputRange: [sheetHeight, 0] }) },
+                { translateY: slide.interpolate({ inputRange: [0, 1], outputRange: [measuredHeight || height, 0] }) },
                 { translateY: drag },
               ],
             },
