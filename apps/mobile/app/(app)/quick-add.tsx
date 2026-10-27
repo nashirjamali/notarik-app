@@ -39,7 +39,7 @@ const noOutline = Platform.OS === "web" ? ({ outlineStyle: "none" } as object) :
 
 // The field has 12 of padding above and below its text.
 const INPUT_PADDING = 24;
-const MIN_INPUT_HEIGHT = 56;
+const MIN_INPUT_HEIGHT = 48;
 
 const CATEGORY_ORDER: Category[] = ["Dining", "Groceries", "Transport", "Bills", "Shopping", "Other"];
 
@@ -235,7 +235,7 @@ export default function QuickAddScreen() {
               }
               style={[
                 styles.input,
-                { color: theme.text, borderColor: theme.accent, backgroundColor: theme.surface, ...theme.type.body1 },
+                { color: theme.text, borderColor: theme.accent, backgroundColor: theme.surface, ...theme.type.body2 },
                 noOutline,
                 Platform.OS !== "web" && { height: inputHeight },
               ]}
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderRadius: 12,
     padding: 12,
-    minHeight: 56,
+    minHeight: 48,
     textAlignVertical: "top",
   },
   preview: { borderRadius: 24, paddingTop: 14, paddingBottom: 16, paddingHorizontal: 16, gap: 12 },
