@@ -24,7 +24,7 @@ export function Nav() {
         <Link
           href="/app"
           prefetch={false}
-          className="rounded-full bg-brand-primary px-4 py-3 font-heading text-button-2 font-bold text-text-inverse transition-opacity hover:opacity-90 md:px-6 md:py-3.5"
+          className="rounded-full bg-brand-primary px-4 py-3 font-heading text-button-2 font-bold text-text-inverse transition-[translate,scale,background-color] hover:-translate-y-0.5 hover:bg-brand-primary-strong active:scale-95 md:px-6 md:py-3.5"
         >
           Open web app
         </Link>

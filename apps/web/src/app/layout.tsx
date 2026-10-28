@@ -40,11 +40,20 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
+    // Browser extensions (Grammarly, Dark Reader, translators) add attributes to <html> and <body>
+    // before React hydrates. suppressHydrationWarning only covers these two elements, not their children.
     <html
       lang="en"
       className={`${dmSans.variable} ${poppins.variable} h-full scroll-smooth antialiased`}
+      suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col font-sans">{children}</body>
+      <head>
+        {/* Lets the CSS hide scroll-reveal content only when JavaScript is running. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
+      <body className="flex min-h-full flex-col font-sans" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }
