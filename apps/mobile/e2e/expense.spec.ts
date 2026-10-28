@@ -88,6 +88,16 @@ test("quick add: save the lines as one expense with items", async ({ page }) => 
   await expect(page.getByText("2 items")).toBeVisible();
 });
 
+test("quick add: amounts written as words are read like digits", async ({ page }) => {
+  await signUp(page, `e2e-words-${Date.now()}@example.com`);
+  await tab(page, "Add").click();
+  await textbox(page, "What did you spend?").fill("kopi dua puluh lima ribu, parkir lima ribu");
+  await expect(page.getByText("Notarik understood 2 expenses")).toBeVisible();
+  await expect(page.getByText("Rp 25.000").first()).toBeVisible();
+  await expect(page.getByText("Rp 5.000").first()).toBeVisible();
+  await expect(page.getByText("Rp 30.000").first()).toBeVisible();
+});
+
 test("sign up stores the name and shows it in settings", async ({ page }) => {
   const email = `e2e-name-${Date.now()}@example.com`;
   await signUp(page, email, "Ada Lovelace");
