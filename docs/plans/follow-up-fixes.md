@@ -1,6 +1,6 @@
 # Plan: three follow-ups after multi Quick add
 
-Status: **plan only, nothing built.** Three separate pieces of work, ordered from smallest to largest. They do not depend on each other, so each can be its own branch and PR.
+Status: **A (PR #17) and B (PR #18) are merged; C1 (number words) is built; C2 and C3 are not.** Three separate pieces of work, ordered from smallest to largest. They do not depend on each other, so each can be its own branch and PR.
 
 | # | Piece | Size | Type |
 |---|-------|------|------|
@@ -89,7 +89,9 @@ Refactoring a sheet that works (Quick add) can break it. Do it in small commits:
 
 Today the sheet has a "Voice" button that only says "Voice entry is not available yet", and the parser (`apps/mobile/src/lib/quickAdd.ts`) understands digits only. The three parts below build on each other and share one rule: **everything ends up as text in the same box, then in the same editable list, and nothing is saved until the person taps Save.**
 
-### C1. Numbers written as words (do this first)
+### C1. Numbers written as words (done)
+
+Built as `wordsToDigits` in `apps/mobile/src/lib/numberWords.ts`, called at the start of `parseQuickAdd` and `splitEntries`. It converts only runs that contain `ribu`, `juta`, `seribu` or `sejuta` (so `dua kopi` stays a quantity), keeps a bare digit after the amount as a quantity (`lima ribu dua kopi`), and writes the result with dots (`25.000`) so the splitter treats it as a sure amount. English forms (`twenty five thousand`) were not added: `25k` already works and the app is Indonesian first.
 
 Speech and fast typing give words, not digits: `kopi dua puluh lima ribu`, `parkir lima ribu`, `bayar kos satu setengah juta`.
 
