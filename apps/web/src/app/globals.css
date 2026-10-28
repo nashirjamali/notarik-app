@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens from the Figma file "Notarik" (collection "Color", light mode only).
+ * Names follow Figma: color/brand/primary -> --color-brand-primary -> bg-brand-primary.
+ * The default Tailwind palette is removed on purpose: only Notarik colors exist.
+ */
+@theme {
+  --color-*: initial;
+
+  /* Primary was nudged from #8e55ea to #8d54ea so white text on it reaches 4.5:1 (4.54). */
+  --color-brand-primary: #8d54ea;
+  --color-brand-accent: #8d54ea80; /* primary at 50% */
+  --color-brand-accent-subtle: #8d54ea1a; /* primary at 10% */
+  /* Violet for small text and links: 4.6:1 or better on white, surface-subtle and the 10% tint. */
+  --color-brand-primary-strong: #8345e8;
+  /* Dark end of the violet gradient (banners, cards). The light end is brand-primary. */
+  --color-brand-gradient-to: #753dd1;
+
+  /* Feature card backgrounds (landing page only; not in the Figma Color collection). */
+  --color-pastel-lavender: #ede3fc;
+  --color-pastel-blue: #dbe9ff;
+  --color-pastel-pink: #fcedf5;
+  --color-pastel-yellow: #fff5d6;
+
+  --color-text-primary: #141718;
+  --color-text-secondary: #6c7275;
+  --color-text-inverse: #fefefe;
+
+  --color-surface-default: #fefefe;
+  --color-surface-subtle: #f3f5f7;
+  --color-surface-inverse: #141718;
+
+  --color-border-default: #e8ecef;
+
+  --color-status-success: #3fdd78;
+  --color-status-success-subtle: #ecfcf1;
+  --color-status-warning: #dda73f;
+  --color-status-warning-subtle: #fcf6ec;
+  --color-status-danger: #d84c10;
+  --color-status-danger-subtle: #fbede7;
+
+  --color-category-groceries: #29b26e;
+  --color-category-dining: #ff9433;
+  --color-category-transport: #338cff;
+  --color-category-shopping: #ed59a6;
+  --color-category-bills: #f2bf1a;
+  --color-category-other: #999ea8;
+
+  /* Fonts: DM Sans for headings and buttons, Poppins for body (see layout.tsx). */
+  --font-heading: var(--font-dm-sans), sans-serif;
+  --font-sans: var(--font-poppins), sans-serif;
+
+  /* Type scale: Figma text styles (size / line height). Weight comes from font-bold etc. */
+  --text-hero: 6rem; /* Hero 96/96 */
+  --text-hero--line-height: 1;
+  --text-headline-1: 4rem; /* 64/64 */
+  --text-headline-1--line-height: 1;
+  --text-headline-2: 3rem; /* 48/56 */
+  --text-headline-2--line-height: calc(56 / 48);
+  --text-headline-3: 2.5rem; /* 40/48 */
+  --text-headline-3--line-height: calc(48 / 40);
+  --text-headline-4: 2rem; /* 32/40 */
+  --text-headline-4--line-height: calc(40 / 32);
+  --text-body-1: 1.5rem; /* 24/32 */
+  --text-body-1--line-height: calc(32 / 24);
+  --text-body-2: 1rem; /* 16/24 */
+  --text-body-2--line-height: 1.5;
+  --text-caption: 0.875rem; /* 14/24 */
+  --text-caption--line-height: calc(24 / 14);
+  --text-caption-small: 0.75rem; /* 12/20 */
+  --text-caption-small--line-height: calc(20 / 12);
+  --text-button-1: 1rem; /* Button/1 16/16 */
+  --text-button-1--line-height: 1;
+  --text-button-2: 0.875rem; /* Button/2 14/16 */
+  --text-button-2--line-height: calc(16 / 14);
+}
+
+body {
+  background: var(--color-surface-default);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
