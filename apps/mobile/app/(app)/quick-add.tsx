@@ -1,23 +1,17 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
-  Easing,
   Image,
-  Keyboard,
-  PanResponder,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  useWindowDimensions,
   View,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { ApiError, type FieldError } from "@/lib/api";
 import { createTransaction, createTransactionsBatch } from "@/lib/client";
@@ -35,11 +29,11 @@ import {
 } from "@/lib/quickAddRows";
 import { dateLabel } from "@/lib/receipt";
 import type { TransactionInput } from "@/lib/types";
+import { BottomSheet } from "@/components/BottomSheet";
 import { OptionSheet } from "@/components/OptionSheet";
 import { QuickAddRows } from "@/features/QuickAddRows";
 import { useTheme } from "@/theme/Theme";
 import { categoryLabels, type Category } from "@/theme/tokens";
-import Close from "../../assets/svg/sheet-x.svg";
 import Mark from "../../assets/svg/review-mark.svg";
 
 const camera = require("../../assets/icons/3d-camera.png");
@@ -66,44 +60,12 @@ export default function QuickAddScreen() {
   const theme = useTheme();
   const router = useRouter();
   const client = useQueryClient();
-  const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
   const [text, setText] = useState("");
   const [picked, setPicked] = useState<Category | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [serverErrors, setServerErrors] = useState<FieldError[]>([]);
   const [inputHeight, setInputHeight] = useState(MIN_INPUT_HEIGHT);
-  const [slide] = useState(() => new Animated.Value(0));
-  const [drag] = useState(() => new Animated.Value(0));
-  const [keyboard, setKeyboard] = useState(0);
 
-  useEffect(() => {
-    Animated.timing(slide, {
-      toValue: 1,
-      duration: 260,
-      easing: Easing.out(Easing.cubic),
-      useNativeDriver: true,
-    }).start();
-  }, [slide]);
-
-  // The sheet sits on top of the keyboard and shrinks to the room left under the status bar.
-  useEffect(() => {
-    const ios = Platform.OS === "ios";
-    const show = Keyboard.addListener(ios ? "keyboardWillChangeFrame" : "keyboardDidShow", (event) =>
-      setKeyboard(Math.max(0, height - event.endCoordinates.screenY)),
-    );
-    const hide = Keyboard.addListener(ios ? "keyboardWillHide" : "keyboardDidHide", () => setKeyboard(0));
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, [height]);
-
-  // The sheet is as tall as its content and never taller than Figma's 664 (it starts 180 from the
-  // top of an 844 high screen) or the room left above the keyboard.
-  const roomAbove = height - insets.top - keyboard - 12;
-  const maxSheetHeight = Math.min(Math.max(height - 180, 480), roomAbove);
-  const [measuredHeight, setMeasuredHeight] = useState(0);
   const entries = useMemo(() => rowsFromText(text), [text]);
   const cutOff = useMemo(() => splitEntries(text).length > MAX_ROWS, [text]);
   const [edits, setEdits] = useState<Record<string, RowEdit>>({});
@@ -161,34 +123,6 @@ export default function QuickAddScreen() {
     else router.replace("/");
   }
 
-  function close() {
-    Keyboard.dismiss();
-    Animated.timing(slide, {
-      toValue: 0,
-      duration: 200,
-      easing: Easing.in(Easing.cubic),
-      useNativeDriver: true,
-    }).start(leave);
-  }
-
-  // Pulling the top of the sheet down closes it; letting go early springs it back.
-  const [panResponder] = useState(() =>
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (_event, gesture) =>
-        gesture.dy > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
-      onPanResponderMove: (_event, gesture) => drag.setValue(Math.max(0, gesture.dy)),
-      onPanResponderRelease: (_event, gesture) => {
-        if (gesture.dy > 100 || gesture.vy > 0.8) {
-          close();
-          Animated.timing(drag, { toValue: 0, duration: 0, useNativeDriver: true }).start();
-        } else {
-          Animated.spring(drag, { toValue: 0, friction: 8, useNativeDriver: true }).start();
-        }
-      },
-      onPanResponderTerminate: () => Animated.spring(drag, { toValue: 0, useNativeDriver: true }).start(),
-    }),
-  );
-
   function submit() {
     if (busy) return;
     setServerErrors([]);
@@ -230,239 +164,195 @@ export default function QuickAddScreen() {
   const fieldMessage = serverErrors[0]?.message;
 
   return (
-    <View style={styles.root}>
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: slide }]}>
+    <>
+      <BottomSheet
+        title="Add expense"
+        onClosed={leave}
+        footer={
         <Pressable
-          accessibilityLabel="Close"
           accessibilityRole="button"
-          onPress={close}
-          style={[StyleSheet.absoluteFill, { backgroundColor: theme.scrim }]}
-        />
-      </Animated.View>
-      <View style={styles.avoid} pointerEvents="box-none">
-        <Animated.View
-          onLayout={(event) => setMeasuredHeight(event.nativeEvent.layout.height)}
-          style={[
-            styles.sheet,
-            {
-              maxHeight: maxSheetHeight,
-              marginBottom: keyboard,
-              backgroundColor: theme.surface,
-              transform: [
-                { translateY: slide.interpolate({ inputRange: [0, 1], outputRange: [measuredHeight || height, 0] }) },
-                { translateY: drag },
-              ],
-            },
+          accessibilityLabel={saveLabel}
+          accessibilityState={{ busy, disabled: missingAmount }}
+          onPress={submit}
+          style={({ pressed }) => [
+            styles.save,
+            { backgroundColor: theme.accent, opacity: busy ? 0.6 : missingAmount ? 0.5 : pressed ? 0.85 : 1 },
           ]}
         >
-          <View {...panResponder.panHandlers}>
-            <View style={[styles.grabber, { backgroundColor: theme.border }]} />
-            <View style={styles.header}>
-              <Text accessibilityRole="header" style={{ color: theme.text, ...theme.type.body1Bold }}>
-                Add expense
+          {busy ? (
+            <ActivityIndicator color={theme.accentText} />
+          ) : (
+            <Text style={{ color: theme.accentText, ...theme.type.button1 }}>{saveLabel}</Text>
+          )}
+        </Pressable>
+        }
+      >
+        <TextInput
+          accessibilityLabel="What did you spend?"
+          autoFocus
+          multiline
+          // The parser reads the exact words typed, so keep the keyboard from rewriting them.
+          autoCorrect={false}
+          autoCapitalize="none"
+          spellCheck={false}
+          autoComplete="off"
+          placeholder="makan siang 35rb di warteg"
+          placeholderTextColor={theme.muted}
+          value={text}
+          onChangeText={(value) => {
+            setText(value);
+            setMessage(null);
+          }}
+          // iOS does not grow a multiline field by itself; web does.
+          onContentSizeChange={
+            Platform.OS === "web"
+              ? undefined
+              : (event) =>
+                  setInputHeight(Math.max(MIN_INPUT_HEIGHT, event.nativeEvent.contentSize.height + INPUT_PADDING))
+          }
+          style={[
+            styles.input,
+            { color: theme.text, borderColor: theme.accent, backgroundColor: theme.surface, ...theme.type.body2 },
+            noOutline,
+            Platform.OS !== "web" && { height: inputHeight },
+          ]}
+        />
+
+        {many ? (
+          <QuickAddRows
+            rows={rows}
+            asOne={asOne}
+            onAsOne={setAsOne}
+            onPickCategory={setPickingKey}
+            onRemove={(key) => setRemoved((current) => ({ ...current, [key]: true }))}
+            onAmount={(key, total) => setEdits((current) => ({ ...current, [key]: { ...current[key], total } }))}
+          />
+        ) : typed && parsed.total != null ? (
+          <View style={[styles.preview, { backgroundColor: theme.bg }]}>
+            <View style={styles.label}>
+              <Mark />
+              <Text style={{ color: theme.accent, ...theme.type.captionSmallBold }}>
+                Notarik understood
               </Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Close sheet"
-                onPress={close}
-                style={[styles.closeButton, { backgroundColor: theme.bg }]}
-              >
-                <Close />
-              </Pressable>
+            </View>
+            <View style={styles.topRow}>
+              <View style={[styles.iconTile, { backgroundColor: theme.surface }]}>
+                {category === "Dining" ? (
+                  <Image source={rice} style={styles.rice} resizeMode="contain" />
+                ) : (
+                  <View style={[styles.bigDot, { backgroundColor: theme.category[category] }]} />
+                )}
+              </View>
+              <View style={styles.meta}>
+                <Text numberOfLines={1} style={{ color: theme.text, ...theme.type.body2Bold }}>
+                  {title}
+                </Text>
+                <Text numberOfLines={1} style={caption}>
+                  {subtitle}
+                </Text>
+              </View>
+              <Text style={{ color: theme.text, ...theme.type.body1Bold }}>
+                {formatIdr(parsed.total)}
+              </Text>
+            </View>
+            <View style={styles.chips}>
+              <View style={[styles.previewChip, { backgroundColor: theme.surface }]}>
+                <View style={[styles.dot, { backgroundColor: theme.category[category] }]} />
+                <Text style={{ color: theme.text, ...theme.type.captionSmallBold }}>
+                  {categoryLabels[category]}
+                </Text>
+              </View>
+              <View style={[styles.previewChip, { backgroundColor: theme.surface }]}>
+                <Text style={caption}>{dateChip(parsed.date, now)}</Text>
+              </View>
             </View>
           </View>
-          <ScrollView
-            contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}
-          >
-            <TextInput
-              accessibilityLabel="What did you spend?"
-              autoFocus
-              multiline
-              // The parser reads the exact words typed, so keep the keyboard from rewriting them.
-              autoCorrect={false}
-              autoCapitalize="none"
-              spellCheck={false}
-              autoComplete="off"
-              placeholder="makan siang 35rb di warteg"
-              placeholderTextColor={theme.muted}
-              value={text}
-              onChangeText={(value) => {
-                setText(value);
-                setMessage(null);
-              }}
-              // iOS does not grow a multiline field by itself; web does.
-              onContentSizeChange={
-                Platform.OS === "web"
-                  ? undefined
-                  : (event) =>
-                      setInputHeight(Math.max(MIN_INPUT_HEIGHT, event.nativeEvent.contentSize.height + INPUT_PADDING))
-              }
-              style={[
-                styles.input,
-                { color: theme.text, borderColor: theme.accent, backgroundColor: theme.surface, ...theme.type.body2 },
-                noOutline,
-                Platform.OS !== "web" && { height: inputHeight },
-              ]}
-            />
+        ) : null}
 
-            {many ? (
-              <QuickAddRows
-                rows={rows}
-                asOne={asOne}
-                onAsOne={setAsOne}
-                onPickCategory={setPickingKey}
-                onRemove={(key) => setRemoved((current) => ({ ...current, [key]: true }))}
-                onAmount={(key, total) => setEdits((current) => ({ ...current, [key]: { ...current[key], total } }))}
-              />
-            ) : typed && parsed.total != null ? (
-              <View style={[styles.preview, { backgroundColor: theme.bg }]}>
-                <View style={styles.label}>
-                  <Mark />
-                  <Text style={{ color: theme.accent, ...theme.type.captionSmallBold }}>
-                    Notarik understood
-                  </Text>
-                </View>
-                <View style={styles.topRow}>
-                  <View style={[styles.iconTile, { backgroundColor: theme.surface }]}>
-                    {category === "Dining" ? (
-                      <Image source={rice} style={styles.rice} resizeMode="contain" />
-                    ) : (
-                      <View style={[styles.bigDot, { backgroundColor: theme.category[category] }]} />
-                    )}
-                  </View>
-                  <View style={styles.meta}>
-                    <Text numberOfLines={1} style={{ color: theme.text, ...theme.type.body2Bold }}>
-                      {title}
+        {message || fieldMessage ? (
+          <Text accessibilityRole="alert" style={{ color: theme.danger, ...theme.type.caption }}>
+            {message ?? fieldMessage}
+          </Text>
+        ) : null}
+
+        {cutOff ? <Text style={caption}>Only the first {MAX_ROWS} expenses are used.</Text> : null}
+
+        {!many ? (
+          <View style={{ gap: 8 }}>
+            <Text style={caption}>Category</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8, paddingRight: 24 }}
+              style={styles.chipScroll}
+            >
+              {CATEGORY_ORDER.map((name) => {
+                const selected = name === category;
+                const color = theme.category[name];
+                return (
+                  <Pressable
+                    key={name}
+                    accessibilityRole="radio"
+                    accessibilityLabel={categoryLabels[name]}
+                    aria-checked={selected}
+                    onPress={() => setPicked(name)}
+                    style={[
+                      styles.category,
+                      selected
+                        ? { backgroundColor: color, borderColor: color }
+                        : { backgroundColor: theme.surface, borderColor: theme.border },
+                    ]}
+                  >
+                    <View style={[styles.dot, { backgroundColor: selected ? theme.accentText : color }]} />
+                    <Text
+                      style={{
+                        color: selected ? theme.accentText : theme.text,
+                        ...(selected ? theme.type.captionBold : theme.type.caption),
+                      }}
+                    >
+                      {categoryLabels[name]}
                     </Text>
-                    <Text numberOfLines={1} style={caption}>
-                      {subtitle}
-                    </Text>
-                  </View>
-                  <Text style={{ color: theme.text, ...theme.type.body1Bold }}>
-                    {formatIdr(parsed.total)}
-                  </Text>
-                </View>
-                <View style={styles.chips}>
-                  <View style={[styles.previewChip, { backgroundColor: theme.surface }]}>
-                    <View style={[styles.dot, { backgroundColor: theme.category[category] }]} />
-                    <Text style={{ color: theme.text, ...theme.type.captionSmallBold }}>
-                      {categoryLabels[category]}
-                    </Text>
-                  </View>
-                  <View style={[styles.previewChip, { backgroundColor: theme.surface }]}>
-                    <Text style={caption}>{dateChip(parsed.date, now)}</Text>
-                  </View>
-                </View>
-              </View>
-            ) : null}
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          </View>
+        ) : null}
 
-            {message || fieldMessage ? (
-              <Text accessibilityRole="alert" style={{ color: theme.danger, ...theme.type.caption }}>
-                {message ?? fieldMessage}
-              </Text>
-            ) : null}
-
-            {cutOff ? <Text style={caption}>Only the first {MAX_ROWS} expenses are used.</Text> : null}
-
-            {!many ? (
-              <View style={{ gap: 8 }}>
-                <Text style={caption}>Category</Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ gap: 8, paddingRight: 24 }}
-                  style={styles.chipScroll}
-                >
-                  {CATEGORY_ORDER.map((name) => {
-                    const selected = name === category;
-                    const color = theme.category[name];
-                    return (
-                      <Pressable
-                        key={name}
-                        accessibilityRole="radio"
-                        accessibilityLabel={categoryLabels[name]}
-                        aria-checked={selected}
-                        onPress={() => setPicked(name)}
-                        style={[
-                          styles.category,
-                          selected
-                            ? { backgroundColor: color, borderColor: color }
-                            : { backgroundColor: theme.surface, borderColor: theme.border },
-                        ]}
-                      >
-                        <View style={[styles.dot, { backgroundColor: selected ? theme.accentText : color }]} />
-                        <Text
-                          style={{
-                            color: selected ? theme.accentText : theme.text,
-                            ...(selected ? theme.type.captionBold : theme.type.caption),
-                          }}
-                        >
-                          {categoryLabels[name]}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-              </View>
-            ) : null}
-
-            <View style={{ gap: 8 }}>
-              <Text style={caption}>Or add another way</Text>
-              <View style={styles.altRow}>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Snap receipt"
-                  onPress={() => router.replace("/snap")}
-                  style={[styles.alt, { borderColor: theme.border, backgroundColor: theme.surface }]}
-                >
-                  <View style={[styles.altTile, { backgroundColor: theme.bg }]}>
-                    <Image source={camera} style={styles.altIcon} resizeMode="contain" />
-                  </View>
-                  <View>
-                    <Text style={{ color: theme.text, ...theme.type.captionBold }}>Snap receipt</Text>
-                    <Text style={caption}>Photo or PDF</Text>
-                  </View>
-                </Pressable>
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Voice"
-                  onPress={() => setMessage("Voice entry is not available yet")}
-                  style={[styles.alt, { borderColor: theme.border, backgroundColor: theme.surface }]}
-                >
-                  <View style={[styles.altTile, { backgroundColor: theme.bg }]}>
-                    <Image source={mic} style={styles.altIcon} resizeMode="contain" />
-                  </View>
-                  <View>
-                    <Text style={{ color: theme.text, ...theme.type.captionBold }}>Voice</Text>
-                    <Text style={caption}>Just say it</Text>
-                  </View>
-                </Pressable>
-              </View>
-            </View>
-          </ScrollView>
-
-          <View style={[styles.bottom, { backgroundColor: theme.surface, paddingBottom: keyboard > 0 ? 12 : Math.max(insets.bottom, 0) + 24 }]}>
+        <View style={{ gap: 8 }}>
+          <Text style={caption}>Or add another way</Text>
+          <View style={styles.altRow}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={saveLabel}
-              accessibilityState={{ busy, disabled: missingAmount }}
-              onPress={submit}
-              style={({ pressed }) => [
-                styles.save,
-                { backgroundColor: theme.accent, opacity: busy ? 0.6 : missingAmount ? 0.5 : pressed ? 0.85 : 1 },
-              ]}
+              accessibilityLabel="Snap receipt"
+              onPress={() => router.replace("/snap")}
+              style={[styles.alt, { borderColor: theme.border, backgroundColor: theme.surface }]}
             >
-              {busy ? (
-                <ActivityIndicator color={theme.accentText} />
-              ) : (
-                <Text style={{ color: theme.accentText, ...theme.type.button1 }}>{saveLabel}</Text>
-              )}
+              <View style={[styles.altTile, { backgroundColor: theme.bg }]}>
+                <Image source={camera} style={styles.altIcon} resizeMode="contain" />
+              </View>
+              <View>
+                <Text style={{ color: theme.text, ...theme.type.captionBold }}>Snap receipt</Text>
+                <Text style={caption}>Photo or PDF</Text>
+              </View>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Voice"
+              onPress={() => setMessage("Voice entry is not available yet")}
+              style={[styles.alt, { borderColor: theme.border, backgroundColor: theme.surface }]}
+            >
+              <View style={[styles.altTile, { backgroundColor: theme.bg }]}>
+                <Image source={mic} style={styles.altIcon} resizeMode="contain" />
+              </View>
+              <View>
+                <Text style={{ color: theme.text, ...theme.type.captionBold }}>Voice</Text>
+                <Text style={caption}>Just say it</Text>
+              </View>
             </Pressable>
           </View>
-        </Animated.View>
-      </View>
+        </View>
+      </BottomSheet>
       <OptionSheet<Category>
         visible={pickingKey != null}
         title="Category"
@@ -476,36 +366,11 @@ export default function QuickAddScreen() {
           setPickingKey(null);
         }}
       />
-    </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  avoid: { flex: 1, justifyContent: "flex-end", alignItems: "center" },
-  sheet: {
-    width: "100%",
-    maxWidth: 430,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    overflow: "hidden",
-  },
-  grabber: { alignSelf: "center", width: 36, height: 4, borderRadius: 2, marginTop: 8 },
-  content: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 16, gap: 20 },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingTop: 20,
-  },
-  closeButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-  },
   input: {
     borderWidth: 2,
     borderRadius: 12,
@@ -556,6 +421,5 @@ const styles = StyleSheet.create({
   },
   altTile: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   altIcon: { width: 34, height: 34 },
-  bottom: { paddingHorizontal: 24, paddingTop: 12 },
   save: { paddingVertical: 12, minHeight: 40, borderRadius: 12, alignItems: "center", justifyContent: "center" },
 });
