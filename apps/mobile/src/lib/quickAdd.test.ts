@@ -149,3 +149,42 @@ describe("parseMany", () => {
     ]);
   });
 });
+
+describe("numbers written as words", () => {
+  it("reads a spoken amount like a typed one", () => {
+    expect(parseQuickAdd("kopi dua puluh lima ribu", TODAY)).toMatchObject({
+      total: 25000,
+      description: "Kopi",
+      category: "Dining",
+    });
+    expect(parseQuickAdd("makan siang tiga puluh lima ribu di warteg", TODAY)).toEqual(
+      parseQuickAdd("makan siang 35rb di warteg", TODAY),
+    );
+    expect(parseQuickAdd("bayar kos satu setengah juta", TODAY).total).toBe(1_500_000);
+    expect(parseQuickAdd("bensin seratus ribu", TODAY)).toMatchObject({ total: 100000, category: "Transport" });
+  });
+
+  it("keeps a quantity out of the amount", () => {
+    const parsed = parseQuickAdd("dua kopi lima ribu", TODAY);
+    expect(parsed.total).toBe(5000);
+    expect(parsed.description).toBe("Dua kopi");
+  });
+
+  it("splits several spoken amounts into rows", () => {
+    expect(splitEntries("kopi dua puluh lima ribu, parkir lima ribu")).toEqual(["kopi 25.000", "parkir 5.000"]);
+    expect(splitEntries("kopi dua puluh lima ribu parkir lima ribu")).toEqual(["kopi 25.000", "parkir 5.000"]);
+    const rows = parseMany("kopi dua puluh lima ribu, nasi goreng tiga puluh ribu di warteg, parkir lima ribu", TODAY);
+    expect(rows.map((row) => row.total)).toEqual([25000, 30000, 5000]);
+    expect(rows[1].merchant).toBe("Warteg");
+  });
+
+  it("mixes digits and words", () => {
+    const rows = parseMany("kopi 25rb, parkir lima ribu", TODAY);
+    expect(rows.map((row) => row.total)).toEqual([25000, 5000]);
+  });
+
+  it("leaves digit text exactly as before", () => {
+    expect(parseQuickAdd("makan siang 35rb di warteg", TODAY).total).toBe(35000);
+    expect(parseMany("kopi 25rb, parkir 5rb", TODAY)).toHaveLength(2);
+  });
+});

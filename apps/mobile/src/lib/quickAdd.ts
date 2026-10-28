@@ -1,4 +1,5 @@
 import { parseAmount } from "@/lib/money";
+import { wordsToDigits } from "@/lib/numberWords";
 import { localToday } from "@/lib/receipt";
 import type { Category } from "@/theme/tokens";
 
@@ -62,7 +63,8 @@ export function guessCategory(text: string): Category {
 }
 
 export function parseQuickAdd(input: string, today = localToday()): QuickParse {
-  const text = input.replace(/\s+/g, " ").trim();
+  // "dua puluh lima ribu" is read as 25.000, so spoken amounts work like typed ones.
+  const text = wordsToDigits(input.replace(/\s+/g, " ")).trim();
   const amount = pickAmount(text);
   const withoutAmount = amount ? `${text.slice(0, amount.start)} ${text.slice(amount.end)}` : text;
 
@@ -169,7 +171,7 @@ function mergeOrphans(pieces: string[]): string[] {
 
 /** Every expense written in the text, as separate pieces (not capped). */
 export function splitEntries(input: string): string[] {
-  const separated = splitOnSeparators(input.replace(/\r\n?/g, "\n"))
+  const separated = splitOnSeparators(wordsToDigits(input.replace(/\r\n?/g, "\n")))
     .map((piece) => piece.replace(/\s+/g, " ").trim())
     .filter((piece) => /[\p{L}\p{N}]/u.test(piece));
   return mergeOrphans(separated.flatMap(cutAtAmounts).map((piece) => piece.trim()).filter(Boolean));
