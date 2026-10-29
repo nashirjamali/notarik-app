@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, useSyncExternalStore, type FormEvent } from "react";
+
+const noSubscription = () => () => {};
 
 const field =
   "w-full rounded-2xl border border-border-default bg-surface-default px-4 py-3 text-body-2 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-accent";
@@ -11,6 +13,8 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Before hydration the form would submit natively and put the password in the URL, so keep the button off until the handler is attached.
+  const hydrated = useSyncExternalStore(noSubscription, () => true, () => false);
   const signup = mode === "signup";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -76,7 +80,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       )}
       <button
         type="submit"
-        disabled={busy}
+        disabled={busy || !hydrated}
         className="h-13 rounded-full bg-brand-primary font-heading text-button-1 font-bold text-text-inverse transition-colors hover:bg-brand-primary-strong disabled:opacity-60"
       >
         {busy ? "Please wait…" : signup ? "Create account" : "Log in"}
