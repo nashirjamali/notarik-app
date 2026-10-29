@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { GOOGLE_CLIENT_ID, loadGoogle, nonceFromBytes } from "@/lib/google";
 
@@ -10,9 +9,9 @@ import { GOOGLE_CLIENT_ID, loadGoogle, nonceFromBytes } from "@/lib/google";
  * so both pages say "Continue with Google".
  */
 export function GoogleButton() {
-  const router = useRouter();
   const slot = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [signingIn, setSigningIn] = useState(false);
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID || !slot.current) return;
@@ -37,7 +36,11 @@ export function GoogleButton() {
                 const payload = await res.json().catch(() => null);
                 return setError(typeof payload?.message === "string" ? payload.message : "Google sign-in failed");
               }
-              router.replace("/app");
+              // A full navigation on purpose: the session cookie is new, so drop the router cache (it may hold a
+              // redirect to /login from before) and let the server render /app with the cookie.
+              setSigningIn(true);
+              // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+              window.location.assign("/app");
             } catch {
               setError("Cannot reach the server. Try again.");
             }
@@ -58,13 +61,18 @@ export function GoogleButton() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, []);
 
   if (!GOOGLE_CLIENT_ID) return null;
   return (
     <div className="flex flex-col items-center gap-3">
       <p className="flex w-full items-center gap-3 text-caption text-text-secondary before:h-px before:flex-1 before:bg-border-default after:h-px after:flex-1 after:bg-border-default">or</p>
       <div ref={slot} className="flex min-h-10 justify-center" />
+      {signingIn && (
+        <p role="status" className="text-caption text-text-secondary">
+          Signing you in…
+        </p>
+      )}
       {error && (
         <p role="alert" className="w-full rounded-2xl bg-status-danger-subtle px-4 py-3 text-caption text-status-danger">
           {error}
