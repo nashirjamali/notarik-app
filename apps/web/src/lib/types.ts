@@ -15,6 +15,8 @@ export const categories: Category[] = ["Groceries", "Dining", "Transport", "Shop
 
 export type Me = { user_id: string; name: string | null; email: string | null };
 
+export type Settings = { auto_read_receipts: boolean; notifications: boolean };
+
 export type Recap = {
   month: string;
   total_minor: number;

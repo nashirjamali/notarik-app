@@ -90,7 +90,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <nav
         aria-label="Main"
-        className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-border-default bg-surface-default pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-5 border-t border-border-default bg-surface-default pb-[env(safe-area-inset-bottom)] md:hidden"
       >
         {navItems.map((item) => {
           const active = isActive(pathname, item.href);

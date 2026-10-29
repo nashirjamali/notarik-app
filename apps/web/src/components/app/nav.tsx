@@ -18,6 +18,7 @@ export const navItems: NavItem[] = [
   { href: "/app/transactions", label: "Transactions", icon: <Svg><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" /></Svg> },
   { href: "/app/recap", label: "Recap", icon: <Svg><path d="M5 20V10m7 10V4m7 16v-7" /></Svg> },
   { href: "/app/ask", label: "Ask Notarik", icon: <Svg><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z" /></Svg> },
+  { href: "/app/settings", label: "Settings", icon: <Svg><circle cx="12" cy="12" r="3" /><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6 7 7m10 10 1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" /></Svg> },
 ];
 
 export function isActive(pathname: string, href: string) {

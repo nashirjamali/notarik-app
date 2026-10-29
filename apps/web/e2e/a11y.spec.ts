@@ -40,7 +40,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     await page.getByLabel("Password").fill("password123");
     await page.getByRole("button", { name: "Log in" }).click();
     await page.waitForURL("**/app");
-    for (const path of ["/app", "/app/transactions", "/app/recap", "/app/ask"]) {
+    for (const path of ["/app", "/app/transactions", "/app/recap", "/app/ask", "/app/settings"]) {
       await page.goto(path);
       await page.waitForLoadState("networkidle");
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
