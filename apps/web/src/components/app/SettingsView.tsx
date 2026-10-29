@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMe, getSettings, updateSettings } from "@/lib/client";
+import { useSignOut } from "./AppShell";
 import type { Settings } from "@/lib/types";
 import { Card, ErrorState, PageTitle, Skeleton } from "./ui";
 
@@ -35,6 +36,7 @@ function Switch({ id, label, hint, checked, onChange }: { id: string; label: str
 
 export function SettingsView() {
   const client = useQueryClient();
+  const signOut = useSignOut();
   const me = useQuery({ queryKey: ["me"], queryFn: getMe });
   const settings = useQuery({ queryKey: ["settings"], queryFn: getSettings });
   const save = useMutation({
@@ -98,6 +100,14 @@ export function SettingsView() {
             )}
           </Card>
         )}
+        {/* The sidebar has Log out from 768px; the mobile layout has no other place for it. */}
+        <button
+          type="button"
+          onClick={signOut}
+          className="h-12 rounded-full bg-surface-subtle font-heading text-button-1 font-bold text-text-primary md:hidden"
+        >
+          Log out
+        </button>
       </div>
     </>
   );

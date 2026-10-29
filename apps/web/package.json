@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "gen:api": "openapi-typescript ../mobile/openapi.json -o src/lib/schema.d.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "sync:assets": "node scripts/sync-mobile-assets.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.105.0",

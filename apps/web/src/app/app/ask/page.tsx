@@ -1,8 +1,6 @@
-import type { Metadata } from "next";
-import { AskView } from "@/components/app/AskView";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Ask Notarik" };
-
+/** The mobile app calls this screen Chat; keep the old address working. */
 export default function Page() {
-  return <AskView />;
+  redirect("/app/chat");
 }

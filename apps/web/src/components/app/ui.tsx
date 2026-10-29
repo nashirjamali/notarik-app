@@ -21,13 +21,14 @@ export function CategoryIcon({ category }: { category: Category }) {
 }
 
 export function Card({ className = "", children }: { className?: string; children: ReactNode }) {
-  return <div className={`rounded-3xl bg-surface-default p-5 md:p-6 ${className}`}>{children}</div>;
+  return <div className={`rounded-3xl bg-surface-subtle p-5 md:bg-surface-default md:p-6 ${className}`}>{children}</div>;
 }
 
 export function PageTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <h1 className="font-heading text-headline-4 font-bold">{children}</h1>
+      {/* Mobile layout: the centered title of the mobile "Top Bar". From 768px a left-aligned page heading. */}
+      <h1 className="w-full text-center text-body-2 font-medium md:w-auto md:text-left md:font-heading md:text-headline-4 md:font-bold">{children}</h1>
       {aside}
     </div>
   );
