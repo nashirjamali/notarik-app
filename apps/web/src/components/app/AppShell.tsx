@@ -35,40 +35,39 @@ function Icon({ name, size, className = "" }: { name: string; size: number; clas
 /** Pathname-dependent parts live in their own components so the rest of the shell renders with the first HTML. */
 function SidebarLinks() {
   const pathname = usePathname();
+  const add = navItems.find((item) => item.add)!;
   return (
     <>
-      {navItems.map((item) => {
-        const active = isActive(pathname, item);
-        if (item.add) {
+      {/* The raised "+" of the pill becomes the primary action on top; the other four keep the mobile order. */}
+      <Link
+        href={add.href}
+        aria-current={isActive(pathname, add) ? "page" : undefined}
+        className="mb-4 flex items-center justify-center gap-2 rounded-full bg-brand-primary px-4 py-3.5 font-heading text-button-1 font-bold text-text-inverse transition-colors hover:bg-brand-primary-strong"
+      >
+        <span aria-hidden="true" className="text-xl leading-none">
+          +
+        </span>
+        {add.label}
+      </Link>
+      {navItems
+        .filter((item) => !item.add)
+        .map((item) => {
+          const active = isActive(pathname, item);
           return (
             <Link
               key={item.href}
               href={item.href}
               aria-current={active ? "page" : undefined}
-              className="my-2 flex items-center justify-center gap-2 rounded-full bg-brand-primary px-4 py-3 font-heading text-button-1 font-bold text-text-inverse transition-colors hover:bg-brand-primary-strong"
+              className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-body-2 font-medium transition-colors ${
+                active ? "bg-brand-accent-subtle text-brand-primary-strong" : "text-text-secondary hover:bg-surface-subtle"
+              }`}
             >
-              <span aria-hidden="true" className="text-xl leading-none">
-                +
-              </span>
+              {/* The inactive artwork is light-on-dark for the pill; on the white sidebar the dark "active" strokes are dimmed instead. */}
+              <Icon name={item.active} size={22} className={active ? "" : "opacity-60"} />
               {item.label}
             </Link>
           );
-        }
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-body-2 font-medium transition-colors ${
-              active ? "bg-brand-accent-subtle text-brand-primary-strong" : "text-text-secondary hover:bg-surface-subtle"
-            }`}
-          >
-            {/* The inactive artwork is light-on-dark for the pill; on the white sidebar the dark "active" strokes are dimmed instead. */}
-            <Icon name={item.active} size={22} className={active ? "" : "opacity-60"} />
-            {item.label}
-          </Link>
-        );
-      })}
+        })}
     </>
   );
 }
@@ -116,7 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const signOut = useSignOut();
   return (
     <div className="min-h-dvh bg-surface-default md:bg-surface-subtle md:pl-60">
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col gap-8 border-r border-border-default bg-surface-default p-6 md:flex">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col gap-6 border-r border-border-default bg-surface-default p-6 md:flex">
         <Brand />
         <nav aria-label="Main" className="flex flex-1 flex-col gap-1">
           <Suspense fallback={<PlainLinks />}>
