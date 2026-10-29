@@ -134,3 +134,10 @@ body {
     translate: 0 28px;
   }
 }
+
+/* A visible focus ring for keyboard users only, in the brand colour (the browser default is a black box). */
+:focus-visible {
+  outline: 2px solid var(--color-brand-primary);
+  outline-offset: 2px;
+  border-radius: inherit;
+}

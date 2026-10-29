@@ -99,7 +99,7 @@ export function QuickAddView() {
   return (
     <>
       <TopBar title="Add expense" onBack={back} />
-      <div className="mx-auto flex max-w-xl flex-col gap-5 md:mt-2">
+      <div className="flex max-w-xl flex-col gap-5 md:mt-2">
         <h1 className="sr-only md:not-sr-only md:font-heading md:text-headline-4 md:font-bold">Add expense</h1>
         <textarea
           aria-label="What did you spend?"
@@ -131,7 +131,7 @@ export function QuickAddView() {
             onAmount={(key, total) => setEdits((current) => ({ ...current, [key]: { ...current[key], total } }))}
           />
         ) : typed && parsed.total != null ? (
-          <section aria-label="Understood expense" className="flex flex-col gap-3 rounded-3xl bg-surface-subtle px-4 pt-3.5 pb-4">
+          <section aria-label="Understood expense" className="flex flex-col gap-3 rounded-3xl bg-surface-subtle px-4 pt-3.5 pb-4 md:bg-surface-default">
             <p className="flex items-center gap-1.5 text-caption-small font-semibold text-brand-primary-strong">
               <Image src="/app-assets/svg/review-mark.svg" alt="" width={12} height={10} unoptimized />
               Notarik understood

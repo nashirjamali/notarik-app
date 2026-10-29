@@ -51,7 +51,7 @@ test("log in, see the seeded expense, keep tokens out of the page, log out", asy
   const email = await seedUser(page.request, "Warung Tegal");
   await logIn(page, email);
 
-  await expect(page.getByRole("heading", { level: 2, name: /Rina/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: /Rina/ })).toBeVisible();
   await expect(page.getByRole("main").getByText("Warung Tegal")).toBeVisible();
 
   await page.getByRole("link", { name: "Transactions" }).filter({ visible: true }).first().click();

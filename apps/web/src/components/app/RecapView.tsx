@@ -77,7 +77,7 @@ export function RecapView() {
   return (
     <>
       <TopBar title="Recap & Budget" onBack={back} />
-      <div className="mx-auto flex max-w-xl flex-col gap-4 md:max-w-3xl">
+      <div className="flex max-w-xl flex-col gap-4 md:max-w-3xl">
         <h1 className="sr-only md:not-sr-only md:font-heading md:text-headline-4 md:font-bold">Recap &amp; Budget</h1>
         <div className="flex justify-center md:justify-start">{month ? <MonthSwitcher month={month} onChange={setMonth} /> : <Skeleton className="h-8 w-48" />}</div>
 
@@ -113,7 +113,7 @@ export function RecapView() {
               </div>
             </section>
 
-            <section aria-labelledby="by-category" className="flex flex-col gap-1">
+            <section aria-labelledby="by-category" className="flex flex-col gap-1 md:rounded-3xl md:bg-surface-default md:p-6">
               <h2 id="by-category" className="text-caption-small font-semibold text-text-secondary">
                 By category
               </h2>

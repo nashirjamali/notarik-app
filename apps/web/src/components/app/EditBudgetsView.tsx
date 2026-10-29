@@ -64,7 +64,7 @@ export function EditBudgetsView() {
   return (
     <>
       <TopBar title="Edit budgets" onBack={back} />
-      <div className="mx-auto flex max-w-xl flex-col gap-3.5">
+      <div className="flex max-w-xl flex-col gap-3.5">
         <div className="flex flex-col md:mb-2">
           <h1 className="sr-only md:not-sr-only md:font-heading md:text-headline-4 md:font-bold">Edit budgets</h1>
           {month && <p className="text-center text-caption-small text-text-secondary md:text-left">{monthLabel(month)}</p>}

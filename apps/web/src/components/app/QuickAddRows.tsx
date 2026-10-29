@@ -27,7 +27,7 @@ export function QuickAddRows({
 }) {
   const total = rows.reduce((sum, row) => sum + (row.total ?? 0), 0);
   return (
-    <section aria-label="Understood expenses" className="flex flex-col gap-3 rounded-3xl bg-surface-subtle px-4 pt-3.5 pb-3">
+    <section aria-label="Understood expenses" className="flex flex-col gap-3 rounded-3xl bg-surface-subtle px-4 pt-3.5 pb-3 md:bg-surface-default">
       <div className="flex items-center justify-between">
         <p className="flex items-center gap-1.5 text-caption-small font-semibold text-brand-primary-strong">
           <Image src="/app-assets/svg/review-mark.svg" alt="" width={12} height={10} unoptimized />
@@ -62,7 +62,7 @@ export function QuickAddRows({
 
 export function CategoryTile({ category }: { category: Row["category"] }) {
   return (
-    <span className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-surface-default">
+    <span className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-surface-default md:bg-surface-subtle">
       {category === "Dining" ? (
         <Image src="/app-assets/icons/3d-rice.png" alt="" width={76} height={76} className="size-[38px] object-contain" />
       ) : (
