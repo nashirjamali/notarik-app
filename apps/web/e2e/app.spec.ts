@@ -330,7 +330,7 @@ test("settings shows the account and saves a preference that survives a reload",
 
   await page.reload();
   await expect(main.getByRole("switch", { name: "Notifications" })).toHaveAttribute("aria-checked", "false");
-  await expect(main.getByRole("switch", { name: "Read receipts automatically" })).toHaveAttribute("aria-checked", "true");
+  await expect(main.getByRole("switch", { name: "Auto-read receipts" })).toHaveAttribute("aria-checked", "true");
 });
 
 // A 1x1 PNG: enough for the API to accept the upload. The e2e API has no LLM key, so nothing is read from it.
@@ -539,5 +539,34 @@ test("Chat in the mobile layout: top bar, greeting, composer, new chat", async (
   // The page itself must not scroll: the composer stays above the menu pill.
   const scroll = await page.evaluate(() => document.documentElement.scrollHeight - document.documentElement.clientHeight);
   expect(scroll).toBeLessThanOrEqual(1);
+  await context.close();
+});
+
+test("Settings groups: sheets, budgets link, version and CSV export", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, acceptDownloads: true });
+  const page = await context.newPage();
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.goto("/app/settings");
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 1, name: "Settings" })).toBeVisible();
+  for (const group of ["Notarik AI", "Preferences", "Money", "About"]) await expect(main.getByRole("heading", { level: 2, name: group })).toBeVisible();
+  await expect(main.getByText("IDR (Rp)")).toBeVisible();
+  await expect(main.getByRole("switch", { name: "Confirm before saving" })).toBeDisabled();
+  await expect(main.getByText("Version").locator("..").locator("..")).toContainText(/\d+\.\d+\.\d+/);
+
+  await main.getByRole("button", { name: "Categories" }).click();
+  const sheet = page.getByRole("dialog", { name: "Categories" });
+  await expect(sheet).toContainText("Food & Drink, Groceries, Transport, Bills, Shopping, Other");
+  await sheet.getByRole("button", { name: "Close" }).click();
+  await expect(sheet).toBeHidden();
+  await main.getByRole("button", { name: "Privacy" }).click();
+  await expect(page.getByRole("dialog", { name: "Privacy" })).toContainText("never saves anything by itself");
+  await page.keyboard.press("Escape");
+
+  const [download] = await Promise.all([page.waitForEvent("download"), main.getByRole("button", { name: "Export data" }).click()]);
+  expect(download.suggestedFilename()).toMatch(/\.csv$/);
+
+  await main.getByRole("link", { name: "Budgets" }).click();
+  await expect(page).toHaveURL(/\/app\/recap$/);
   await context.close();
 });

@@ -11,6 +11,9 @@ export type TransactionPatch = Schemas["TransactionUpdate"];
 
 export const paymentMethods: PaymentMethod[] = ["Cash", "QRIS", "Debit card", "Credit card", "E-wallet", "Bank transfer", "Other"];
 
+/** The order the mobile app lists categories in (filters, sheets). */
+export const categoryOrder: Category[] = ["Dining", "Groceries", "Transport", "Bills", "Shopping", "Other"];
+
 export const categories: Category[] = ["Groceries", "Dining", "Transport", "Shopping", "Bills", "Other"];
 
 export type Me = { user_id: string; name: string | null; email: string | null };
