@@ -1,4 +1,4 @@
-import type { Budget, Category, Me, Recap, TransactionPage } from "./types";
+import type { Budget, Category, CategoryBudget, Me, Projection, Recap, TransactionPage } from "./types";
 
 export class ApiError extends Error {
   constructor(
@@ -30,6 +30,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const getMe = () => request<Me>("/me");
 export const getRecap = (month: string) => request<Recap>(`/recap?month=${month}`);
+export const getProjection = (month: string) => request<Projection>(`/projection?month=${month}`);
+export const getCategoryBudgets = (month: string) => request<CategoryBudget[]>(`/budget/categories?month=${month}`);
+export const putBudget = (month: string, totalMinor: number) =>
+  request<Budget>("/budget", { method: "PUT", body: JSON.stringify({ month, total_minor: totalMinor }) });
 export const getBudget = (month: string) => request<Budget>(`/budget?month=${month}`);
 
 export function listTransactions(query: { month: string; category?: Category; cursor?: string | null; limit?: number }) {
