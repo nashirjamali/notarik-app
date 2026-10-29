@@ -48,7 +48,9 @@ Source of truth for looks: the Expo app (also running as Expo web on :8081 for s
 
 *Original scope:* Mobile layout of the thread and composer (scan button, send), suggestion prompts via `?prompt=`, confirm/cancel cards styled like `ChatParts`.
 
-**PR 6. Recap and budgets.** "Recap & Budget" screen and a separate "Edit budgets" screen (monthly and per category), as on mobile.
+**PR 6. Recap and budgets. (done)** Recap & Budget with the ring, insight, and by-category list; a separate Edit budgets screen at `/app/recap/edit?month=` (monthly plus one limit per category, empty = no limit). The inline budget editor is gone; Projection stays on the wide layout only.
+
+*Original scope:* "Recap & Budget" screen and a separate "Edit budgets" screen (monthly and per category), as on mobile.
 
 **PR 7. Settings.** Account card with avatar, grouped rows (Notarik AI, Preferences, Money, About), Categories / Help / Privacy sheets, Export data, Log out.
 

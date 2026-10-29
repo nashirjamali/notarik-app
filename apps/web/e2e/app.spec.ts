@@ -106,29 +106,32 @@ test("a second user never sees the first user's rows", async ({ browser, request
   await contextB.close();
 });
 
-test("recap shows the month by category, a projection, and lets you set a budget", async ({ page }) => {
+test("Recap & Budget: ring, categories, and Edit budgets with a monthly and a category limit", async ({ page }) => {
   await logIn(page, await seedUser(page.request, "Warung Tegal"));
   await page.getByRole("link", { name: "Recap" }).filter({ visible: true }).first().click();
   await expect(page).toHaveURL(/\/app\/recap$/);
   // Home stays in the DOM, hidden, after client navigation: only look at what is visible.
   const main = page.getByRole("main");
   const seen = (text: string | RegExp) => main.getByText(text).filter({ visible: true });
-  await expect(seen("Rp 25.000").first()).toBeVisible();
-  await expect(main.getByText("Food & Drink", { exact: true }).filter({ visible: true })).toBeVisible();
-  await expect(seen("100%")).toBeVisible();
+  await expect(main.getByRole("heading", { level: 1, name: "Recap & Budget" })).toBeVisible();
+  await expect(seen("Spent this month")).toBeVisible();
+  await expect(seen("No monthly budget set")).toBeVisible();
+  await expect(seen("Food & Drink")).toBeVisible();
   await expect(seen(/Estimated total by the end of the month/)).toBeVisible();
-  await expect(seen("No budget for this month")).toBeVisible();
 
-  await main.getByRole("button", { name: "Set budget" }).click();
+  await main.getByRole("link", { name: "Edit budgets" }).click();
+  await expect(page).toHaveURL(/\/app\/recap\/edit\?month=\d{4}-\d{2}$/);
   await main.getByLabel("Monthly budget").fill("abc");
-  await main.getByRole("button", { name: "Save" }).click();
-  await expect(main.getByRole("alert").filter({ visible: true })).toContainText("Enter an amount");
+  await main.getByRole("button", { name: "Save budgets" }).click();
+  await expect(main.getByRole("alert").filter({ visible: true })).toContainText("Enter the monthly budget");
 
   await main.getByLabel("Monthly budget").fill("100rb");
-  await main.getByRole("button", { name: "Save" }).click();
-  await expect(seen("Rp 100.000").first()).toBeVisible();
-  await expect(seen(/25% used/)).toBeVisible();
-  await expect(main.getByRole("button", { name: "Edit budget" })).toBeVisible();
+  await main.getByLabel("Food & Drink budget").fill("20rb");
+  await main.getByRole("button", { name: "Save budgets" }).click();
+  await expect(page).toHaveURL(/\/app\/recap$/);
+  await expect(seen("25%")).toBeVisible();
+  await expect(seen("of Rp 100.000")).toBeVisible();
+  await expect(seen("Rp 5.000 over")).toBeVisible();
 });
 
 test("add, edit and delete an expense", async ({ page }) => {
