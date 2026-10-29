@@ -128,6 +128,39 @@ test("recap shows the month by category, a projection, and lets you set a budget
   await expect(main.getByRole("button", { name: "Edit budget" })).toBeVisible();
 });
 
+test("responses carry security headers and unknown app pages show a friendly 404", async ({ page }) => {
+  const login = await page.request.get("/login");
+  const headers = login.headers();
+  expect(headers["x-content-type-options"]).toBe("nosniff");
+  expect(headers["x-frame-options"]).toBe("DENY");
+  expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+  expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.goto("/app/does-not-exist");
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Main" }).filter({ visible: true })).toBeVisible();
+});
+
+test("search narrows the list and the export downloads a CSV of the user's own rows", async ({ page, request }) => {
+  const email = await seedUser(request, "Warung Tegal");
+  await logIn(page, email);
+  await page.getByRole("link", { name: "Transactions" }).filter({ visible: true }).first().click();
+  const visible = (text: string) => page.getByText(text, { exact: true }).filter({ visible: true });
+  await expect(visible("Warung Tegal")).toBeVisible();
+
+  await page.getByRole("searchbox", { name: "Search expenses" }).fill("nothing like this");
+  await expect(visible("No expenses this month")).toBeVisible();
+  await page.getByRole("searchbox", { name: "Search expenses" }).fill("tegal");
+  await expect(visible("Warung Tegal")).toBeVisible();
+
+  const [download] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Export CSV" }).click()]);
+  expect(download.suggestedFilename()).toBe("notarik-expenses.csv");
+  const csv = await (await import("node:fs/promises")).readFile((await download.path())!, "utf8");
+  expect(csv).toContain("date,merchant,category");
+  expect(csv).toContain("Warung Tegal");
+});
+
 test("the BFF rejects cross-site writes and unknown API areas", async ({ page }) => {
   const email = await seedUser(page.request, "Warung Tegal");
   await logIn(page, email);

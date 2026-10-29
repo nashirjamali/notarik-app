@@ -2,11 +2,12 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { listTransactions } from "@/lib/client";
+import { downloadCsv, listTransactions } from "@/lib/client";
 import { groupByDay } from "@/lib/group";
 import { formatIdr } from "@/lib/money";
 import { dayHeading } from "@/lib/months";
 import { useClock } from "@/lib/useClock";
+import { useDebounced } from "@/lib/useDebounced";
 import { categories, type Category } from "@/lib/types";
 import { MonthSwitcher } from "./MonthSwitcher";
 import { TransactionRow } from "./TransactionRow";
@@ -17,10 +18,13 @@ export function TransactionsView() {
   const [picked, setMonth] = useState<string>();
   const [category, setCategory] = useState<Category | undefined>();
   const month = picked ?? clock?.month;
+  const [search, setSearch] = useState("");
+  const q = useDebounced(search.trim());
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const query = useInfiniteQuery({
-    queryKey: ["transactions", month, category ?? "all"],
-    queryFn: ({ pageParam }) => listTransactions({ month: month!, category, cursor: pageParam, limit: 30 }),
+    queryKey: ["transactions", month, category ?? "all", q],
+    queryFn: ({ pageParam }) => listTransactions({ month: month!, category, q, cursor: pageParam, limit: 30 }),
     enabled: month !== undefined,
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.next_cursor,
@@ -33,6 +37,30 @@ export function TransactionsView() {
   return (
     <>
       <PageTitle aside={month ? <MonthSwitcher month={month} onChange={setMonth} /> : <Skeleton className="h-10 w-56" />}>Transactions</PageTitle>
+
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <input
+          type="search"
+          aria-label="Search expenses"
+          placeholder="Search merchant or note"
+          maxLength={100}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          className="min-w-0 flex-1 rounded-full border border-border-default bg-surface-default px-5 py-2.5 text-body-2 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-accent md:max-w-sm"
+        />
+        <button
+          type="button"
+          onClick={() => downloadCsv().then(() => setExportError(null), (e: Error) => setExportError(e.message))}
+          className="rounded-full bg-surface-default px-5 py-2.5 text-button-2 font-bold hover:bg-border-default"
+        >
+          Export CSV
+        </button>
+        {exportError && (
+          <p role="alert" className="w-full text-caption text-status-danger">
+            {exportError}
+          </p>
+        )}
+      </div>
 
       <div role="group" aria-label="Filter by category" className="-mx-5 mb-5 flex gap-2 overflow-x-auto px-5 pb-1 md:mx-0 md:flex-wrap md:px-0">
         {[undefined, ...categories].map((value) => {
@@ -64,7 +92,7 @@ export function TransactionsView() {
       ) : groups.length === 0 ? (
         <EmptyState
           title="No expenses this month"
-          hint={category ? "Try another category or month." : "Add one in the Notarik app and it shows up here."}
+          hint={category || q ? "Try another search, category or month." : "Add one in the Notarik app and it shows up here."}
         />
       ) : (
         <div className="flex flex-col gap-4">
