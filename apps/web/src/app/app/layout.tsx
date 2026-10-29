@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { AppShell } from "@/components/app/AppShell";
 import { Providers } from "@/components/app/Providers";
 
@@ -11,7 +11,10 @@ export const metadata: Metadata = {
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <Providers>
-      <AppShell>{children}</AppShell>
+      {/* Route-dependent hooks (usePathname, useParams) resolve at request time on dynamic routes like /app/transactions/[id]. */}
+      <Suspense fallback={<div className="min-h-dvh bg-surface-subtle" />}>
+        <AppShell>{children}</AppShell>
+      </Suspense>
     </Providers>
   );
 }
