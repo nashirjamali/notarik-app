@@ -34,3 +34,21 @@ export type Budget = {
   label: string;
   days_left: number;
 };
+
+export type Projection = {
+  month: string;
+  spent_minor: number;
+  day_index: number;
+  days_in_month: number;
+  projected_minor: number | null;
+  ready: boolean;
+  detail: string;
+};
+
+export type CategoryBudget = {
+  category: Category;
+  spent_minor: number;
+  limit_minor: number | null;
+  over_minor: number | null;
+  percent_used: number | null;
+};
