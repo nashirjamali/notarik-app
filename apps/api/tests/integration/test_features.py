@@ -352,6 +352,20 @@ def test_settings_default_on_and_update_partially(api_client, make_user):
         assert client.patch("/me/settings", json={"notifications": "maybe"}).status_code == 422
 
 
+def test_two_settings_changed_at_once_both_stick(api_client, make_user):
+    """Two switches flipped quickly send two PATCHes; neither may overwrite the other."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    with api_client(make_user()) as client:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            for round_ in range(20):
+                value = round_ % 2 == 1
+                first = pool.submit(client.patch, "/me/settings", json={"auto_read_receipts": value})
+                second = pool.submit(client.patch, "/me/settings", json={"notifications": value})
+                assert first.result().status_code == 200 and second.result().status_code == 200
+                assert client.get("/me/settings").json() == {"auto_read_receipts": value, "notifications": value}, round_
+
+
 def test_settings_are_per_user(api_client, make_user):
     first, second = make_user(), make_user()
     with api_client(first) as client:
