@@ -25,6 +25,7 @@ The owner is building this project to **train their developer skills and learn A
 
 ## Planned stack (confirm before building)
 - Client: Expo (React Native) + Expo Router + TypeScript, web via React Native Web, in `apps/mobile/`
+- Web: Next.js 16 (App Router) in `apps/web/`: public landing at `/`, the signed-in app at `/app` (`docs/adr/007-web-nextjs-for-landing-and-web-app.md`). Tokens stay in httpOnly cookies behind `/api/proxy`; the browser never sees them.
 - API: **Python**, FastAPI + LangGraph in `apps/api/` (decided, `docs/adr/001-backend-language-python.md`)
 - DB: self-managed Postgres with RLS on every table; auth is Supabase Auth (ADR-002)
 - LLM: OpenRouter through LangChain chat models. The user uses OpenRouter for all LLM calls.
@@ -52,3 +53,4 @@ The owner is building this project to **train their developer skills and learn A
 - `make api` — start the API on http://127.0.0.1:8000
 - `make test` — run the backend tests against Postgres
 - `make test-unit` — run only fast unit tests
+- Web (from `apps/web/`): `npm run dev`, `npm run lint`, `npm run typecheck`, `npm test` (vitest), `npx playwright test` (e2e; starts the API on :8000 and a production build on :3100), `npm run gen:api` (types from `../mobile/openapi.json`)
