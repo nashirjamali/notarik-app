@@ -103,6 +103,67 @@ test("a second user never sees the first user's rows", async ({ browser, request
   await contextB.close();
 });
 
+test("add, edit and delete an expense", async ({ page }) => {
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  const visible = (text: string) => page.getByText(text, { exact: true }).filter({ visible: true });
+
+  await page.getByRole("link", { name: "Transactions" }).filter({ visible: true }).first().click();
+  await page.getByRole("link", { name: "Add expense" }).click();
+  await expect(page).toHaveURL(/\/transactions\/new$/);
+
+  // Validation first.
+  await page.getByLabel("Merchant").filter({ visible: true }).fill("Kopi Tuku");
+  await page.getByLabel("Amount").filter({ visible: true }).fill("abc");
+  await page.getByRole("button", { name: "Save expense" }).click();
+  await expect(page.getByText("Enter an amount like 25rb or 25.000")).toBeVisible();
+
+  await page.getByLabel("Amount").filter({ visible: true }).fill("32rb");
+  await page.locator("select[name=category]").filter({ visible: true }).selectOption("Dining");
+  await page.locator("select[name=payment]").filter({ visible: true }).selectOption("QRIS");
+  await page.getByLabel("Note").filter({ visible: true }).fill("<i>morning</i> coffee");
+  await page.getByRole("button", { name: "Save expense" }).click();
+  await expect(page).toHaveURL(/\/app\/transactions$/);
+  await expect(visible("Kopi Tuku")).toBeVisible();
+
+  // Detail, then edit the amount and category.
+  await visible("Kopi Tuku").click();
+  await expect(page.getByRole("heading", { name: "Kopi Tuku" })).toBeVisible();
+  await expect(visible("Rp 32.000")).toBeVisible();
+  await expect(visible("<i>morning</i> coffee")).toBeVisible();
+  await page.getByRole("button", { name: "Edit" }).click();
+  await page.getByLabel("Amount").filter({ visible: true }).fill("45.000");
+  await page.locator("select[name=category]").filter({ visible: true }).selectOption("Shopping");
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await expect(visible("Rp 45.000")).toBeVisible();
+  await expect(visible("Shopping")).toBeVisible();
+
+  // Delete needs a confirmation.
+  await page.getByRole("button", { name: "Delete" }).click();
+  await page.getByRole("button", { name: "Keep it" }).click();
+  await expect(page.getByRole("heading", { name: "Kopi Tuku" })).toBeVisible();
+  await page.getByRole("button", { name: "Delete" }).click();
+  await page.getByRole("button", { name: "Confirm delete" }).click();
+  await expect(page).toHaveURL(/\/app\/transactions$/);
+  await expect(page.getByText("Kopi Tuku")).toHaveCount(0);
+});
+
+test("another user cannot open or change someone else's expense", async ({ browser, request }) => {
+  const emailA = await seedUser(request, "Toko Rahasia A");
+  const emailB = await seedUser(request, "Kedai B");
+  const a = await (await browser.newContext()).newPage();
+  await logIn(a, emailA);
+  const rows = await (await a.request.get("/api/proxy/transactions?month=" + new Date().toISOString().slice(0, 7))).json();
+  const id = rows.items[0].id;
+
+  const b = await (await browser.newContext()).newPage();
+  await logIn(b, emailB);
+  expect((await b.request.get(`/api/proxy/transactions/${id}`)).status()).toBe(404);
+  expect((await b.request.delete(`/api/proxy/transactions/${id}`)).status()).toBe(404);
+  await b.goto(`/app/transactions/${id}`);
+  await expect(b.getByText("does not exist or was deleted")).toBeVisible();
+  expect((await a.request.get(`/api/proxy/transactions/${id}`)).status()).toBe(200);
+});
+
 test("the BFF rejects cross-site writes and unknown API areas", async ({ page }) => {
   const email = await seedUser(page.request, "Warung Tegal");
   await logIn(page, email);

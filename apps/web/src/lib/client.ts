@@ -1,4 +1,4 @@
-import type { Budget, Category, Me, Recap, TransactionPage } from "./types";
+import type { Budget, Category, Me, Recap, Transaction, TransactionInput, TransactionPage, TransactionPatch } from "./types";
 
 export class ApiError extends Error {
   constructor(
@@ -39,6 +39,13 @@ export function listTransactions(query: { month: string; category?: Category; cu
   if (query.limit) params.set("limit", String(query.limit));
   return request<TransactionPage>(`/transactions?${params}`);
 }
+
+export const getTransaction = (id: string) => request<Transaction>(`/transactions/${encodeURIComponent(id)}`);
+export const createTransaction = (body: TransactionInput) =>
+  request<Transaction>("/transactions", { method: "POST", body: JSON.stringify(body) });
+export const updateTransaction = (id: string, body: TransactionPatch) =>
+  request<Transaction>(`/transactions/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(body) });
+export const deleteTransaction = (id: string) => request<void>(`/transactions/${encodeURIComponent(id)}`, { method: "DELETE" });
 
 export async function signOut() {
   await fetch("/api/auth/logout", { method: "POST" });

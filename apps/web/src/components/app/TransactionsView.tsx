@@ -1,6 +1,7 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { useState } from "react";
 import { listTransactions } from "@/lib/client";
 import { groupByDay } from "@/lib/group";
@@ -32,7 +33,18 @@ export function TransactionsView() {
 
   return (
     <>
-      <PageTitle aside={month ? <MonthSwitcher month={month} onChange={setMonth} /> : <Skeleton className="h-10 w-56" />}>Transactions</PageTitle>
+      <PageTitle
+        aside={
+          <div className="flex flex-wrap items-center gap-3">
+            {month ? <MonthSwitcher month={month} onChange={setMonth} /> : <Skeleton className="h-10 w-56" />}
+            <Link href="/app/transactions/new" className="rounded-full bg-brand-primary px-5 py-2.5 text-button-2 font-bold text-text-inverse transition-colors hover:bg-brand-primary-strong">
+              Add expense
+            </Link>
+          </div>
+        }
+      >
+        Transactions
+      </PageTitle>
 
       <div role="group" aria-label="Filter by category" className="-mx-5 mb-5 flex gap-2 overflow-x-auto px-5 pb-1 md:mx-0 md:flex-wrap md:px-0">
         {[undefined, ...categories].map((value) => {
@@ -64,7 +76,7 @@ export function TransactionsView() {
       ) : groups.length === 0 ? (
         <EmptyState
           title="No expenses this month"
-          hint={category ? "Try another category or month." : "Add one in the Notarik app and it shows up here."}
+          hint={category ? "Try another category or month." : "Add an expense and it shows up here."}
         />
       ) : (
         <div className="flex flex-col gap-4">
