@@ -306,3 +306,21 @@ for (const vp of [
     await context.close();
   });
 }
+
+test("settings shows the account and saves a preference that survives a reload", async ({ page }) => {
+  const email = await seedUser(page.request, "Warung Tegal");
+  await logIn(page, email);
+  await page.getByRole("link", { name: "Settings" }).filter({ visible: true }).first().click();
+  await expect(page).toHaveURL(/\/app\/settings$/);
+  const main = page.getByRole("main");
+  await expect(main.getByText(email)).toBeVisible();
+
+  const notifications = main.getByRole("switch", { name: "Notifications" });
+  await expect(notifications).toHaveAttribute("aria-checked", "true");
+  await notifications.click();
+  await expect(notifications).toHaveAttribute("aria-checked", "false");
+
+  await page.reload();
+  await expect(main.getByRole("switch", { name: "Notifications" })).toHaveAttribute("aria-checked", "false");
+  await expect(main.getByRole("switch", { name: "Read receipts automatically" })).toHaveAttribute("aria-checked", "true");
+});

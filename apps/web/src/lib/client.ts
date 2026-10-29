@@ -6,6 +6,7 @@ import type {
   Me,
   Projection,
   Recap,
+  Settings,
   Transaction,
   TransactionInput,
   TransactionPage,
@@ -41,6 +42,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const getMe = () => request<Me>("/me");
+export const getSettings = () => request<Settings>("/me/settings");
+export const updateSettings = (patch: Partial<Settings>) =>
+  request<Settings>("/me/settings", { method: "PATCH", body: JSON.stringify(patch) });
 export const getRecap = (month: string) => request<Recap>(`/recap?month=${month}`);
 export const getProjection = (month: string) => request<Projection>(`/projection?month=${month}`);
 export const getCategoryBudgets = (month: string) => request<CategoryBudget[]>(`/budget/categories?month=${month}`);

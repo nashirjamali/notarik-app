@@ -41,4 +41,4 @@ A logged-in web app under `/app` with the responsive shell from the Figma design
 - Next.js docs (middleware, route handlers, cookies); OWASP session management and CSRF cheat sheets; `openapi-typescript` docs
 
 ## Status
-Built. Web `Money` is `src/lib/money.ts`. Recap (with budget and projection) is on the web. Ask Notarik, adding or editing expenses and receipt upload are not (Ask is a placeholder). The refresh single-flight is per server instance; with several instances, add sticky routing or a shared lock. Not measured: Lighthouse on `/app`.
+Built. Web `Money` is `src/lib/money.ts`. The web has recap (with budget and projection), Ask Notarik, adding/editing/deleting expenses, search and CSV export, and Settings (account, receipt auto-read, notifications). Receipt upload is not on the web yet. The refresh single-flight is per server instance; with several instances, add sticky routing or a shared lock. Not measured: Lighthouse on `/app`.
