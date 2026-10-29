@@ -26,6 +26,9 @@ for (const vp of widths) {
       await expect(stores.getByRole("img", { name: /App Store/ })).toBeVisible();
       await expect(stores.getByRole("img", { name: /Google Play/ })).toBeVisible();
       await expect(stores.getByText("Coming soon")).toHaveCount(2);
+      // In a flex row the badge used to shrink sideways and look squashed.
+      const play = await stores.getByRole("img", { name: /Google Play/ }).boundingBox();
+      expect(play!.width / play!.height).toBeCloseTo(646 / 250, 1);
       await expect(stores.getByText("Web app")).toHaveCount(0);
 
       const overflow = await page.evaluate(

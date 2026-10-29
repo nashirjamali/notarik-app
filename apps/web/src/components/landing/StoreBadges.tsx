@@ -48,7 +48,7 @@ export function StoreBadges({ className = "", tone = "default" }: { className?: 
             alt="Get it on Google Play (coming soon)"
             width={646}
             height={250}
-            className="-mx-[10px] -my-[6px] h-[53px] w-auto"
+            className="-mx-[10px] -my-[6px] h-[53px] w-auto max-w-none shrink-0"
           />
           <ComingSoon />
         </li>
