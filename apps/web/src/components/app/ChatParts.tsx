@@ -13,7 +13,7 @@ export type CardState = "open" | "saving" | "approved" | "rejected" | "expired";
 
 export function Avatar() {
   return (
-    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-accent-subtle">
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-accent-subtle md:hidden">
       <Image src="/app-assets/svg/chat-avatar-mark.svg" alt="" width={18} height={16} unoptimized />
     </span>
   );
@@ -26,7 +26,7 @@ export function AiBubble({ text, children }: { text?: string; children?: ReactNo
       <Avatar />
       <div className="flex min-w-0 flex-1 flex-col items-start gap-2">
         {text != null && (
-          <p className="max-w-[85%] rounded-[20px] bg-surface-subtle px-4 py-3 text-body-2 break-words whitespace-pre-wrap">
+          <p className="max-w-[85%] rounded-[20px] bg-surface-subtle px-4 py-3 text-body-2 break-words whitespace-pre-wrap md:rounded-3xl md:px-5 md:py-3.5">
             {splitAmounts(text).map((part, index) => (part.amount ? <strong key={index} className="font-medium">{part.text}</strong> : <span key={index}>{part.text}</span>))}
           </p>
         )}
@@ -39,7 +39,7 @@ export function AiBubble({ text, children }: { text?: string; children?: ReactNo
 export function UserBubble({ text }: { text: string }) {
   return (
     <div className="flex justify-end">
-      <p className="max-w-[85%] rounded-[20px] border-2 border-border-default bg-surface-default px-4 py-3 text-body-2 break-words whitespace-pre-wrap">{text}</p>
+      <p className="max-w-[85%] rounded-[20px] border-2 border-border-default bg-surface-default px-4 py-3 text-body-2 break-words whitespace-pre-wrap md:rounded-3xl md:border md:px-5 md:py-3.5">{text}</p>
     </div>
   );
 }
@@ -114,16 +114,16 @@ export function ProposalCard({
 
   const primary = pending.kind === "create_expense" ? "Save" : pending.kind === "delete_expense" ? "Delete" : "Set budget";
   const secondary = pending.kind === "create_expense" ? (editing ? "Cancel" : "Edit") : "Cancel";
-  const action = "flex min-h-10 flex-1 items-center justify-center rounded-xl px-4 py-3 font-heading text-button-2 font-bold disabled:opacity-60";
+  const action = "flex min-h-10 flex-1 items-center justify-center rounded-xl px-4 py-3 font-heading text-button-2 font-bold disabled:opacity-60 md:rounded-full md:py-3.5";
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-3.5 rounded-3xl border border-border-default bg-surface-default p-4 shadow-[0_8px_12px_rgb(20_23_23/0.06)]">
-      <div className="flex items-center gap-3">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-status-warning-subtle">
+    <div className="flex w-full max-w-sm flex-col gap-3.5 rounded-3xl border border-border-default bg-surface-default p-4 shadow-[0_8px_12px_rgb(20_23_23/0.06)] md:max-w-none md:gap-4 md:rounded-[28px] md:p-6 md:shadow-none">
+      <div className="flex items-center gap-3 md:gap-3.5">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-status-warning-subtle md:size-14 md:rounded-2xl md:bg-surface-subtle">
           {expense && coffee ? (
-            <Image src="/app-assets/icons/3d-coffee.png" alt="" width={80} height={80} className="size-10 object-contain" />
+            <Image src="/app-assets/icons/3d-coffee.png" alt="" width={80} height={80} className="size-10 object-contain md:size-11" />
           ) : expense && shown === "Dining" ? (
-            <Image src="/app-assets/icons/3d-rice.png" alt="" width={80} height={80} className="size-10 object-contain" />
+            <Image src="/app-assets/icons/3d-rice.png" alt="" width={80} height={80} className="size-10 object-contain md:size-11" />
           ) : (
             <span className={`size-5 rounded-full ${categoryMeta[shown].dot}`} />
           )}
@@ -132,14 +132,14 @@ export function ProposalCard({
           {editing ? (
             <input aria-label="Merchant" value={name} onChange={(event) => setName(event.target.value)} placeholder="Merchant" autoComplete="off" className={`${input} text-body-2 font-medium`} />
           ) : (
-            <span className="truncate text-body-2 font-medium">{title}</span>
+            <span className="truncate text-body-2 font-medium md:text-body-1 md:font-semibold">{title}</span>
           )}
           {subtitle && !editing && <span className="truncate text-caption-small text-text-secondary">{subtitle}</span>}
         </div>
         {editing ? (
           <input aria-label="Amount" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="Rp 0" inputMode="numeric" autoComplete="off" className={`${input} w-28 text-right text-body-1 font-semibold`} />
         ) : total != null ? (
-          <span className="text-body-1 font-semibold">{formatIdr(total)}</span>
+          <span className="text-body-1 font-semibold md:font-heading md:text-headline-4 md:font-bold md:tracking-[-1.6px]">{formatIdr(total)}</span>
         ) : null}
       </div>
 
@@ -156,7 +156,7 @@ export function ProposalCard({
                   aria-checked={selected}
                   onClick={() => setCategory(value)}
                   style={selected ? { backgroundColor: `var(--color-category-${value.toLowerCase()})` } : undefined}
-                  className={`flex items-center gap-1.5 rounded-full py-1.5 pr-3 pl-2.5 text-caption-small font-semibold ${selected ? "text-text-primary" : "bg-surface-subtle"}`}
+                  className={`flex items-center gap-1.5 rounded-full py-1.5 pr-3 pl-2.5 text-caption-small font-semibold md:gap-2 md:px-4 md:py-2 md:text-caption md:font-medium ${selected ? "text-text-primary" : "bg-surface-subtle"}`}
                 >
                   <span aria-hidden="true" className={`size-2 rounded-full ${selected ? "bg-surface-default" : categoryMeta[value].dot}`} />
                   {categoryMeta[value].label}
@@ -166,11 +166,11 @@ export function ProposalCard({
           </div>
         ) : (
           <div className="flex flex-wrap gap-2">
-            <span className="flex items-center gap-1.5 rounded-full bg-surface-subtle py-1.5 pr-3 pl-2.5 text-caption-small font-semibold">
+            <span className="flex items-center gap-1.5 rounded-full bg-surface-subtle py-1.5 pr-3 pl-2.5 text-caption-small font-semibold md:gap-2 md:px-4 md:py-2 md:text-caption md:font-medium">
               <span aria-hidden="true" className={`size-2 rounded-full ${categoryMeta[shown].dot}`} />
               {categoryMeta[shown].label}
             </span>
-            {dateChip && <span className="rounded-full bg-surface-subtle py-1.5 pr-3 pl-2.5 text-caption-small text-text-secondary">{dateChip}</span>}
+            {dateChip && <span className="rounded-full bg-surface-subtle py-1.5 pr-3 pl-2.5 text-caption-small text-text-secondary md:px-4 md:py-2 md:text-caption">{dateChip}</span>}
           </div>
         ))}
 
@@ -182,7 +182,7 @@ export function ProposalCard({
       {decided ? (
         <p className="text-caption-small text-text-secondary">{state === "approved" ? "Saved" : state === "rejected" ? "Not saved" : "Replaced by a newer request"}</p>
       ) : (
-        <div className="flex gap-2">
+        <div className="flex gap-2 md:gap-3">
           <button type="button" disabled={busy} onClick={() => (pending.kind !== "create_expense" ? onReject() : setEditing((value) => !value))} className={`${action} bg-surface-subtle`}>
             {secondary}
           </button>
