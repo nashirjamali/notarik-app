@@ -91,12 +91,12 @@ function MobileHome() {
           <Image src={asset("svg/logo-mark.svg")} alt="" width={16} height={14} unoptimized />
           Try asking Notarik
         </h2>
-        <ul className="-mx-6 flex gap-2 overflow-x-auto px-6 py-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
+        <ul className="flex flex-col items-start gap-2">
           {suggestions.map((text) => (
-            <li key={text} className="shrink-0">
+            <li key={text} className="max-w-full">
               <Link
                 href={`/app/chat?prompt=${encodeURIComponent(text)}`}
-                className="flex items-center gap-1.5 rounded-full border border-border-default bg-surface-default px-3.5 py-2 text-caption whitespace-nowrap"
+                className="flex items-center gap-1.5 rounded-full border border-border-default bg-surface-default px-3.5 py-2 text-caption"
               >
                 <Image src={asset("svg/icon-sparkle.svg")} alt="" width={16} height={16} unoptimized />
                 {text}
