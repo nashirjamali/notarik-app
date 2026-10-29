@@ -234,18 +234,19 @@ test("ask Notarik: answers from your data, proposes an expense and only saves af
   await page.getByRole("button", { name: "Send" }).click();
   await expect(seen(/Rp 25\.000/).first()).toBeVisible();
 
-  // A proposal is not saved until it is confirmed: cancel first.
+  // A proposal is not saved until Save is pressed; a newer request replaces an unanswered one.
   await page.getByLabel("Message").filter({ visible: true }).fill("kopi 30rb");
   await page.getByRole("button", { name: "Send" }).click();
-  await expect(seen("Save Rp 30.000 as Food & Drink?")).toBeVisible();
-  await page.getByRole("button", { name: "Cancel" }).filter({ visible: true }).click();
-  await expect(seen("Cancelled. Nothing was changed.")).toBeVisible();
+  const card = page.getByText("Rp 30.000", { exact: true }).filter({ visible: true });
+  await expect(card).toBeVisible();
+  await expect(seen("Food & Drink").first()).toBeVisible();
 
   await page.getByLabel("Message").filter({ visible: true }).fill("kopi 45rb");
   await page.getByRole("button", { name: "Send" }).click();
-  await expect(seen("Save Rp 45.000 as Food & Drink?")).toBeVisible();
-  await page.getByRole("button", { name: "Confirm" }).filter({ visible: true }).click();
-  await expect(seen("Done. Saved.")).toBeVisible();
+  await expect(seen("Replaced by a newer request")).toBeVisible();
+  await page.getByRole("button", { name: "Save", exact: true }).filter({ visible: true }).click();
+  await expect(seen("Saved. It's in your transactions.")).toBeVisible();
+  await expect(page.getByRole("link", { name: "View expense" }).filter({ visible: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Transactions" }).filter({ visible: true }).first().click();
   await expect(page.getByText("Rp 45.000", { exact: true }).filter({ visible: true }).first()).toBeVisible();
@@ -499,4 +500,41 @@ test("Quick add several expenses at once: a missing amount blocks saving until i
   await expect(page).toHaveURL(/\/app\/transactions$/);
   await expect(page.getByText(/^kopi$/i).filter({ visible: true })).toBeVisible();
   await expect(page.getByText(/^parkir$/i).filter({ visible: true })).toBeVisible();
+});
+
+test("a chat proposal can be edited before saving", async ({ page }) => {
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.goto("/app/chat");
+  await page.getByLabel("Message").fill("kopi 30rb");
+  await page.getByRole("button", { name: "Send" }).click();
+  await page.getByRole("button", { name: "Edit", exact: true }).click();
+  await page.getByLabel("Amount").fill("50rb");
+  await page.getByRole("radio", { name: "Transport" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Saved. It's in your transactions.")).toBeVisible();
+  await page.getByRole("link", { name: "View expense" }).click();
+  await expect(page.getByText("Rp 50.000").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Category/ })).toContainText("Transport");
+});
+
+test("Chat in the mobile layout: top bar, greeting, composer, new chat", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.goto("/app/chat");
+  await expect(page.getByRole("heading", { name: "Ask Notarik" })).toBeVisible();
+  await expect(page.getByText(/Hi Rina Putri! Ask me about your spending/)).toBeVisible();
+  await expect(page.getByRole("link", { name: "Scan a receipt" })).toHaveAttribute("href", "/app/receipts/new");
+  const send = page.getByRole("button", { name: "Send" });
+  await expect(send).toBeDisabled();
+  await page.getByLabel("Message").fill("berapa pengeluaran bulan ini");
+  await expect(send).toBeEnabled();
+  await send.click();
+  await expect(page.getByText(/Rp 25\.000/).filter({ visible: true }).first()).toBeVisible();
+  await page.getByRole("button", { name: "New chat" }).click();
+  await expect(page.getByText("berapa pengeluaran bulan ini")).toHaveCount(0);
+  // The page itself must not scroll: the composer stays above the menu pill.
+  const scroll = await page.evaluate(() => document.documentElement.scrollHeight - document.documentElement.clientHeight);
+  expect(scroll).toBeLessThanOrEqual(1);
+  await context.close();
 });

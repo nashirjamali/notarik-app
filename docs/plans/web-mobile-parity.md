@@ -44,7 +44,9 @@ Source of truth for looks: the Expo app (also running as Expo web on :8081 for s
 
 *Original scope:* Quick add (sentence, parsed rows, category sheet, save), then Snap receipt (gallery, PDF, camera capture) and the receipt review screen. Replaces today's add and scan pages.
 
-**PR 5. Chat.** Mobile layout of the thread and composer (scan button, send), suggestion prompts via `?prompt=`, confirm/cancel cards styled like `ChatParts`.
+**PR 5. Chat. (done)** Top bar with New chat, greeting from the profile name, avatar bubbles, typing dots, the structured proposal card (Edit then Save / Cancel, Delete, Set budget; a newer proposal marks the old one "Replaced by a newer request"), "View expense" link, composer with scan button. The old Confirm/Cancel summary card is gone.
+
+*Original scope:* Mobile layout of the thread and composer (scan button, send), suggestion prompts via `?prompt=`, confirm/cancel cards styled like `ChatParts`.
 
 **PR 6. Recap and budgets.** "Recap & Budget" screen and a separate "Edit budgets" screen (monthly and per category), as on mobile.
 

@@ -1,8 +1,19 @@
-export type PendingAction = {
-  kind: "create_expense" | "delete_expense" | "set_budget";
-  summary: string;
-  payload: Record<string, unknown>;
+import type { Category } from "./types";
+
+export type ExpensePayload = {
+  merchant: string | null;
+  date: string | null;
+  total_minor: number | null;
+  category: Category;
+  items: { name: string; qty?: number | null; line_total_minor: number | null }[];
 };
+
+export type PendingAction =
+  | { kind: "create_expense"; payload: ExpensePayload; summary: string }
+  | { kind: "delete_expense"; payload: { transaction_id: string; merchant?: string }; summary: string }
+  | { kind: "set_budget"; payload: { month: string; total_minor: number }; summary: string };
+
+export type ConfirmResult = { status: "approved" | "rejected"; transaction_id?: string };
 
 export type ChatReply = { text: string; pending: PendingAction | null; threadId: string | null; route: string | null };
 

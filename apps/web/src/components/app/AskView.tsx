@@ -1,45 +1,37 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { confirmChat, sendChat } from "@/lib/client";
-import { splitAmounts, type PendingAction } from "@/lib/chat";
-import { PageTitle } from "./ui";
+import { confirmChat, getMe, sendChat } from "@/lib/client";
+import type { PendingAction } from "@/lib/chat";
+import { AiBubble, ProposalCard, TypingBubble, UserBubble, type CardState } from "./ChatParts";
+import { TopBar, TopBarButton } from "./TopBar";
 
 type Message = {
   id: number;
   role: "user" | "assistant";
   text: string;
+  at: Date;
   pending?: PendingAction | null;
   threadId?: string | null;
-  decision?: "approved" | "rejected" | "failed";
+  state?: CardState;
+  error?: string | null;
+  link?: { label: string; href: string };
 };
 
-const suggestions = ["How much did I spend this month?", "Am I on track with my budget?", "kopi 25rb tadi pagi"];
+const svg = (name: string) => `/app-assets/svg/${name}.svg`;
 
-function Amounts({ text }: { text: string }) {
-  return (
-    <>
-      {splitAmounts(text).map((part, index) =>
-        part.amount ? (
-          <strong key={index} className="font-semibold">
-            {part.text}
-          </strong>
-        ) : (
-          <span key={index}>{part.text}</span>
-        ),
-      )}
-    </>
-  );
-}
-
-/** Chat with Notarik. The assistant only proposes changes; nothing is saved until you press Confirm. */
+/** Chat with Notarik. The assistant only proposes changes; nothing is saved until you press Save, Delete or Set budget. */
 export function AskView() {
   const client = useQueryClient();
+  const router = useRouter();
+  const me = useQuery({ queryKey: ["me"], queryFn: getMe });
   const [messages, setMessages] = useState<Message[]>([]);
   const [threadId, setThreadId] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const next = useRef(1);
@@ -52,6 +44,30 @@ export function AskView() {
     end.current?.scrollIntoView?.({ block: "end" });
   }, [messages, busy]);
 
+  const add = (message: Omit<Message, "id" | "at">) => setMessages((all) => [...all, { ...message, id: next.current++, at: new Date() }]);
+
+  async function send(text: string) {
+    const message = text.trim();
+    if (!message || busy) return;
+    setError(null);
+    setDraft("");
+    setBusy(true);
+    add({ role: "user", text: message });
+    try {
+      const reply = await sendChat(message, threadId);
+      setThreadId(reply.threadId ?? threadId);
+      setMessages((all) => [
+        // A new proposal replaces any card still waiting for an answer.
+        ...(reply.pending ? all.map((m) => (m.pending && (m.state ?? "open") === "open" ? { ...m, state: "expired" as const } : m)) : all),
+        { id: next.current++, at: new Date(), role: "assistant", text: reply.text || "I do not have an answer for that.", pending: reply.pending, threadId: reply.threadId ?? threadId, state: "open" },
+      ]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   useEffect(() => {
     if (!prompt || sentPrompt.current) return;
     sentPrompt.current = true;
@@ -60,157 +76,119 @@ export function AskView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prompt]);
 
-  async function send(text: string) {
-    const message = text.trim();
-    if (!message || busy) return;
-    setError(null);
-    setBusy(true);
-    setMessages((all) => [...all, { id: next.current++, role: "user", text: message }]);
+  async function decide(id: number, decision: "approve" | "reject" | "edit", payload?: Record<string, unknown>) {
+    const target = messages.find((m) => m.id === id);
+    if (!target?.pending || !target.threadId) return;
+    const patch = (change: Partial<Message>) => setMessages((all) => all.map((m) => (m.id === id ? { ...m, ...change } : m)));
+    patch({ state: "saving", error: null });
     try {
-      const reply = await sendChat(message, threadId);
-      setThreadId(reply.threadId ?? threadId);
-      setMessages((all) => [
-        ...all,
-        { id: next.current++, role: "assistant", text: reply.text || "I do not have an answer for that.", pending: reply.pending, threadId: reply.threadId },
-      ]);
-      // An answer can come from fresh data; nothing was written until a confirm, so no refresh needed here.
+      const result = await confirmChat(target.threadId, decision, payload);
+      const approved = result.status === "approved";
+      patch({ state: approved ? "approved" : "rejected" });
+      if (approved) await client.invalidateQueries();
+      const kind = target.pending.kind;
+      add({
+        role: "assistant",
+        text: !approved ? "Nothing was saved." : kind === "delete_expense" ? "Deleted." : kind === "set_budget" ? "Budget updated." : "Saved. It's in your transactions.",
+        link: approved && kind === "create_expense" && result.transaction_id ? { label: "View expense", href: `/app/transactions/${result.transaction_id}` } : undefined,
+      });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
-    } finally {
-      setBusy(false);
+      patch({ state: "open", error: e instanceof Error ? e.message : "Could not apply that" });
     }
   }
 
-  async function decide(id: number, threadForAction: string, decision: "approve" | "reject") {
-    try {
-      const result = await confirmChat(threadForAction, decision);
-      const outcome = result.status === "approved" ? "approved" : "rejected";
-      setMessages((all) => all.map((m) => (m.id === id ? { ...m, decision: outcome } : m)));
-      if (outcome === "approved") await client.invalidateQueries();
-    } catch (e) {
-      setMessages((all) => all.map((m) => (m.id === id ? { ...m, decision: "failed" } : m)));
-      setError(e instanceof Error ? e.message : "Could not apply that");
-    }
-  }
-
-  function submit(event: FormEvent<HTMLFormElement>) {
+  function submit(event: FormEvent) {
     event.preventDefault();
-    const form = event.currentTarget;
-    const input = new FormData(form).get("message");
-    form.reset();
-    void send(String(input ?? ""));
+    void send(draft);
   }
+
+  const canSend = draft.trim().length > 0 && !busy;
+  const greeting = `Hi${me.data?.name ? ` ${me.data.name}` : ""}! Ask me about your spending, or just tell me what you bought.`;
+  const back = () => (window.history.length > 1 ? router.back() : router.replace("/app"));
+  const newChat = () => {
+    setMessages([]);
+    setThreadId(null);
+    setDraft("");
+    setError(null);
+  };
 
   return (
-    <div className="flex h-[calc(100dvh-9rem)] min-h-96 flex-col md:h-[calc(100dvh-10rem)] lg:h-[calc(100dvh-8rem)]">
-      <PageTitle
-        aside={
-          messages.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                setMessages([]);
-                setThreadId(null);
-                setError(null);
-              }}
-              className="rounded-full bg-surface-default px-5 py-2.5 text-button-2 font-bold hover:bg-border-default"
-            >
-              New chat
-            </button>
-          )
+    <div className="-mb-32 flex h-[calc(100dvh-8rem)] min-h-96 flex-col md:mb-0 md:h-[calc(100dvh-8rem)]">
+      <TopBar
+        title="Ask Notarik"
+        onBack={back}
+        right={
+          <TopBarButton label="New chat" onClick={newChat}>
+            <Image src={svg("chat-new-chat")} alt="" width={24} height={24} unoptimized />
+          </TopBarButton>
         }
-      >
-        Ask Notarik
-      </PageTitle>
+      />
+      <div className="mb-4 hidden items-center justify-between md:flex">
+        <h1 className="flex items-center gap-2 font-heading text-headline-4 font-bold">
+          <Image src={svg("chat-avatar-mark")} alt="" width={26} height={23} unoptimized />
+          Ask Notarik
+        </h1>
+        {messages.length > 0 && (
+          <button type="button" onClick={newChat} className="rounded-full bg-surface-default px-5 py-2.5 text-button-2 font-bold hover:bg-border-default">
+            New chat
+          </button>
+        )}
+      </div>
+      <h1 className="sr-only md:hidden">Ask Notarik</h1>
 
-      <div role="log" aria-live="polite" aria-label="Conversation" className="flex flex-1 flex-col gap-3 overflow-y-auto rounded-3xl bg-surface-default p-4 md:p-6">
-        {messages.length === 0 ? (
-          <div className="m-auto flex max-w-md flex-col items-center gap-4 text-center">
-            <Image src="/brand/mark.svg" alt="" width={64} height={55} unoptimized className="h-12 w-auto" />
-            <p className="text-body-2 text-text-secondary">
-              Ask about your spending, or tell me what you bought. I only suggest changes; you confirm them.
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {suggestions.map((text) => (
-                <button
-                  key={text}
-                  type="button"
-                  onClick={() => void send(text)}
-                  className="rounded-full bg-brand-accent-subtle px-4 py-2 text-caption font-medium text-brand-primary-strong hover:bg-brand-accent"
-                >
-                  {text}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          messages.map((m) => (
-            <div key={m.id} className={`flex flex-col gap-2 ${m.role === "user" ? "items-end" : "items-start"}`}>
-              <p
-                className={`max-w-[85%] rounded-[22px] px-[18px] py-3 text-body-2 break-words whitespace-pre-wrap ${
-                  m.role === "user" ? "bg-brand-primary text-text-inverse" : "bg-surface-subtle"
-                }`}
-              >
-                {m.role === "assistant" ? <Amounts text={m.text} /> : m.text}
-              </p>
-              {m.pending && (
-                <div className="flex max-w-[85%] flex-col gap-3 rounded-3xl border border-border-default p-4">
-                  <p className="text-body-2 font-medium">{m.pending.summary}</p>
-                  {m.decision === undefined && m.threadId ? (
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => void decide(m.id, m.threadId!, "reject")}
-                        className="flex-1 rounded-full bg-surface-subtle px-5 py-2.5 text-button-2 font-bold hover:bg-border-default"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void decide(m.id, m.threadId!, "approve")}
-                        className="flex-1 rounded-full bg-brand-primary px-5 py-2.5 text-button-2 font-bold text-text-inverse hover:bg-brand-primary-strong"
-                      >
-                        Confirm
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-caption text-text-secondary">
-                      {m.decision === "approved" ? "Done. Saved." : m.decision === "rejected" ? "Cancelled. Nothing was changed." : "That did not go through."}
-                    </p>
-                  )}
-                </div>
+      <div role="log" aria-live="polite" aria-label="Conversation" className="flex flex-1 flex-col gap-3.5 overflow-y-auto pb-4 md:rounded-3xl md:bg-surface-default md:p-6">
+        <AiBubble text={greeting} />
+        {messages.map((message) =>
+          message.role === "user" ? (
+            <UserBubble key={message.id} text={message.text} />
+          ) : (
+            <AiBubble key={message.id} text={message.text}>
+              {message.pending && (
+                <ProposalCard
+                  pending={message.pending}
+                  state={message.state ?? "open"}
+                  at={message.at}
+                  error={message.error}
+                  onApprove={() => void decide(message.id, "approve")}
+                  onReject={() => void decide(message.id, "reject")}
+                  onEdit={(payload) => void decide(message.id, "edit", payload)}
+                />
               )}
-            </div>
-          ))
+              {message.link && (
+                <Link href={message.link.href} className="text-caption font-medium text-brand-primary-strong hover:underline">
+                  {message.link.label}
+                </Link>
+              )}
+            </AiBubble>
+          ),
         )}
-        {busy && (
-          <p aria-label="Notarik is typing" className="self-start rounded-[22px] bg-surface-subtle px-[18px] py-3 text-body-2 text-text-secondary">
-            …
-          </p>
-        )}
+        {busy && <TypingBubble />}
         <div ref={end} />
       </div>
 
       {error && (
-        <p role="alert" className="mt-2 rounded-2xl bg-status-danger-subtle px-4 py-2.5 text-caption text-status-danger">
+        <p role="alert" className="mb-2 rounded-2xl bg-status-danger-subtle px-4 py-2.5 text-caption text-status-danger-text">
           {error}
         </p>
       )}
-      <form onSubmit={submit} className="mt-3 flex gap-2">
+      <form onSubmit={submit} className="flex items-center gap-3 rounded-xl border-2 border-border-default bg-surface-default p-3 focus-within:border-brand-primary">
+        <Link href="/app/receipts/new" aria-label="Scan a receipt" className="flex h-10 shrink-0 items-center">
+          <Image src={svg("chat-camera")} alt="" width={24} height={24} unoptimized />
+        </Link>
         <input
-          name="message"
           aria-label="Message"
+          placeholder="Ask or log an expense…"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
           autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
           maxLength={2000}
-          placeholder="Ask or log an expense"
-          className="min-w-0 flex-1 rounded-full border border-border-default bg-surface-default px-5 py-3 text-body-2 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-accent"
+          className="min-w-0 flex-1 bg-transparent text-[17px] outline-none"
         />
-        <button
-          type="submit"
-          disabled={busy}
-          className="rounded-full bg-brand-primary px-6 py-3 font-heading text-button-1 font-bold text-text-inverse hover:bg-brand-primary-strong disabled:opacity-60"
-        >
-          Send
+        <button type="submit" aria-label="Send" disabled={!canSend} className="flex shrink-0 rounded-xl bg-brand-primary p-2 disabled:opacity-50">
+          <Image src={svg("chat-arrow-up")} alt="" width={24} height={24} unoptimized />
         </button>
       </form>
     </div>
