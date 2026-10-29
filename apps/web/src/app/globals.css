@@ -136,8 +136,11 @@ body {
 }
 
 /* A visible focus ring for keyboard users only, in the brand colour (the browser default is a black box). */
-:focus-visible {
-  outline: 2px solid var(--color-brand-primary);
-  outline-offset: 2px;
-  border-radius: inherit;
+/* In the base layer so a utility such as outline-none wins: fields that sit in a container with its own focus style (the chat composer, the login fields) must not get a second ring. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-brand-primary);
+    outline-offset: 2px;
+    border-radius: inherit;
+  }
 }
