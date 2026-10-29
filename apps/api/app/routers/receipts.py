@@ -29,7 +29,7 @@ def _missing() -> HTTPException:
 @router.post("", status_code=201)
 def upload(
     file: UploadFile = File(...),
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     payload = file.file.read()
@@ -54,7 +54,7 @@ def upload(
 @router.get("/{run_id}")
 def read_run(
     run_id: UUID,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     row = get_run(connection, user_id, run_id)
@@ -67,7 +67,7 @@ def read_run(
 @router.get("/{run_id}/events")
 def events(
     run_id: UUID,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     row = get_run(connection, user_id, run_id)
@@ -85,7 +85,7 @@ def events(
 @router.get("/{run_id}/image")
 def image(
     run_id: UUID,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     path = image_path(connection, user_id, run_id)
@@ -98,7 +98,7 @@ def image(
 def confirm(
     run_id: UUID,
     body: ConfirmBody,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     try:

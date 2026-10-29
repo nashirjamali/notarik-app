@@ -37,7 +37,7 @@ def _events(payload: dict):
 @router.post("")
 def post_chat(
     body: ChatBody,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     try:
@@ -58,7 +58,7 @@ def post_chat(
 def post_confirm(
     thread_id: UUID,
     body: ConfirmBody,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     if body.decision not in {"approve", "reject", "edit"}:

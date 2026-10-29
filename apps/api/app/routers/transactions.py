@@ -47,7 +47,7 @@ def _month_or_none(value: str | None):
 @router.post("", response_model=TransactionRead, status_code=201)
 def create(
     body: TransactionCreate,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     return create_transaction(connection, user_id, body)
@@ -56,7 +56,7 @@ def create(
 @router.post("/batch", response_model=TransactionBatchRead, status_code=201)
 def create_batch(
     body: TransactionBatchCreate,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     return TransactionBatchRead(items=create_transactions(connection, user_id, body.transactions))
@@ -64,7 +64,7 @@ def create_batch(
 
 @router.get("", response_model=TransactionPage)
 def list_rows(
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
     month: Annotated[str | None, Query()] = None,
     category: Category | None = None,
@@ -103,7 +103,7 @@ def _safe_cell(value):
 
 @router.get("/export")
 def export(
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     buffer = io.StringIO()
@@ -123,7 +123,7 @@ def export(
 @router.get("/{transaction_id}", response_model=TransactionRead)
 def read_one(
     transaction_id: UUID,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     row = get_transaction(connection, user_id, transaction_id)
@@ -136,7 +136,7 @@ def read_one(
 def patch_one(
     transaction_id: UUID,
     body: TransactionUpdate,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     row = update_transaction(connection, user_id, transaction_id, body)
@@ -148,7 +148,7 @@ def patch_one(
 @router.delete("/{transaction_id}", status_code=204)
 def delete_one(
     transaction_id: UUID,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     if not delete_transaction(connection, user_id, transaction_id):

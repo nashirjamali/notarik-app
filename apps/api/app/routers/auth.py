@@ -17,7 +17,7 @@ def _unauthorized() -> HTTPException:
 
 
 @router.post("/signup", response_model=TokenPair, status_code=201)
-def signup(body: SignupRequest, connection: Connection = Depends(write_connection)):
+def signup(body: SignupRequest, connection: Connection = Depends(write_connection, scope="function")):
     pair = auth_service.create_account(
         connection, body.email, body.password, settings, body.name
     )
@@ -30,7 +30,7 @@ def signup(body: SignupRequest, connection: Connection = Depends(write_connectio
 
 
 @router.post("/login", response_model=TokenPair)
-def login(body: LoginRequest, connection: Connection = Depends(write_connection)):
+def login(body: LoginRequest, connection: Connection = Depends(write_connection, scope="function")):
     pair = auth_service.login(connection, body.email, body.password, settings)
     if pair is None:
         raise _unauthorized()
@@ -40,7 +40,7 @@ def login(body: LoginRequest, connection: Connection = Depends(write_connection)
 @router.post("/social", response_model=TokenPair)
 def social(
     body: SocialLoginRequest,
-    connection: Connection = Depends(write_connection),
+    connection: Connection = Depends(write_connection, scope="function"),
     key_client=Depends(google_key_client),
 ):
     try:
@@ -63,7 +63,7 @@ def social(
 
 
 @router.post("/refresh", response_model=TokenPair)
-def refresh(body: RefreshRequest, connection: Connection = Depends(write_connection)):
+def refresh(body: RefreshRequest, connection: Connection = Depends(write_connection, scope="function")):
     pair = auth_service.refresh(connection, body.refresh_token, settings)
     if pair is None:
         raise HTTPException(
@@ -74,5 +74,5 @@ def refresh(body: RefreshRequest, connection: Connection = Depends(write_connect
 
 
 @router.post("/logout", status_code=204)
-def logout(body: RefreshRequest, connection: Connection = Depends(write_connection)):
+def logout(body: RefreshRequest, connection: Connection = Depends(write_connection, scope="function")):
     auth_service.logout(connection, body.refresh_token)
