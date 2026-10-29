@@ -40,6 +40,8 @@
   --color-status-warning-subtle: #fcf6ec;
   --color-status-danger: #d84c10;
   --color-status-danger-subtle: #fbede7;
+  /* Danger as text: 4.5:1 or better on white and on the grey surfaces (the plain danger colour is 4.0:1). */
+  --color-status-danger-text: #b53a08;
 
   --color-category-groceries: #29b26e;
   --color-category-dining: #ff9433;

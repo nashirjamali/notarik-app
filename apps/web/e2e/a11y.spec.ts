@@ -44,12 +44,19 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     await page.getByLabel("Password").fill("password123");
     await page.getByRole("button", { name: "Log in" }).click();
     await page.waitForURL("**/app");
-    for (const path of ["/app", "/app/transactions", "/app/recap", "/app/chat", "/app/settings", "/app/receipts/new"]) {
+    const month = new Date().toISOString().slice(0, 7);
+    const { items } = await (await page.request.get(`/api/proxy/transactions?month=${month}`)).json();
+    for (const path of ["/app", "/app/transactions", `/app/transactions/${items[0].id}`, "/app/recap", "/app/chat", "/app/settings", "/app/receipts/new"]) {
       await page.goto(path);
       await page.waitForLoadState("networkidle");
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
       expect(await violations(page), `${path} at ${viewport.width}px`).toEqual([]);
     }
+    // The open category sheet is a modal dialog of its own.
+    await page.goto(`/app/transactions/${items[0].id}`);
+    await page.getByRole("button", { name: /^Category/ }).click();
+    await expect(page.getByRole("dialog", { name: "Category" })).toBeVisible();
+    expect(await violations(page), `category sheet at ${viewport.width}px`).toEqual([]);
     await context.close();
   });
 }

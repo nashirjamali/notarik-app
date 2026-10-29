@@ -158,7 +158,7 @@ test("add, edit and delete an expense", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Kopi Tuku" })).toBeVisible();
   await expect(visible("Rp 32.000")).toBeVisible();
   await expect(visible("<i>morning</i> coffee")).toBeVisible();
-  await page.getByRole("button", { name: "Edit" }).click();
+  await page.getByRole("button", { name: "Edit", exact: true }).click();
   await page.getByLabel("Amount").filter({ visible: true }).fill("45.000");
   await page.locator("select[name=category]").filter({ visible: true }).selectOption("Shopping");
   await page.getByRole("button", { name: "Save changes" }).click();
@@ -166,11 +166,11 @@ test("add, edit and delete an expense", async ({ page }) => {
   await expect(visible("Shopping")).toBeVisible();
 
   // Delete needs a confirmation.
-  await page.getByRole("button", { name: "Delete" }).click();
-  await page.getByRole("button", { name: "Keep it" }).click();
+  await page.getByRole("button", { name: "Delete transaction" }).click();
+  await page.getByRole("button", { name: "Keep" }).click();
   await expect(page.getByRole("heading", { name: "Kopi Tuku" })).toBeVisible();
-  await page.getByRole("button", { name: "Delete" }).click();
-  await page.getByRole("button", { name: "Confirm delete" }).click();
+  await page.getByRole("button", { name: "Delete transaction" }).click();
+  await page.getByRole("button", { name: "Yes, delete" }).click();
   await expect(page).toHaveURL(/\/app\/transactions$/);
   await expect(page.getByText("Kopi Tuku")).toHaveCount(0);
 });
@@ -445,5 +445,42 @@ test("Transactions in the mobile layout: search toggle, month row, category chip
   await main.getByRole("button", { name: "Close search" }).click();
   await expect(box).toBeHidden();
   await expect(main.getByText("Warung Tegal")).toBeVisible();
+  await context.close();
+});
+
+test("detail in the mobile layout: change category and payment in sheets, add a note inline, More menu", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.goto("/app/transactions");
+  await page.getByRole("main").getByText("Warung Tegal").click();
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 1, name: "Warung Tegal" })).toBeVisible();
+  await expect(main.getByText("Rp 25.000").first()).toBeVisible();
+  await expect(main.getByText("Details", { exact: true })).toBeVisible();
+
+  await main.getByRole("button", { name: /^Category/ }).click();
+  const sheet = page.getByRole("dialog", { name: "Category" });
+  await expect(sheet.getByRole("radio", { name: "Food & Drink" })).toHaveAttribute("aria-checked", "true");
+  await sheet.getByRole("radio", { name: "Transport" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(main.getByRole("button", { name: /^Category/ })).toContainText("Transport");
+
+  await main.getByRole("button", { name: /^Payment/ }).click();
+  await page.getByRole("dialog", { name: "Payment" }).getByRole("radio", { name: "QRIS" }).click();
+  await expect(main.getByRole("button", { name: /^Payment/ })).toContainText("QRIS");
+
+  await main.getByRole("button", { name: /^Note/ }).click();
+  await main.getByLabel("Note").fill("lunch with team");
+  await main.getByLabel("Note").press("Enter");
+  await expect(main.getByRole("button", { name: /^Note/ })).toContainText("lunch with team");
+
+  await page.reload();
+  await expect(page.getByRole("main").getByRole("button", { name: /^Category/ })).toContainText("Transport");
+  await expect(page.getByRole("main").getByRole("button", { name: /^Note/ })).toContainText("lunch with team");
+
+  await page.getByRole("button", { name: "More" }).click();
+  await page.getByRole("button", { name: "Delete expense" }).click();
+  await expect(page.getByRole("button", { name: "Yes, delete" })).toBeVisible();
   await context.close();
 });
