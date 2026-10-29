@@ -21,7 +21,7 @@ class SettingsUpdate(BaseModel):
 
 
 @router.get("/me")
-def me(connection: Connection = Depends(user_connection)):
+def me(connection: Connection = Depends(user_connection, scope="function")):
     user_id = connection.execute(text("SELECT auth.uid()")).scalar_one()
     name = connection.execute(text("SELECT auth.current_name()")).scalar_one()
     email = connection.execute(text("SELECT auth.current_email()")).scalar_one()
@@ -44,7 +44,7 @@ def _read(connection: Connection, user_id: UUID) -> Settings:
 
 @router.get("/me/settings", response_model=Settings)
 def read_settings(
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     return _read(connection, user_id)
@@ -53,7 +53,7 @@ def read_settings(
 @router.patch("/me/settings", response_model=Settings)
 def update_settings(
     body: SettingsUpdate,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     current = _read(connection, user_id)

@@ -40,7 +40,7 @@ def _month(value: str) -> str:
 @router.get("/recap")
 def read_recap(
     month: str = Query(),
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     return recap(connection, user_id, _month(month))
@@ -49,7 +49,7 @@ def read_recap(
 @router.get("/budget")
 def read_budget(
     month: str = Query(),
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     return get_budget(connection, user_id, _month(month))
@@ -58,7 +58,7 @@ def read_budget(
 @router.put("/budget")
 def write_budget(
     body: BudgetBody,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     return put_budget(connection, user_id, _month(body.month), body.total_minor)
@@ -67,7 +67,7 @@ def write_budget(
 @router.get("/budget/categories")
 def read_category_budgets(
     month: str = Query(),
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     return category_budgets(connection, user_id, _month(month))
@@ -76,7 +76,7 @@ def read_category_budgets(
 @router.put("/budget/categories")
 def write_category_budget(
     body: CategoryBudgetBody,
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     return put_category_budget(connection, user_id, _month(body.month), body.category, body.total_minor)
@@ -85,7 +85,7 @@ def write_category_budget(
 @router.get("/projection")
 def read_projection(
     month: str = Query(),
-    connection: Connection = Depends(user_connection),
+    connection: Connection = Depends(user_connection, scope="function"),
     user_id: UUID = Depends(current_user),
 ):
     return projection(connection, user_id, _month(month))
