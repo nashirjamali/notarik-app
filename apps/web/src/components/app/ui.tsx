@@ -12,10 +12,23 @@ export const categoryMeta: Record<Category, { label: string; icon: IconName; dot
   Other: { label: "Other", icon: "receipt", dot: "bg-category-other" },
 };
 
+/** Only four categories have a 3D icon in the design; Shopping and Other show their colour. */
+const threeD: Partial<Record<Category, string>> = {
+  Dining: "3d-coffee",
+  Groceries: "3d-groceries",
+  Transport: "3d-transport",
+  Bills: "3d-bills",
+};
+
 export function CategoryIcon({ category }: { category: Category }) {
+  const art = threeD[category];
   return (
-    <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-surface-subtle">
-      <Image src={`/icons/${categoryMeta[category].icon}.png`} alt="" width={64} height={64} className="size-8 object-contain" />
+    <span className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-surface-subtle">
+      {art ? (
+        <Image src={`/app-assets/icons/${art}.png`} alt="" width={72} height={72} className="size-9 object-contain" />
+      ) : (
+        <span className={`size-4.5 rounded-full ${categoryMeta[category].dot}`} />
+      )}
     </span>
   );
 }

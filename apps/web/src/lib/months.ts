@@ -40,3 +40,10 @@ export function dayHeading(iso: string, now: string): string {
   const short = `${Number(match[3])} ${SHORT[Number(match[2]) - 1]}`;
   return match[1] === now.slice(0, 4) ? short : `${short} ${match[1]}`;
 }
+
+/** "08:15" in the browser's timezone, from an ISO timestamp. */
+export function timeOf(timestamp: string): string {
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}

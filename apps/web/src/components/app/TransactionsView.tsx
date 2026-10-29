@@ -1,18 +1,22 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { downloadCsv, listTransactions } from "@/lib/client";
+import { useEffect, useRef, useState } from "react";
+import { downloadCsv, getRecap, listTransactions } from "@/lib/client";
 import { groupByDay } from "@/lib/group";
 import { formatIdr } from "@/lib/money";
 import { dayHeading } from "@/lib/months";
 import { useClock } from "@/lib/useClock";
 import { useDebounced } from "@/lib/useDebounced";
-import { categories, type Category } from "@/lib/types";
+import type { Category } from "@/lib/types";
 import { MonthSwitcher } from "./MonthSwitcher";
 import { TransactionRow } from "./TransactionRow";
-import { Card, EmptyState, ErrorState, PageTitle, Skeleton, categoryMeta } from "./ui";
+import { EmptyState, ErrorState, Skeleton, categoryMeta } from "./ui";
+
+/** Same order as the mobile filter chips. */
+const filters: Category[] = ["Dining", "Groceries", "Transport", "Bills", "Shopping", "Other"];
 
 export function TransactionsView() {
   const clock = useClock();
@@ -22,6 +26,11 @@ export function TransactionsView() {
   const [search, setSearch] = useState("");
   const q = useDebounced(search.trim());
   const [exportError, setExportError] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
+  const searchBox = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (searching) searchBox.current?.focus();
+  }, [searching]);
 
   const query = useInfiniteQuery({
     queryKey: ["transactions", month, category ?? "all", q],
@@ -31,65 +40,85 @@ export function TransactionsView() {
     getNextPageParam: (last) => last.next_cursor,
   });
 
+  const recap = useQuery({ queryKey: ["recap", month], queryFn: () => getRecap(month!), enabled: month !== undefined });
   const rows = query.data?.pages.flatMap((page) => page.items) ?? [];
   const groups = groupByDay(rows);
   const now = clock?.today ?? "";
 
   return (
     <>
-      <PageTitle
-        aside={
-          <div className="flex flex-wrap items-center gap-3">
-            {month ? <MonthSwitcher month={month} onChange={setMonth} /> : <Skeleton className="h-10 w-56" />}
-            <Link href="/app/receipts/new" className="rounded-full bg-brand-accent-subtle px-5 py-2.5 text-button-2 font-bold text-brand-primary-strong transition-colors hover:bg-brand-accent">
-              Scan receipt
-            </Link>
-            <Link href="/app/transactions/new" className="rounded-full bg-brand-primary px-5 py-2.5 text-button-2 font-bold text-text-inverse transition-colors hover:bg-brand-primary-strong">
-              Add expense
-            </Link>
-          </div>
-        }
-      >
-        Transactions
-      </PageTitle>
+      <div className="mb-3 flex items-center justify-between gap-3 md:mb-6">
+        <h1 className="font-heading text-body-1 font-semibold md:text-headline-4 md:font-bold">Transactions</h1>
+        <button
+          type="button"
+          aria-label={searching ? "Close search" : "Search"}
+          onClick={() => {
+            setSearching((value) => !value);
+            if (searching) setSearch("");
+          }}
+          className="flex size-12 items-center justify-center rounded-full bg-border-default md:hidden"
+        >
+          <Image src="/app-assets/svg/list-search.svg" alt="" width={24} height={24} unoptimized />
+        </button>
+        {/* Wide layout: the actions that the mobile app keeps in the menu and in Settings. */}
+        <div className="hidden items-center gap-3 md:flex">
+          <Link href="/app/receipts/new" className="rounded-full bg-brand-accent-subtle px-5 py-2.5 text-button-2 font-bold text-brand-primary-strong transition-colors hover:bg-brand-accent">
+            Scan receipt
+          </Link>
+          <button
+            type="button"
+            onClick={() => downloadCsv().then(() => setExportError(null), (e: Error) => setExportError(e.message))}
+            className="rounded-full bg-surface-default px-5 py-2.5 text-button-2 font-bold hover:bg-border-default"
+          >
+            Export CSV
+          </button>
+        </div>
+      </div>
+      {exportError && (
+        <p role="alert" className="mb-3 text-caption text-status-danger">
+          {exportError}
+        </p>
+      )}
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
+      <div className={`mb-3 rounded-2xl bg-surface-subtle px-4 md:mb-4 md:block md:max-w-sm md:rounded-full md:bg-surface-default md:px-5 ${searching ? "" : "hidden"}`}>
         <input
           type="search"
           aria-label="Search expenses"
           placeholder="Search merchant or note"
           maxLength={100}
+          ref={searchBox}
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          className="min-w-0 flex-1 rounded-full border border-border-default bg-surface-default px-5 py-2.5 text-body-2 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-accent md:max-w-sm"
+          className="h-11 w-full bg-transparent text-caption outline-none md:text-body-2"
         />
-        <button
-          type="button"
-          onClick={() => downloadCsv().then(() => setExportError(null), (e: Error) => setExportError(e.message))}
-          className="rounded-full bg-surface-default px-5 py-2.5 text-button-2 font-bold hover:bg-border-default"
-        >
-          Export CSV
-        </button>
-        {exportError && (
-          <p role="alert" className="w-full text-caption text-status-danger">
-            {exportError}
-          </p>
-        )}
       </div>
 
-      <div role="group" aria-label="Filter by category" className="-mx-5 mb-5 flex gap-2 overflow-x-auto px-5 pb-1 md:mx-0 md:flex-wrap md:px-0">
-        {[undefined, ...categories].map((value) => {
+      <div className="mb-3 flex items-center justify-between gap-3 py-3">
+        {month ? <MonthSwitcher month={month} onChange={setMonth} /> : <Skeleton className="h-8 w-48" />}
+        <div className="flex flex-col items-end">
+          <span className="text-caption-small text-text-secondary">Spent</span>
+          <span className="text-caption font-medium">{formatIdr(recap.data?.total_minor ?? 0)}</span>
+        </div>
+      </div>
+
+      <div role="radiogroup" aria-label="Filter by category" className="-mx-6 mb-3 flex gap-2 overflow-x-auto px-6 pb-3 md:mx-0 md:flex-wrap md:px-0">
+        {[undefined, ...filters].map((value) => {
           const active = value === category;
           return (
             <button
               key={value ?? "all"}
               type="button"
-              aria-pressed={active}
-              onClick={() => setCategory(value)}
-              className={`shrink-0 rounded-full px-4 py-2 text-button-2 font-bold transition-colors ${
-                active ? "bg-brand-primary text-text-inverse" : "bg-surface-default text-text-secondary hover:bg-border-default"
+              role="radio"
+              aria-checked={active}
+              onClick={() => setCategory(active ? undefined : value)}
+              style={active && value ? { backgroundColor: `var(--color-category-${value.toLowerCase()})`, borderColor: `var(--color-category-${value.toLowerCase()})` } : undefined}
+              className={`flex shrink-0 items-center gap-2 rounded-full border py-2 text-caption ${
+                value ? "pr-3.5 pl-3" : "px-4"
+              } ${
+                active ? (value ? "text-text-inverse font-medium" : "border-text-primary bg-text-primary font-medium text-text-inverse") : "border-border-default bg-surface-default"
               }`}
             >
+              {value && <span aria-hidden="true" className={`size-2 rounded-full ${active ? "bg-surface-default" : categoryMeta[value].dot}`} />}
               {value ? categoryMeta[value].label : "All"}
             </button>
           );
@@ -110,19 +139,19 @@ export function TransactionsView() {
           hint={category || q ? "Try another search, category or month." : "Add an expense and it shows up here."}
         />
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
           {groups.map((group) => (
-            <Card key={group.date}>
-              <div className="flex items-baseline justify-between">
-                <h2 className="font-heading text-body-2 font-bold">{dayHeading(group.date, now)}</h2>
-                <span className="text-caption text-text-secondary">{formatIdr(group.total)}</span>
+            <section key={group.date} className="md:rounded-3xl md:bg-surface-default md:p-6">
+              <div className="flex items-baseline justify-between pb-1">
+                <h2 className="text-caption-small font-semibold text-text-secondary">{dayHeading(group.date, now)}</h2>
+                <span className="text-caption-small text-text-secondary">{formatIdr(group.total)}</span>
               </div>
-              <ul className="divide-y divide-border-default">
+              <ul>
                 {group.items.map((row) => (
                   <TransactionRow key={row.id} row={row} />
                 ))}
               </ul>
-            </Card>
+            </section>
           ))}
           {query.hasNextPage && (
             <button
