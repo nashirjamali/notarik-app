@@ -1,7 +1,10 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { stubGoogle } from "./google-stub";
 
 const API = "http://127.0.0.1:8000";
+
+test.beforeEach(async ({ context }) => stubGoogle(context));
 
 async function user(request: import("@playwright/test").APIRequestContext) {
   const email = `a11y-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.com`;
@@ -34,6 +37,7 @@ test("public pages have no detectable accessibility violations", async ({ page }
 for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
   test(`app pages have no detectable accessibility violations at ${viewport.width}px`, async ({ browser, request }) => {
     const context = await browser.newContext({ viewport });
+    await stubGoogle(context);
     const page = await context.newPage();
     await page.goto("/login");
     await page.getByLabel("Email").fill(await user(request));

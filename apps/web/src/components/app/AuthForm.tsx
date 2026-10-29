@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore, type FormEvent } from "react";
 
 const noSubscription = () => () => {};
+import { GoogleButton } from "./GoogleButton";
 
 const field =
   "w-full rounded-2xl border border-border-default bg-surface-default px-4 py-3 text-body-2 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-accent";
@@ -85,6 +86,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       >
         {busy ? "Please wait…" : signup ? "Create account" : "Log in"}
       </button>
+      <GoogleButton />
       <p className="text-center text-caption text-text-secondary">
         {signup ? "Already have an account? " : "New to Notarik? "}
         <Link href={signup ? "/login" : "/signup"} className="font-medium text-brand-primary-strong hover:underline">

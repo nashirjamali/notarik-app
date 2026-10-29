@@ -1,7 +1,10 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { stubGoogle } from "./google-stub";
 
 const API = "http://127.0.0.1:8000";
 const PASSWORD = "password123";
+
+test.beforeEach(async ({ context }) => stubGoogle(context));
 
 /** Creates a user straight on the API and gives them one expense dated today. */
 async function seedUser(request: APIRequest, merchant: string) {
@@ -348,4 +351,26 @@ test("scan a receipt: rejects a wrong file, then upload, fix the details and sav
   await expect(page).toHaveURL(/\/app\/transactions\/[0-9a-f-]{36}$/);
   await expect(main.getByText("Toko Scan").first()).toBeVisible();
   await expect(main.getByText("Rp 42.000").first()).toBeVisible();
+});
+
+test("Google sign-in sends the token and nonce to our server and shows the failure, with no session", async ({ page, context }) => {
+  for (const [path, label] of [["/login", "Continue with Google"], ["/signup", "Continue with Google"]] as const) {
+    await page.goto(path);
+    const sent = page.waitForRequest("**/api/auth/google");
+    await page.getByRole("button", { name: label }).click();
+    const body = (await sent).postDataJSON();
+    expect(body.id_token).toBe("fake.id.token");
+    expect(body.nonce).toMatch(/^[0-9a-f]{32}$/);
+    expect(body.provider).toBeUndefined();
+    // The e2e API has no Google client IDs, so it rejects any token.
+    await expect(page.getByRole("alert").filter({ hasText: "Google sign-in failed" })).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`${path}$`));
+    expect((await context.cookies()).some((c) => c.name === "nt_access")).toBeFalsy();
+  }
+});
+
+test("the Google route refuses a malformed body and cross-site calls", async ({ page }) => {
+  await page.goto("/login");
+  expect((await page.request.post("/api/auth/google", { data: { id_token: "x" } })).status()).toBe(400);
+  expect((await page.request.post("/api/auth/google", { data: { id_token: "x", nonce: "y" }, headers: { origin: "https://evil.example" } })).status()).toBe(403);
 });
