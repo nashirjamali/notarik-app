@@ -157,7 +157,7 @@ export function TransactionDetail() {
         ) : (
           <>
             <div className="flex flex-col items-center gap-2 text-center">
-              <span className="flex size-20 items-center justify-center rounded-3xl bg-surface-subtle md:bg-surface-default [&>span]:size-20 [&>span]:rounded-3xl [&_img]:size-[60px]">
+              <span className="flex size-20 items-center justify-center rounded-3xl bg-surface-subtle [&>span]:size-20 [&>span]:rounded-3xl [&_img]:size-[60px]">
                 <CategoryIcon category={row.category} />
               </span>
               <h1 className="text-body-2 font-medium">{row.merchant}</h1>
@@ -170,7 +170,7 @@ export function TransactionDetail() {
               )}
             </div>
 
-            <div className="rounded-3xl bg-surface-subtle px-5 md:bg-surface-default">
+            <div className="rounded-3xl bg-surface-subtle px-5">
               <Info label="Category" onClick={() => setPicker("category")}>
                 <span className="flex items-center gap-2 rounded-full border border-border-default bg-surface-default px-3 py-1">
                   <span aria-hidden="true" className={`size-2 rounded-full ${categoryMeta[row.category].dot}`} />
@@ -206,7 +206,7 @@ export function TransactionDetail() {
             </div>
 
             {(receiptUrl || row.items.length > 0) && (
-              <div className="rounded-3xl bg-surface-subtle px-5 md:bg-surface-default">
+              <div className="rounded-3xl bg-surface-subtle px-5">
                 {receiptUrl && (
                   <button type="button" aria-label="View receipt" onClick={() => setViewing(true)} className={`flex w-full items-center gap-3 py-3 text-left ${row.items.length > 0 ? "border-b border-border-default" : ""}`}>
                     <span className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border-default bg-surface-default">

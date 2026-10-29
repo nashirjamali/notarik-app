@@ -77,6 +77,8 @@ test("log in, see the seeded expense, keep tokens out of the page, log out", asy
   expect(cookies.filter((c) => c.name.startsWith("nt_")).every((c) => c.httpOnly && c.sameSite === "Lax")).toBeTruthy();
   expect(cookies.map((c) => c.name)).toEqual(expect.arrayContaining(["nt_access", "nt_refresh"]));
 
+  // Log out lives in Settings at every width: the Figma sidebar has none.
+  await page.goto("/app/settings");
   await page.getByRole("button", { name: "Log out" }).filter({ visible: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.goto("/app");
@@ -139,7 +141,7 @@ test("add, edit and delete an expense", async ({ page }) => {
   const visible = (text: string) => page.getByText(text, { exact: true }).filter({ visible: true });
 
   await page.getByRole("link", { name: "Transactions" }).filter({ visible: true }).first().click();
-  await page.getByRole("link", { name: "Add", exact: true }).filter({ visible: true }).click();
+  await page.getByRole("link", { name: /^Add( expense)?$/ }).filter({ visible: true }).click();
   await expect(page).toHaveURL(/\/transactions\/new$/);
 
   // Nothing typed, then no amount, then a sentence the parser understands.
@@ -229,7 +231,7 @@ test("search narrows the list and the export downloads a CSV of the user's own r
 
 test("ask Notarik: answers from your data, proposes an expense and only saves after Confirm", async ({ page }) => {
   await logIn(page, await seedUser(page.request, "Warung Tegal"));
-  await page.getByRole("link", { name: "Chat" }).filter({ visible: true }).first().click();
+  await page.getByRole("link", { name: /^(Chat|Ask Notarik)$/ }).filter({ visible: true }).first().click();
   const seen = (text: string | RegExp) => page.getByText(text).filter({ visible: true });
   await expect(page.getByRole("heading", { name: "Ask Notarik" })).toBeVisible();
 
@@ -389,10 +391,11 @@ for (const vp of [
     const page = await context.newPage();
     await logIn(page, await seedUser(page.request, "Warung Tegal"));
     const links = page.getByRole("navigation", { name: "Main" }).filter({ visible: true }).getByRole("link");
-    await expect(links).toHaveText(vp.width < 768 ? ["", "", "", "", ""] : ["+Add", "Home", "Transactions", "Chat", "Settings"]);
-    // The pill keeps the mobile order; the sidebar puts Add on top as the primary action.
-    const order = vp.width < 768 ? ["/app", "/app/transactions", "/app/transactions/new", "/app/chat", "/app/settings"] : ["/app/transactions/new", "/app", "/app/transactions", "/app/chat", "/app/settings"];
+    await expect(links).toHaveText(vp.width < 768 ? ["", "", "", "", ""] : ["Home", "Transactions", "Recap & Budget", "Ask Notarik", "Settings"]);
+    // The pill keeps the mobile order. The sidebar follows the Figma "Web app" frame: Recap & Budget has its own entry and Add expense sits at the bottom.
+    const order = vp.width < 768 ? ["/app", "/app/transactions", "/app/transactions/new", "/app/chat", "/app/settings"] : ["/app", "/app/transactions", "/app/recap", "/app/chat", "/app/settings"];
     for (const [index, href] of order.entries()) await expect(links.nth(index)).toHaveAttribute("href", href);
+    if (vp.width >= 768) await expect(page.getByRole("link", { name: "Add expense" })).toHaveAttribute("href", "/app/transactions/new");
     await expect(links.filter({ has: page.locator('[aria-current="page"]') })).toHaveCount(0);
     await expect(page.getByRole("navigation", { name: "Main" }).filter({ visible: true }).locator('[aria-current="page"]')).toHaveAttribute("href", "/app");
     await context.close();

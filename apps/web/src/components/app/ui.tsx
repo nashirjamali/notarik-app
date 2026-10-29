@@ -22,7 +22,7 @@ const threeD: Partial<Record<Category, string>> = {
 export function CategoryIcon({ category }: { category: Category }) {
   const art = threeD[category];
   return (
-    <span className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-surface-subtle">
+    <span className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-surface-subtle md:bg-surface-default">
       {art ? (
         <Image src={`/app-assets/icons/${art}.png`} alt="" width={72} height={72} className="size-9 object-contain" />
       ) : (
@@ -33,7 +33,7 @@ export function CategoryIcon({ category }: { category: Category }) {
 }
 
 export function Card({ className = "", children }: { className?: string; children: ReactNode }) {
-  return <div className={`rounded-3xl bg-surface-subtle p-5 md:bg-surface-default md:p-6 ${className}`}>{children}</div>;
+  return <div className={`rounded-3xl bg-surface-subtle p-5 md:p-6 ${className}`}>{children}</div>;
 }
 
 export function PageTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {

@@ -77,7 +77,7 @@ export function TransactionsView() {
         </p>
       )}
 
-      <div className={`mb-3 rounded-2xl bg-surface-subtle px-4 md:mb-4 md:block md:max-w-sm md:rounded-full md:bg-surface-default md:px-5 ${searching ? "" : "hidden"}`}>
+      <div className={`mb-3 rounded-2xl bg-surface-subtle px-4 md:mb-4 md:block md:max-w-sm md:rounded-full md:px-5 ${searching ? "" : "hidden"}`}>
         <input
           type="search"
           aria-label="Search expenses"
@@ -138,7 +138,7 @@ export function TransactionsView() {
       ) : (
         <div className="flex flex-col gap-5">
           {groups.map((group) => (
-            <section key={group.date} className="md:rounded-3xl md:bg-surface-default md:p-6">
+            <section key={group.date} className="md:rounded-3xl md:bg-surface-subtle md:p-6">
               <div className="flex items-baseline justify-between pb-1">
                 <h2 className="text-caption-small font-semibold text-text-secondary">{dayHeading(group.date, now)}</h2>
                 <span className="text-caption-small text-text-secondary">{formatIdr(group.total)}</span>
