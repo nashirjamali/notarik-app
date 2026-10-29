@@ -162,6 +162,19 @@ test("another user cannot open or change someone else's expense", async ({ brows
   await b.goto(`/app/transactions/${id}`);
   await expect(b.getByText("does not exist or was deleted")).toBeVisible();
   expect((await a.request.get(`/api/proxy/transactions/${id}`)).status()).toBe(200);
+
+test("responses carry security headers and unknown app pages show a friendly 404", async ({ page }) => {
+  const login = await page.request.get("/login");
+  const headers = login.headers();
+  expect(headers["x-content-type-options"]).toBe("nosniff");
+  expect(headers["x-frame-options"]).toBe("DENY");
+  expect(headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+  expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.goto("/app/does-not-exist");
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Main" }).filter({ visible: true })).toBeVisible();
 });
 
 test("the BFF rejects cross-site writes and unknown API areas", async ({ page }) => {
