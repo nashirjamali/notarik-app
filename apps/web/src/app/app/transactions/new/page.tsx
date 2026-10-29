@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { NewExpenseView } from "@/components/app/NewExpenseView";
+import { QuickAddView } from "@/components/app/QuickAddView";
 
 export const metadata: Metadata = { title: "Add expense" };
 
 export default function Page() {
-  return <NewExpenseView />;
+  return <QuickAddView />;
 }

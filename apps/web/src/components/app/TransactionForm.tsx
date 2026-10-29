@@ -22,6 +22,7 @@ export function TransactionForm({
   onSubmit,
   onCancel,
   withPayment = true,
+  cancelLabel = "Cancel",
 }: {
   initial?: Partial<Initial>;
   today: string;
@@ -32,6 +33,7 @@ export function TransactionForm({
   onCancel: () => void;
   /** A receipt confirmation has no payment method to send. */
   withPayment?: boolean;
+  cancelLabel?: string;
 }) {
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -122,7 +124,7 @@ export function TransactionForm({
           {busy ? "Saving…" : submitLabel}
         </button>
         <button type="button" onClick={onCancel} className="h-12 rounded-full px-6 font-heading text-button-1 font-bold text-text-secondary hover:bg-surface-subtle">
-          Cancel
+          {cancelLabel}
         </button>
       </div>
     </form>

@@ -115,7 +115,7 @@ export function TransactionsView() {
               className={`flex shrink-0 items-center gap-2 rounded-full border py-2 text-caption ${
                 value ? "pr-3.5 pl-3" : "px-4"
               } ${
-                active ? (value ? "text-text-inverse font-medium" : "border-text-primary bg-text-primary font-medium text-text-inverse") : "border-border-default bg-surface-default"
+                active ? (value ? "text-text-primary font-medium" : "border-text-primary bg-text-primary font-medium text-text-inverse") : "border-border-default bg-surface-default"
               }`}
             >
               {value && <span aria-hidden="true" className={`size-2 rounded-full ${active ? "bg-surface-default" : categoryMeta[value].dot}`} />}

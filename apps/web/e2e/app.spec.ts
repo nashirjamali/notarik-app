@@ -139,25 +139,24 @@ test("add, edit and delete an expense", async ({ page }) => {
   await page.getByRole("link", { name: "Add", exact: true }).filter({ visible: true }).click();
   await expect(page).toHaveURL(/\/transactions\/new$/);
 
-  // Validation first.
-  await page.getByLabel("Merchant").filter({ visible: true }).fill("Kopi Tuku");
-  await page.getByLabel("Amount").filter({ visible: true }).fill("abc");
+  // Nothing typed, then no amount, then a sentence the parser understands.
+  const sentence = page.getByLabel("What did you spend?");
   await page.getByRole("button", { name: "Save expense" }).click();
-  await expect(page.getByText("Enter an amount like 25rb or 25.000")).toBeVisible();
-
-  await page.getByLabel("Amount").filter({ visible: true }).fill("32rb");
-  await page.locator("select[name=category]").filter({ visible: true }).selectOption("Dining");
-  await page.locator("select[name=payment]").filter({ visible: true }).selectOption("QRIS");
-  await page.getByLabel("Note").filter({ visible: true }).fill("<i>morning</i> coffee");
+  await expect(page.getByText("Type what you spent")).toBeVisible();
+  await sentence.fill("kopi tuku");
   await page.getByRole("button", { name: "Save expense" }).click();
-  await expect(page).toHaveURL(/\/app\/transactions$/);
-  await expect(visible("Kopi Tuku")).toBeVisible();
+  await expect(page.getByText("Add an amount, like 35rb or 35.000")).toBeVisible();
+  await sentence.fill("kopi tuku 32rb");
+  await expect(page.getByText("Notarik understood")).toBeVisible();
+  await expect(page.getByRole("radio", { name: "Food & Drink" })).toHaveAttribute("aria-checked", "true");
+  await page.getByRole("button", { name: "Save expense" }).click();
 
-  // Detail, then edit the amount and category.
-  await visible("Kopi Tuku").click();
-  await expect(page.getByRole("heading", { name: "Kopi Tuku" })).toBeVisible();
+  // Quick add opens the new expense.
+  await expect(page).toHaveURL(/\/app\/transactions\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("heading", { name: /kopi tuku/i })).toBeVisible();
   await expect(visible("Rp 32.000")).toBeVisible();
-  await expect(visible("<i>morning</i> coffee")).toBeVisible();
+
+  // Edit the amount and category in the form.
   await page.getByRole("button", { name: "Edit", exact: true }).click();
   await page.getByLabel("Amount").filter({ visible: true }).fill("45.000");
   await page.locator("select[name=category]").filter({ visible: true }).selectOption("Shopping");
@@ -168,11 +167,11 @@ test("add, edit and delete an expense", async ({ page }) => {
   // Delete needs a confirmation.
   await page.getByRole("button", { name: "Delete transaction" }).click();
   await page.getByRole("button", { name: "Keep" }).click();
-  await expect(page.getByRole("heading", { name: "Kopi Tuku" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /kopi tuku/i })).toBeVisible();
   await page.getByRole("button", { name: "Delete transaction" }).click();
   await page.getByRole("button", { name: "Yes, delete" }).click();
   await expect(page).toHaveURL(/\/app\/transactions$/);
-  await expect(page.getByText("Kopi Tuku")).toHaveCount(0);
+  await expect(page.getByText(/kopi tuku/i).filter({ visible: true })).toHaveCount(0);
 });
 
 test("another user cannot open or change someone else's expense", async ({ browser, request }) => {
@@ -483,4 +482,21 @@ test("detail in the mobile layout: change category and payment in sheets, add a 
   await page.getByRole("button", { name: "Delete expense" }).click();
   await expect(page.getByRole("button", { name: "Yes, delete" })).toBeVisible();
   await context.close();
+});
+
+test("Quick add several expenses at once: a missing amount blocks saving until it is filled or removed", async ({ page }) => {
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.goto("/app/transactions/new");
+  const sentence = page.getByLabel("What did you spend?");
+  await sentence.fill("kopi 25rb, parkir 5rb, bensin");
+  await expect(page.getByText("Notarik understood 3 expenses")).toBeVisible();
+  await page.getByRole("button", { name: "Save 3 expenses" }).click();
+  await expect(page.getByText("Add an amount to the highlighted expenses, or remove them")).toBeVisible();
+
+  await page.getByRole("button", { name: "Remove bensin" }).click();
+  await expect(page.getByText("Notarik understood 2 expenses")).toBeVisible();
+  await page.getByRole("button", { name: "Save 2 expenses" }).click();
+  await expect(page).toHaveURL(/\/app\/transactions$/);
+  await expect(page.getByText(/^kopi$/i).filter({ visible: true })).toBeVisible();
+  await expect(page.getByText(/^parkir$/i).filter({ visible: true })).toBeVisible();
 });
