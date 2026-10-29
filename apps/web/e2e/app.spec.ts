@@ -1,0 +1,161 @@
+import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+
+const API = "http://127.0.0.1:8000";
+const PASSWORD = "password123";
+
+/** Creates a user straight on the API and gives them one expense dated today. */
+async function seedUser(request: APIRequest, merchant: string) {
+  const email = `web-${Date.now()}-${Math.random().toString(36).slice(2, 7)}@example.com`;
+  const signup = await request.post(`${API}/auth/signup`, { data: { email, password: PASSWORD, name: "Rina Putri" } });
+  expect(signup.ok()).toBeTruthy();
+  const { access_token } = await signup.json();
+  const date = new Date();
+  const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const created = await request.post(`${API}/transactions`, {
+    headers: { authorization: `Bearer ${access_token}` },
+    data: { merchant, date: iso, total_minor: 25_000, currency: "IDR", category: "Dining", payment_method: "Cash", items: [] },
+  });
+  expect(created.status()).toBe(201);
+  return email;
+}
+type APIRequest = APIRequestContext;
+
+async function logIn(page: Page, email: string) {
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill(PASSWORD);
+  await page.getByRole("button", { name: "Log in" }).click();
+  await expect(page).toHaveURL(/\/app$/);
+}
+
+test("a visit to /app without a session redirects to /login", async ({ page }) => {
+  await page.goto("/app/transactions");
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
+});
+
+test("wrong password shows an error and stays on the form", async ({ page }) => {
+  const email = await seedUser(page.request, "Warung Tegal");
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Password").fill("not-the-password");
+  await page.getByRole("button", { name: "Log in" }).click();
+  await expect(page.getByText("Wrong email or password")).toBeVisible();
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test("log in, see the seeded expense, keep tokens out of the page, log out", async ({ page }) => {
+  const email = await seedUser(page.request, "Warung Tegal");
+  await logIn(page, email);
+
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Rina");
+  await expect(page.getByRole("main").getByText("Warung Tegal")).toBeVisible();
+
+  await page.getByRole("link", { name: "Transactions" }).filter({ visible: true }).first().click();
+  await expect(page).toHaveURL(/\/app\/transactions$/);
+  // Next keeps the previous route (Home) hidden in the DOM, so only look at what is visible.
+  const visibleText = (text: string) => page.getByText(text).filter({ visible: true });
+  await expect(visibleText("Warung Tegal")).toBeVisible();
+  await expect(visibleText("Rp 25.000").first()).toBeVisible();
+  await expect(visibleText("Today").first()).toBeVisible();
+
+  // Category filter: another category has nothing, so the empty state shows.
+  await page.getByRole("button", { name: "Bills" }).click();
+  await expect(visibleText("No expenses this month")).toBeVisible();
+  await page.getByRole("button", { name: "Food & Drink" }).click();
+  await expect(visibleText("Warung Tegal")).toBeVisible();
+
+  // The browser can never read a token.
+  const visible = await page.evaluate(() => ({ cookie: document.cookie, local: JSON.stringify(localStorage), session: JSON.stringify(sessionStorage) }));
+  expect(visible.cookie).toBe("");
+  expect(visible.local).toBe("{}");
+  expect(visible.session).toBe("{}");
+  const cookies = await page.context().cookies();
+  expect(cookies.filter((c) => c.name.startsWith("nt_")).every((c) => c.httpOnly && c.sameSite === "Lax")).toBeTruthy();
+  expect(cookies.map((c) => c.name)).toEqual(expect.arrayContaining(["nt_access", "nt_refresh"]));
+
+  await page.getByRole("button", { name: "Log out" }).filter({ visible: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await page.goto("/app");
+  await expect(page).toHaveURL(/\/login$/);
+});
+
+test("a second user never sees the first user's rows", async ({ browser, request }) => {
+  const emailA = await seedUser(request, "Toko Rahasia A");
+  const emailB = await seedUser(request, "Kedai B");
+
+  const contextA = await browser.newContext();
+  const pageA = await contextA.newPage();
+  await logIn(pageA, emailA);
+  await expect(pageA.getByRole("main").getByText("Toko Rahasia A")).toBeVisible();
+
+  const contextB = await browser.newContext();
+  const pageB = await contextB.newPage();
+  await logIn(pageB, emailB);
+  await pageB.goto("/app/transactions");
+  await expect(pageB.getByText("Kedai B")).toBeVisible();
+  const body = await (await pageB.request.get("/api/proxy/transactions?month=" + new Date().toISOString().slice(0, 7))).text();
+  expect(body).toContain("Kedai B");
+  expect(body).not.toContain("Toko Rahasia A");
+  await expect(pageB.getByText("Toko Rahasia A")).toHaveCount(0);
+
+  await contextA.close();
+  await contextB.close();
+});
+
+test("the BFF rejects cross-site writes and unknown API areas", async ({ page }) => {
+  const email = await seedUser(page.request, "Warung Tegal");
+  await logIn(page, email);
+  const crossSite = await page.request.post("/api/auth/logout", { headers: { origin: "https://evil.example" } });
+  expect(crossSite.status()).toBe(403);
+  const crossSiteWrite = await page.request.post("/api/proxy/transactions", { headers: { origin: "https://evil.example" }, data: {} });
+  expect(crossSiteWrite.status()).toBe(403);
+  expect((await page.request.get("/api/proxy/receipts/abc")).status()).toBe(404);
+  expect((await page.request.get("/api/proxy/auth/refresh")).status()).toBe(404);
+  // Still signed in after the blocked attempts.
+  expect((await page.request.get("/api/proxy/me")).status()).toBe(200);
+});
+
+test("an expired access token is renewed without logging out, even for parallel requests", async ({ page, context }) => {
+  const email = await seedUser(page.request, "Warung Tegal");
+  await logIn(page, email);
+  await context.clearCookies({ name: "nt_access" });
+  const results = await Promise.all([1, 2, 3].map(() => page.request.get("/api/proxy/me")));
+  expect(results.map((r) => r.status())).toEqual([200, 200, 200]);
+  expect((await context.cookies()).some((c) => c.name === "nt_access")).toBeTruthy();
+});
+
+for (const vp of [
+  { name: "desktop", width: 1440, height: 900, nav: "sidebar" },
+  { name: "tablet", width: 768, height: 1024, nav: "top" },
+  { name: "mobile", width: 390, height: 844, nav: "bottom" },
+]) {
+  test(`the shell shows a ${vp.nav} navigation at ${vp.width}px with no horizontal scroll`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
+    const page = await context.newPage();
+    await logIn(page, await seedUser(page.request, "Warung Tegal"));
+    await expect(page.getByRole("main").getByText("Warung Tegal")).toBeVisible();
+
+    const navs = page.getByRole("navigation", { name: "Main" });
+    const visible = await navs.evaluateAll((els) =>
+      els.filter((el) => el.getBoundingClientRect().width > 0).map((el) => {
+        const box = el.getBoundingClientRect();
+        return { top: box.top, left: box.left, width: box.width, bottom: box.bottom, height: box.height };
+      }),
+    );
+    expect(visible).toHaveLength(1);
+    const [box] = visible;
+    if (vp.nav === "sidebar") {
+      expect(box.left).toBeLessThan(64);
+      expect(box.width).toBeGreaterThanOrEqual(200);
+      expect(box.height).toBeGreaterThan(200);
+    } else if (vp.nav === "top") {
+      expect(box.top).toBeLessThan(80);
+    } else {
+      expect(Math.round(box.bottom)).toBe(vp.height);
+    }
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(0);
+    await context.close();
+  });
+}

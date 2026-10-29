@@ -10,10 +10,22 @@ export default defineConfig({
     channel: process.env.CI ? undefined : "chrome",
     baseURL: "http://127.0.0.1:3100",
   },
-  webServer: {
-    command: "npm run build && npx next start -p 3100 -H 127.0.0.1",
-    url: "http://127.0.0.1:3100",
-    reuseExistingServer: !process.env.CI,
-    timeout: 240_000,
-  },
+  webServer: [
+    {
+      command: "cd ../api && uv run uvicorn app.main:app --host 127.0.0.1 --port 8000",
+      url: "http://127.0.0.1:8000/health",
+      reuseExistingServer: !process.env.CI,
+      // The tests expect an API without an LLM key, so a key in the local .env must not leak in.
+      env: { OPENROUTER_API_KEY: "" },
+      timeout: 120_000,
+    },
+    {
+      command: "npm run build && npx next start -p 3100 -H 127.0.0.1",
+      url: "http://127.0.0.1:3100",
+      reuseExistingServer: !process.env.CI,
+      // The production build is served over plain http here, so the cookies cannot be Secure.
+      env: { API_URL: "http://127.0.0.1:8000", COOKIE_INSECURE: "1" },
+      timeout: 240_000,
+    },
+  ],
 });
