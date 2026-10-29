@@ -1,26 +1,28 @@
-import type { ReactNode } from "react";
+/** The menu, in the same order as the mobile app: Home, Transactions, Add, Chat, Settings. */
+export type NavItem = {
+  href: string;
+  label: string;
+  /** Mobile artwork in public/app-assets/svg: drawn white-on-circle when active, grey otherwise. */
+  active: string;
+  inactive: string;
+  /** The raised "+" in the middle. */
+  add?: boolean;
+};
 
-export type NavItem = { href: string; label: string; icon: ReactNode };
-
-const stroke = { fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round", strokeLinejoin: "round" } as const;
-
-function Svg({ children }: { children: ReactNode }) {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-6 shrink-0" {...stroke}>
-      {children}
-    </svg>
-  );
-}
-
-/** One navigation config; the shell presents it as a sidebar, a top bar or a bottom bar. */
 export const navItems: NavItem[] = [
-  { href: "/app", label: "Home", icon: <Svg><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" /></Svg> },
-  { href: "/app/transactions", label: "Transactions", icon: <Svg><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" /></Svg> },
-  { href: "/app/recap", label: "Recap", icon: <Svg><path d="M5 20V10m7 10V4m7 16v-7" /></Svg> },
-  { href: "/app/ask", label: "Ask Notarik", icon: <Svg><path d="M20 15a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2z" /></Svg> },
-  { href: "/app/settings", label: "Settings", icon: <Svg><circle cx="12" cy="12" r="3" /><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6 7 7m10 10 1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" /></Svg> },
+  { href: "/app", label: "Home", active: "nav-home-active_26a5", inactive: "nav-home-inactive_d13a" },
+  { href: "/app/transactions", label: "Transactions", active: "nav-transactions-active_6b2f", inactive: "nav-transactions-inactive_9f4d" },
+  { href: "/app/transactions/new", label: "Add", active: "nav-plus-button_a419", inactive: "nav-plus-button_a419", add: true },
+  { href: "/app/chat", label: "Chat", active: "nav-chat-active_46a5", inactive: "nav-chat-inactive_5c78" },
+  { href: "/app/settings", label: "Settings", active: "nav-settings-active_8816", inactive: "nav-settings-inactive_4cb0" },
 ];
 
-export function isActive(pathname: string, href: string) {
-  return href === "/app" ? pathname === "/app" : pathname === href || pathname.startsWith(`${href}/`);
+export const svg = (name: string) => `/app-assets/svg/${name}.svg`;
+
+export function isActive(pathname: string, item: NavItem) {
+  if (item.href === "/app") return pathname === "/app";
+  if (item.add) return pathname === item.href;
+  // "Add" has its own tab, so a new expense does not light up Transactions.
+  if (item.href === "/app/transactions" && pathname === "/app/transactions/new") return false;
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }

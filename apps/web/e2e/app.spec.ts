@@ -227,7 +227,7 @@ test("search narrows the list and the export downloads a CSV of the user's own r
 
 test("ask Notarik: answers from your data, proposes an expense and only saves after Confirm", async ({ page }) => {
   await logIn(page, await seedUser(page.request, "Warung Tegal"));
-  await page.getByRole("link", { name: "Ask Notarik" }).filter({ visible: true }).first().click();
+  await page.getByRole("link", { name: "Chat" }).filter({ visible: true }).first().click();
   const seen = (text: string | RegExp) => page.getByText(text).filter({ visible: true });
   await expect(page.getByRole("heading", { name: "Ask Notarik" })).toBeVisible();
 
@@ -277,7 +277,7 @@ test("an expired access token is renewed without logging out, even for parallel 
 
 for (const vp of [
   { name: "desktop", width: 1440, height: 900, nav: "sidebar" },
-  { name: "tablet", width: 768, height: 1024, nav: "top" },
+  { name: "tablet", width: 768, height: 1024, nav: "sidebar" },
   { name: "mobile", width: 390, height: 844, nav: "bottom" },
 ]) {
   test(`the shell shows a ${vp.nav} navigation at ${vp.width}px with no horizontal scroll`, async ({ browser }) => {
@@ -297,12 +297,12 @@ for (const vp of [
     const [box] = visible;
     if (vp.nav === "sidebar") {
       expect(box.left).toBeLessThan(64);
-      expect(box.width).toBeGreaterThanOrEqual(200);
+      expect(box.width).toBeGreaterThanOrEqual(180);
       expect(box.height).toBeGreaterThan(200);
-    } else if (vp.nav === "top") {
-      expect(box.top).toBeLessThan(80);
     } else {
-      expect(Math.round(box.bottom)).toBe(vp.height);
+      // The floating pill: 34px above the bottom edge, 24px in from each side.
+      expect(Math.round(vp.height - box.bottom)).toBe(34);
+      expect(Math.round(box.left)).toBe(24);
     }
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(0);
@@ -373,4 +373,30 @@ test("the Google route refuses a malformed body and cross-site calls", async ({ 
   await page.goto("/login");
   expect((await page.request.post("/api/auth/google", { data: { id_token: "x" } })).status()).toBe(400);
   expect((await page.request.post("/api/auth/google", { data: { id_token: "x", nonce: "y" }, headers: { origin: "https://evil.example" } })).status()).toBe(403);
+});
+
+for (const vp of [
+  { name: "mobile pill", width: 390, height: 844 },
+  { name: "sidebar", width: 1280, height: 800 },
+]) {
+  test(`the menu has the mobile app's entries in order (${vp.name})`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
+    const page = await context.newPage();
+    await logIn(page, await seedUser(page.request, "Warung Tegal"));
+    const links = page.getByRole("navigation", { name: "Main" }).filter({ visible: true }).getByRole("link");
+    await expect(links).toHaveText(vp.width < 768 ? ["", "", "", "", ""] : ["Home", "Transactions", "+Add", "Chat", "Settings"]);
+    await expect(links.nth(0)).toHaveAccessibleName(/Home/);
+    await expect(links.nth(1)).toHaveAccessibleName(/Transactions/);
+    await expect(links.nth(2)).toHaveAttribute("href", "/app/transactions/new");
+    await expect(links.nth(3)).toHaveAttribute("href", "/app/chat");
+    await expect(links.nth(4)).toHaveAttribute("href", "/app/settings");
+    await expect(links.nth(0)).toHaveAttribute("aria-current", "page");
+    await context.close();
+  });
+}
+
+test("the old Ask address leads to Chat", async ({ page }) => {
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.goto("/app/ask");
+  await expect(page).toHaveURL(/\/app\/chat$/);
 });

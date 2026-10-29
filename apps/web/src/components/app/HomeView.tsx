@@ -21,7 +21,7 @@ const budgetTone: Record<Budget["status"], string> = {
 const quickLinks = [
   { href: "/app/transactions", label: "Transactions", icon: "receipt" },
   { href: "/app/recap", label: "Recap", icon: "recap" },
-  { href: "/app/ask", label: "Ask Notarik", icon: "quick-add" },
+  { href: "/app/chat", label: "Ask Notarik", icon: "quick-add" },
 ] as const;
 
 function greeting(hour: number) {
