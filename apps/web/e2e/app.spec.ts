@@ -26,7 +26,7 @@ type APIRequest = APIRequestContext;
 async function logIn(page: Page, email: string) {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Log in" }).click();
   await expect(page).toHaveURL(/\/app$/);
 }
@@ -41,7 +41,7 @@ test("wrong password shows an error and stays on the form", async ({ page }) => 
   const email = await seedUser(page.request, "Warung Tegal");
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill("not-the-password");
+  await page.getByLabel("Password", { exact: true }).fill("not-the-password");
   await page.getByRole("button", { name: "Log in" }).click();
   await expect(page.getByText("Wrong email or password")).toBeVisible();
   await expect(page).toHaveURL(/\/login$/);
@@ -568,5 +568,36 @@ test("Settings groups: sheets, budgets link, version and CSV export", async ({ b
 
   await main.getByRole("link", { name: "Budgets" }).click();
   await expect(page).toHaveURL(/\/app\/recap$/);
+  await context.close();
+});
+
+test("Create account and Log in in the mobile layout: filled fields, disabled until filled, show password, signup lands in the app", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await page.goto("/signup");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Create your");
+  const create = page.getByRole("button", { name: "Create account" });
+  await expect(create).toBeDisabled();
+  await page.getByLabel("Name").fill("Dewi Lestari");
+  await page.getByLabel("Email").fill(`mobile-${Date.now()}@example.com`);
+  const password = page.getByLabel("Password", { exact: true });
+  await password.fill("password123");
+  await expect(password).toHaveAttribute("type", "password");
+  await page.getByRole("button", { name: "Show password" }).click();
+  await expect(password).toHaveAttribute("type", "text");
+  await expect(create).toBeEnabled();
+  await create.click();
+  await expect(page).toHaveURL(/\/app$/);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Snap it.");
+
+  await context.clearCookies();
+  await page.goto("/login");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Welcome back");
+  await expect(page.getByRole("button", { name: "Log in" })).toBeDisabled();
+  await page.getByRole("button", { name: "Forgot password?" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "not available yet" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Back" })).toHaveAttribute("href", "/");
+  await page.getByRole("link", { name: "Sign up" }).click();
+  await expect(page).toHaveURL(/\/signup$/);
   await context.close();
 });

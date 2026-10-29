@@ -17,7 +17,8 @@ declare global {
   }
 }
 
-const SCRIPT = "https://accounts.google.com/gsi/client";
+// hl=en: the button text follows this language, and the rest of the app is in English.
+const SCRIPT = "https://accounts.google.com/gsi/client?hl=en";
 let loading: Promise<GoogleId> | null = null;
 
 /** Loads Google Identity Services once. */
