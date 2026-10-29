@@ -52,7 +52,9 @@ Source of truth for looks: the Expo app (also running as Expo web on :8081 for s
 
 *Original scope:* "Recap & Budget" screen and a separate "Edit budgets" screen (monthly and per category), as on mobile.
 
-**PR 7. Settings.** Account card with avatar, grouped rows (Notarik AI, Preferences, Money, About), Categories / Help / Privacy sheets, Export data, Log out.
+**PR 7. Settings. (done)** Account card with avatar, the four groups (Notarik AI, Preferences, Money, About), Categories / Help / Privacy sheets, Budgets link, CSV export, version, Log out under 768px.
+
+*Original scope:* Account card with avatar, grouped rows (Notarik AI, Preferences, Money, About), Categories / Help / Privacy sheets, Export data, Log out.
 
 **PR 8. Auth screens.** Onboarding/landing entry, login and signup to match the mobile screens (Google button stays).
 
