@@ -123,7 +123,7 @@ export function ScanReceiptView() {
       <input ref={gallery} type="file" accept="image/jpeg,image/png,application/pdf" aria-label="Receipt file" className="sr-only" tabIndex={-1} onChange={(event) => pick(event.target.files?.[0])} />
       <input ref={photo} type="file" accept="image/jpeg,image/png" capture="environment" aria-label="Receipt photo" className="sr-only" tabIndex={-1} onChange={(event) => pick(event.target.files?.[0])} />
       <input ref={pdf} type="file" accept="application/pdf" aria-label="Receipt PDF" className="sr-only" tabIndex={-1} onChange={(event) => pick(event.target.files?.[0])} />
-      <div className="relative mx-auto flex min-h-[32rem] max-w-xl flex-col justify-between overflow-hidden rounded-3xl bg-text-primary px-6 pt-8 pb-8 text-text-inverse">
+      <div className="relative flex min-h-[32rem] max-w-xl flex-col justify-between overflow-hidden rounded-3xl bg-text-primary px-6 pt-8 pb-8 text-text-inverse">
         <p className="text-center text-caption">Fit the whole receipt in the frame</p>
         <Image src={svg("snap-corner-brackets")} alt="" width={240} height={320} unoptimized className="mx-auto my-6 h-auto w-3/5 max-w-60 opacity-80" />
         {error && (

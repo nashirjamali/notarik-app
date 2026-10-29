@@ -140,7 +140,7 @@ export function TransactionDetail() {
       />
       <div className="hidden md:block">{backLink}</div>
 
-      <div className="mx-auto flex max-w-xl flex-col gap-4 md:mt-4">
+      <div className="flex max-w-xl flex-col gap-4 md:mt-4">
         {editing ? (
           <Card>
             <h1 className="mb-4 text-center text-body-2 font-medium md:text-left md:font-heading md:text-headline-4 md:font-bold">Edit expense</h1>
@@ -157,7 +157,7 @@ export function TransactionDetail() {
         ) : (
           <>
             <div className="flex flex-col items-center gap-2 text-center">
-              <span className="flex size-20 items-center justify-center rounded-3xl bg-surface-subtle [&>span]:size-20 [&>span]:rounded-3xl [&_img]:size-[60px]">
+              <span className="flex size-20 items-center justify-center rounded-3xl bg-surface-subtle md:bg-surface-default [&>span]:size-20 [&>span]:rounded-3xl [&_img]:size-[60px]">
                 <CategoryIcon category={row.category} />
               </span>
               <h1 className="text-body-2 font-medium">{row.merchant}</h1>

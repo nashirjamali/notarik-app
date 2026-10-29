@@ -107,7 +107,7 @@ export function SettingsView() {
   }
 
   return (
-    <div className="mx-auto flex max-w-xl flex-col gap-5">
+    <div className="flex max-w-xl flex-col gap-5">
       <h1 className="flex h-14 items-center text-body-1 font-semibold md:h-auto md:font-heading md:text-headline-4 md:font-bold">Settings</h1>
 
       <section aria-label="Account" className="flex items-center gap-3 rounded-[20px] bg-surface-subtle p-3 md:bg-surface-default">

@@ -58,7 +58,7 @@ function ActionCard({ href, title, subtitle, icon, primary }: { href: string; ti
 /** The mobile app's Home: header, hero, two action cards, four shortcuts, suggested questions. */
 function MobileHome() {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 md:hidden">
       <div className="flex h-12 items-center md:hidden">
         <Image src={asset("svg/logo-full.svg")} alt="Notarik" width={98} height={28} unoptimized priority />
       </div>
@@ -109,29 +109,40 @@ function MobileHome() {
   );
 }
 
-export function HomeView() {
+/** Wide layout: a dashboard (the month, the budget, recent expenses, shortcuts and suggested questions) instead of the phone's single column. */
+function DesktopHome() {
   const clock = useClock();
   const month = clock?.month ?? "";
   const ready = clock !== null;
   const me = useQuery({ queryKey: ["me"], queryFn: getMe });
   const recap = useQuery({ queryKey: ["recap", month], queryFn: () => getRecap(month), enabled: ready });
   const budget = useQuery({ queryKey: ["budget", month], queryFn: () => getBudget(month), enabled: ready });
-  const recent = useQuery({ queryKey: ["recent", month], queryFn: () => listTransactions({ month, limit: 5 }), enabled: ready });
-
+  const recent = useQuery({ queryKey: ["recent", month], queryFn: () => listTransactions({ month, limit: 6 }), enabled: ready });
   const firstName = me.data?.name?.trim().split(/\s+/)[0];
 
   return (
-    <div className="flex flex-col gap-6">
-      <MobileHome />
+    <div className="hidden flex-col gap-6 md:flex">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-heading text-headline-4 font-bold">
+            {clock ? greeting(clock.hour) : "Hello"}
+            {firstName ? `, ${firstName}` : ""}
+          </h1>
+          <p className="text-body-2 text-text-secondary">Snap it. We&apos;ll sort it.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link href="/app/receipts/new" className="flex items-center gap-2 rounded-full bg-brand-primary px-5 py-3 font-heading text-button-2 font-bold text-text-inverse transition-colors hover:bg-brand-primary-strong">
+            <Image src={asset("svg/icon-camera.svg")} alt="" width={20} height={20} unoptimized />
+            Snap receipt
+          </Link>
+          <Link href="/app/chat" className="flex items-center gap-2 rounded-full bg-surface-default px-5 py-3 font-heading text-button-2 font-bold transition-colors hover:bg-border-default">
+            <Image src={asset("svg/logo-mark.svg")} alt="" width={18} height={16} unoptimized />
+            Ask Notarik
+          </Link>
+        </div>
+      </div>
 
-      {/* Wide layout only: the mobile Home is just the part above; here the month sits beneath it. */}
-      <div className="hidden flex-col gap-6 md:flex">
-        <h2 className="font-heading text-body-1 font-bold">
-          {clock ? greeting(clock.hour) : "Hello"}
-          {firstName ? `, ${firstName}` : ""}
-        </h2>
-
-      <section aria-label="Month summary" className="grid gap-4 md:grid-cols-2">
+      <section aria-label="Month summary" className="grid gap-4 lg:grid-cols-2">
         <Card className="bg-linear-to-br from-brand-primary to-brand-gradient-to text-text-inverse">
           <p className="text-caption">Spent in {month ? monthLabel(month) : "this month"}</p>
           {recap.isPending ? (
@@ -153,21 +164,15 @@ export function HomeView() {
           {budget.isPending ? (
             <Skeleton className="mt-2 h-10 w-40" />
           ) : budget.isError ? (
-            <p role="alert" className="mt-2 text-body-2 text-status-danger">Could not load your budget.</p>
+            <p role="alert" className="mt-2 text-body-2 text-status-danger-text">Could not load your budget.</p>
           ) : (
             <>
-              <p className="mt-1 font-heading text-headline-4 font-bold">
-                {budget.data.limit_minor === null ? "Not set" : formatIdr(budget.data.limit_minor)}
-              </p>
+              <p className="mt-1 font-heading text-headline-4 font-bold">{budget.data.limit_minor === null ? "Not set" : formatIdr(budget.data.limit_minor)}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className={`rounded-full px-3 py-1 text-caption-small font-semibold ${budgetTone[budget.data.status]}`}>
-                  {budget.data.label}
-                </span>
+                <span className={`rounded-full px-3 py-1 text-caption-small font-semibold ${budgetTone[budget.data.status]}`}>{budget.data.label}</span>
                 {budget.data.remaining_minor !== null && (
                   <span className="text-caption text-text-secondary">
-                    {budget.data.remaining_minor >= 0
-                      ? `${formatIdr(budget.data.remaining_minor)} left`
-                      : `${formatIdr(-budget.data.remaining_minor)} over`}
+                    {budget.data.remaining_minor >= 0 ? `${formatIdr(budget.data.remaining_minor)} left` : `${formatIdr(-budget.data.remaining_minor)} over`}
                   </span>
                 )}
               </div>
@@ -176,35 +181,80 @@ export function HomeView() {
         </Card>
       </section>
 
-      <section aria-labelledby="recent-heading">
-        <div className="mb-3 flex items-baseline justify-between">
-          <h2 id="recent-heading" className="font-heading text-body-1 font-bold">
-            Recent
-          </h2>
-          <Link href="/app/transactions" className="text-caption font-medium text-brand-primary-strong hover:underline">
-            See all
-          </Link>
-        </div>
-        {recent.isPending ? (
-          <div aria-busy="true" aria-label="Loading recent expenses" className="flex flex-col gap-3">
-            <Skeleton className="h-16" />
-            <Skeleton className="h-16" />
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
+        <section aria-labelledby="recent-heading">
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2 id="recent-heading" className="font-heading text-body-1 font-bold">
+              Recent
+            </h2>
+            <Link href="/app/transactions" className="text-caption font-medium text-brand-primary-strong hover:underline">
+              See all
+            </Link>
           </div>
-        ) : recent.isError ? (
-          <ErrorState message={recent.error.message} onRetry={() => recent.refetch()} />
-        ) : recent.data.items.length === 0 ? (
-          <EmptyState title="No expenses yet" hint="Snap a receipt or type what you bought in the Notarik app." />
-        ) : (
-          <Card className="py-2 md:py-3">
-            <ul className="divide-y divide-border-default">
-              {recent.data.items.map((row) => (
-                <TransactionRow key={row.id} row={row} />
+          {recent.isPending ? (
+            <div aria-busy="true" aria-label="Loading recent expenses" className="flex flex-col gap-3">
+              <Skeleton className="h-16" />
+              <Skeleton className="h-16" />
+            </div>
+          ) : recent.isError ? (
+            <ErrorState message={recent.error.message} onRetry={() => recent.refetch()} />
+          ) : recent.data.items.length === 0 ? (
+            <EmptyState title="No expenses yet" hint="Press Add, or snap a receipt, and it shows up here." />
+          ) : (
+            <Card className="py-2 md:py-3">
+              <ul className="divide-y divide-border-default">
+                {recent.data.items.map((row) => (
+                  <TransactionRow key={row.id} row={row} />
+                ))}
+              </ul>
+            </Card>
+          )}
+        </section>
+
+        <div className="flex flex-col gap-4">
+          <Card>
+            <h2 className="mb-3 font-heading text-body-2 font-bold">Shortcuts</h2>
+            <ul className="grid grid-cols-2 gap-2">
+              {shortcuts.map((tile) => (
+                <li key={tile.label}>
+                  <Link href={tile.href} className="flex flex-col items-center gap-2 rounded-2xl bg-surface-subtle px-2 py-3 text-center transition-colors hover:bg-border-default">
+                    <span className="flex size-12 items-center justify-center rounded-xl" style={{ backgroundColor: tile.tint }}>
+                      <Image src={asset(`icons/${tile.icon}.png`)} alt="" width={76} height={76} className="size-9 object-contain" />
+                    </span>
+                    <span className="text-caption-small font-semibold">{tile.label}</span>
+                  </Link>
+                </li>
               ))}
             </ul>
           </Card>
-        )}
-      </section>
+
+          <Card>
+            <h2 className="mb-3 flex items-center gap-1.5 font-heading text-body-2 font-bold">
+              <Image src={asset("svg/logo-mark.svg")} alt="" width={16} height={14} unoptimized />
+              Try asking Notarik
+            </h2>
+            <ul className="flex flex-col items-start gap-2">
+              {suggestions.map((text) => (
+                <li key={text} className="max-w-full">
+                  <Link href={`/app/chat?prompt=${encodeURIComponent(text)}`} className="flex items-center gap-1.5 rounded-full border border-border-default bg-surface-default px-3.5 py-2 text-caption transition-colors hover:bg-surface-subtle">
+                    <Image src={asset("svg/icon-sparkle.svg")} alt="" width={16} height={16} unoptimized />
+                    {text}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        </div>
       </div>
     </div>
+  );
+}
+
+export function HomeView() {
+  return (
+    <>
+      <MobileHome />
+      <DesktopHome />
+    </>
   );
 }
