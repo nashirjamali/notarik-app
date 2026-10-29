@@ -113,7 +113,7 @@ export function AskView() {
   };
 
   return (
-    <div className="-mb-32 flex h-[calc(100dvh-8rem)] min-h-96 flex-col md:mb-0 md:h-[calc(100dvh-8rem)]">
+    <div className="-mb-32 flex h-[calc(100dvh-8rem)] min-h-96 flex-col md:mb-0 md:h-[calc(100dvh-5.5rem)] md:gap-8">
       <TopBar
         title="Ask Notarik"
         onBack={back}
@@ -123,20 +123,19 @@ export function AskView() {
           </TopBarButton>
         }
       />
-      <div className="mb-4 hidden items-center justify-between md:flex">
-        <h1 className="flex items-center gap-2 font-heading text-headline-4 font-bold">
-          <Image src={svg("chat-avatar-mark")} alt="" width={26} height={23} unoptimized />
+      {/* Wide layout, from the Figma frame "Web app / Ask Notarik / Desktop 1440". */}
+      <div className="hidden items-center justify-between md:flex">
+        <h1 className="flex items-center gap-3 font-heading text-headline-4 font-bold tracking-[-1.6px]">
+          <Image src="/design/3d-quick.png" alt="" width={52} height={52} className="size-[52px] object-contain" />
           Ask Notarik
         </h1>
-        {messages.length > 0 && (
-          <button type="button" onClick={newChat} className="rounded-full bg-surface-default px-5 py-2.5 text-button-2 font-bold hover:bg-border-default">
-            New chat
-          </button>
-        )}
+        <button type="button" onClick={newChat} className="rounded-full border border-border-default px-4 py-2 text-caption font-medium transition-colors hover:bg-surface-subtle">
+          New chat
+        </button>
       </div>
       <h1 className="sr-only md:hidden">Ask Notarik</h1>
 
-      <div role="log" aria-live="polite" aria-label="Conversation" className="flex flex-1 flex-col gap-3.5 overflow-y-auto pb-4 md:rounded-3xl md:bg-surface-subtle md:p-6">
+      <div role="log" aria-live="polite" aria-label="Conversation" className="flex flex-1 flex-col gap-3.5 overflow-y-auto pb-4 md:mx-auto md:w-full md:max-w-[720px] md:gap-5 md:py-2">
         <AiBubble text={greeting} />
         {messages.map((message) =>
           message.role === "user" ? (
@@ -171,9 +170,10 @@ export function AskView() {
           {error}
         </p>
       )}
-      <form onSubmit={submit} className="flex items-center gap-3 rounded-xl border-2 border-border-default bg-surface-default p-3 focus-within:border-brand-primary">
+      <form onSubmit={submit} className="flex items-center gap-3 rounded-xl border-2 border-border-default bg-surface-default p-3 focus-within:border-brand-primary md:mx-auto md:w-full md:max-w-[720px] md:rounded-[28px] md:border md:px-5 md:py-3.5">
         <Link href="/app/receipts/new" aria-label="Scan a receipt" className="flex h-10 shrink-0 items-center">
-          <Image src={svg("chat-camera")} alt="" width={24} height={24} unoptimized />
+          <Image src={svg("chat-camera")} alt="" width={24} height={24} unoptimized className="md:hidden" />
+          <Image src="/design/3d-camera.png" alt="" width={30} height={30} className="hidden size-[30px] object-contain md:block" />
         </Link>
         <input
           aria-label="Message"
@@ -185,10 +185,11 @@ export function AskView() {
           autoCapitalize="none"
           spellCheck={false}
           maxLength={2000}
-          className="min-w-0 flex-1 bg-transparent text-[17px] outline-none"
+          className="min-w-0 flex-1 bg-transparent text-[17px] outline-none md:text-body-2"
         />
-        <button type="submit" aria-label="Send" disabled={!canSend} className="flex shrink-0 rounded-xl bg-brand-primary p-2 disabled:opacity-50">
-          <Image src={svg("chat-arrow-up")} alt="" width={24} height={24} unoptimized />
+        <button type="submit" aria-label="Send" disabled={!canSend} className="flex shrink-0 items-center justify-center rounded-xl bg-brand-primary p-2 disabled:opacity-50 md:size-10 md:rounded-[14px] md:p-0">
+          <Image src={svg("chat-arrow-up")} alt="" width={24} height={24} unoptimized className="md:hidden" />
+          <Image src="/design/icon-send.svg" alt="" width={20} height={20} unoptimized className="hidden md:block" />
         </button>
       </form>
     </div>
