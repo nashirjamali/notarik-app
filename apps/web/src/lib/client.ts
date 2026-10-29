@@ -32,9 +32,10 @@ export const getMe = () => request<Me>("/me");
 export const getRecap = (month: string) => request<Recap>(`/recap?month=${month}`);
 export const getBudget = (month: string) => request<Budget>(`/budget?month=${month}`);
 
-export function listTransactions(query: { month: string; category?: Category; cursor?: string | null; limit?: number }) {
+export function listTransactions(query: { month: string; category?: Category; q?: string; cursor?: string | null; limit?: number }) {
   const params = new URLSearchParams({ month: query.month });
   if (query.category) params.set("category", query.category);
+  if (query.q?.trim()) params.set("q", query.q.trim());
   if (query.cursor) params.set("cursor", query.cursor);
   if (query.limit) params.set("limit", String(query.limit));
   return request<TransactionPage>(`/transactions?${params}`);
@@ -46,6 +47,18 @@ export const createTransaction = (body: TransactionInput) =>
 export const updateTransaction = (id: string, body: TransactionPatch) =>
   request<Transaction>(`/transactions/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(body) });
 export const deleteTransaction = (id: string) => request<void>(`/transactions/${encodeURIComponent(id)}`, { method: "DELETE" });
+
+/** Every expense as a CSV file, saved through the browser's download. */
+export async function downloadCsv() {
+  const res = await fetch("/api/proxy/transactions/export");
+  if (!res.ok) throw new ApiError(res.status, "Could not export your expenses");
+  const url = URL.createObjectURL(await res.blob());
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "notarik-expenses.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 export async function signOut() {
   await fetch("/api/auth/logout", { method: "POST" });
