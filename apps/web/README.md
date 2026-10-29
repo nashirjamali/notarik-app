@@ -29,3 +29,6 @@ The browser never sees a token. `/api/auth/login|signup|logout` call the API and
 | `npm run gen:api` | regenerate `src/lib/schema.d.ts` from `apps/mobile/openapi.json` |
 
 Set `COOKIE_INSECURE=1` only to run a production build over plain http (the e2e config does).
+
+## Same screens as the mobile app
+The signed-in app mirrors `apps/mobile`: under 768px it looks like the mobile app (pill menu, top bars, sheets); from 768px it is a sidebar layout with the same menu. The artwork comes from the mobile app: run `npm run sync:assets` after its `assets/` change (the copies in `public/app-assets` are committed). Parser logic (`quickAdd`, `numberWords`) is ported from the mobile app with its tests; keep the two in step. The plan and what is left are in `docs/plans/web-mobile-parity.md`.

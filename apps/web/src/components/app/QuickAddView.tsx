@@ -10,13 +10,11 @@ import { formatIdr } from "@/lib/money";
 import { dayHeading, today } from "@/lib/months";
 import { MAX_ROWS, parseQuickAdd, splitEntries } from "@/lib/quickAdd";
 import { applyEdit, oneExpense, rowsFromText, toInput, type Row, type RowEdit } from "@/lib/quickAddRows";
-import type { Category, TransactionInput } from "@/lib/types";
+import { categoryOrder, type Category, type TransactionInput } from "@/lib/types";
 import { OptionSheet } from "./OptionSheet";
 import { CategoryTile, QuickAddRows } from "./QuickAddRows";
 import { TopBar } from "./TopBar";
 import { categoryMeta } from "./ui";
-
-const ORDER: Category[] = ["Dining", "Groceries", "Transport", "Bills", "Shopping", "Other"];
 
 function dateChip(date: string, now: Date) {
   const label = dayHeading(date, today(now));
@@ -167,7 +165,7 @@ export function QuickAddView() {
           <div role="radiogroup" aria-label="Category" className="flex flex-col gap-2">
             <p className="text-caption-small text-text-secondary">Category</p>
             <div className="-mx-6 flex gap-2 overflow-x-auto px-6 pb-1 md:mx-0 md:flex-wrap md:px-0">
-              {ORDER.map((name) => {
+              {categoryOrder.map((name) => {
                 const selected = name === category;
                 const color = `var(--color-category-${name.toLowerCase()})`;
                 return (
@@ -215,7 +213,7 @@ export function QuickAddView() {
       <OptionSheet<Category>
         open={pickingKey != null}
         title="Category"
-        options={ORDER.map((value) => ({ value, label: categoryMeta[value].label, dot: categoryMeta[value].dot }))}
+        options={categoryOrder.map((value) => ({ value, label: categoryMeta[value].label, dot: categoryMeta[value].dot }))}
         selected={pickingRow?.category}
         onClose={() => setPickingKey(null)}
         onSelect={(value) => {

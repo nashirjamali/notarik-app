@@ -1,5 +1,7 @@
 # Plan: web app with the same menus and screens as the mobile app
 
+**Status: all nine PRs are merged.** Remaining gaps are listed in `docs/steps/26-FE-web-app-shell-auth-and-first-screens.md`.
+
 **Goal.** The signed-in web app (`apps/web`, `/app/*`) offers the same menu and the same screens as the Expo app (`apps/mobile`). Below the tablet breakpoint (under 768 px, "mobile layout") it looks like the mobile app: same components, spacing, bottom pill navigation, sheets and top bars. From 768 px up ("web layout") it keeps the same menu and the same flows, laid out for a wide screen.
 
 Source of truth for looks: the Expo app (also running as Expo web on :8081 for side-by-side checks) and the Figma file "Notarik".
@@ -60,7 +62,9 @@ Source of truth for looks: the Expo app (also running as Expo web on :8081 for s
 
 *Original scope:* Onboarding/landing entry, login and signup to match the mobile screens (Google button stays).
 
-**PR 9. Cleanup.** Remove unused old components, update `docs/steps/26`, `apps/web/README.md`, run Lighthouse again.
+**PR 9. Cleanup. (done)** Dead helpers removed, one category order, docs and Lighthouse updated; the pathname-dependent navigation has its own Suspense boundary so the shell is in the first HTML (`/app` performance 89 to 99).
+
+*Original scope:* Remove unused old components, update `docs/steps/26`, `apps/web/README.md`, run Lighthouse again.
 
 ## 4. How each PR is checked
 - Playwright at 390, 768 and 1440: menu entries, routes, no horizontal scroll.

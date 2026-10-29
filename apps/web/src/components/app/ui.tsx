@@ -1,15 +1,14 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
 import type { Category } from "@/lib/types";
-import type { IconName } from "@/components/landing/Icon3d";
 
-export const categoryMeta: Record<Category, { label: string; icon: IconName; dot: string }> = {
-  Groceries: { label: "Groceries", icon: "groceries", dot: "bg-category-groceries" },
-  Dining: { label: "Food & Drink", icon: "coffee", dot: "bg-category-dining" },
-  Transport: { label: "Transport", icon: "transport", dot: "bg-category-transport" },
-  Shopping: { label: "Shopping", icon: "quick-add", dot: "bg-category-shopping" },
-  Bills: { label: "Bills", icon: "bills", dot: "bg-category-bills" },
-  Other: { label: "Other", icon: "receipt", dot: "bg-category-other" },
+export const categoryMeta: Record<Category, { label: string; dot: string }> = {
+  Groceries: { label: "Groceries", dot: "bg-category-groceries" },
+  Dining: { label: "Food & Drink", dot: "bg-category-dining" },
+  Transport: { label: "Transport", dot: "bg-category-transport" },
+  Shopping: { label: "Shopping", dot: "bg-category-shopping" },
+  Bills: { label: "Bills", dot: "bg-category-bills" },
+  Other: { label: "Other", dot: "bg-category-other" },
 };
 
 /** Only four categories have a 3D icon in the design; Shopping and Other show their colour. */
