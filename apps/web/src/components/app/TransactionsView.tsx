@@ -10,13 +10,10 @@ import { formatIdr } from "@/lib/money";
 import { dayHeading } from "@/lib/months";
 import { useClock } from "@/lib/useClock";
 import { useDebounced } from "@/lib/useDebounced";
-import type { Category } from "@/lib/types";
+import { categoryOrder, type Category } from "@/lib/types";
 import { MonthSwitcher } from "./MonthSwitcher";
 import { TransactionRow } from "./TransactionRow";
 import { EmptyState, ErrorState, Skeleton, categoryMeta } from "./ui";
-
-/** Same order as the mobile filter chips. */
-const filters: Category[] = ["Dining", "Groceries", "Transport", "Bills", "Shopping", "Other"];
 
 export function TransactionsView() {
   const clock = useClock();
@@ -102,7 +99,7 @@ export function TransactionsView() {
       </div>
 
       <div role="radiogroup" aria-label="Filter by category" className="-mx-6 mb-3 flex gap-2 overflow-x-auto px-6 pb-3 md:mx-0 md:flex-wrap md:px-0">
-        {[undefined, ...filters].map((value) => {
+        {[undefined, ...categoryOrder].map((value) => {
           const active = value === category;
           return (
             <button

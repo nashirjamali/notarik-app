@@ -11,10 +11,11 @@ export const metadata: Metadata = {
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <Providers>
-      {/* Route-dependent hooks (usePathname, useParams) resolve at request time on dynamic routes like /app/transactions/[id]. */}
-      <Suspense fallback={<div className="min-h-dvh bg-surface-subtle" />}>
-        <AppShell>{children}</AppShell>
-      </Suspense>
+      <AppShell>
+        {/* Route-dependent hooks (useParams, useSearchParams) resolve at request time on dynamic routes like /app/transactions/[id];
+            only the page waits, the shell and the navigation are in the first HTML. */}
+        <Suspense fallback={<div className="min-h-dvh" />}>{children}</Suspense>
+      </AppShell>
     </Providers>
   );
 }
