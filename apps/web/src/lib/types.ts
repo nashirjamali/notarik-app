@@ -5,6 +5,11 @@ type Schemas = components["schemas"];
 export type Transaction = Schemas["TransactionRead"];
 export type TransactionPage = Schemas["TransactionPage"];
 export type Category = Transaction["category"];
+export type PaymentMethod = NonNullable<Transaction["payment_method"]>;
+export type TransactionInput = Omit<Schemas["TransactionCreate"], "source">;
+export type TransactionPatch = Schemas["TransactionUpdate"];
+
+export const paymentMethods: PaymentMethod[] = ["Cash", "QRIS", "Debit card", "Credit card", "E-wallet", "Bank transfer", "Other"];
 
 export const categories: Category[] = ["Groceries", "Dining", "Transport", "Shopping", "Bills", "Other"];
 
