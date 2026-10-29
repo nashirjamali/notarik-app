@@ -51,7 +51,7 @@ test("log in, see the seeded expense, keep tokens out of the page, log out", asy
   const email = await seedUser(page.request, "Warung Tegal");
   await logIn(page, email);
 
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Rina");
+  await expect(page.getByRole("heading", { level: 2, name: /Rina/ })).toBeVisible();
   await expect(page.getByRole("main").getByText("Warung Tegal")).toBeVisible();
 
   await page.getByRole("link", { name: "Transactions" }).filter({ visible: true }).first().click();
@@ -284,7 +284,9 @@ for (const vp of [
     const context = await browser.newContext({ viewport: { width: vp.width, height: vp.height } });
     const page = await context.newPage();
     await logIn(page, await seedUser(page.request, "Warung Tegal"));
-    await expect(page.getByRole("main").getByText("Warung Tegal")).toBeVisible();
+    // The mobile Home has no spending list; the wide layout adds the month beneath it.
+    if (vp.width >= 768) await expect(page.getByRole("main").getByText("Warung Tegal")).toBeVisible();
+    else await expect(page.getByRole("heading", { level: 1 })).toContainText("Snap it.");
 
     const navs = page.getByRole("navigation", { name: "Main" });
     const visible = await navs.evaluateAll((els) =>
@@ -399,4 +401,24 @@ test("the old Ask address leads to Chat", async ({ page }) => {
   await logIn(page, await seedUser(page.request, "Warung Tegal"));
   await page.goto("/app/ask");
   await expect(page).toHaveURL(/\/app\/chat$/);
+});
+
+test("Home is the mobile Home: action cards, shortcuts and suggested questions", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 1 })).toContainText("We'll sort it.");
+  await expect(main.getByRole("link", { name: /Snap receipt/ })).toHaveAttribute("href", "/app/receipts/new");
+  await expect(main.getByRole("link", { name: /Ask Notarik/ })).toHaveAttribute("href", "/app/chat");
+  for (const [name, href] of [["Quick add", "/app/transactions/new"], ["Recap", "/app/recap"], ["Budget", "/app/recap"], ["Transactions", "/app/transactions"]]) {
+    await expect(main.getByRole("link", { name, exact: true })).toHaveAttribute("href", href);
+  }
+  // Nothing from the wide layout leaks into the mobile one.
+  await expect(main.getByText("Warung Tegal")).toBeHidden();
+
+  await main.getByRole("link", { name: "Log nasi goreng 25k" }).click();
+  await expect(page).toHaveURL(/\/app\/chat\?prompt=/);
+  await expect(page.getByRole("main").getByText("Log nasi goreng 25k").first()).toBeVisible();
+  await context.close();
 });
