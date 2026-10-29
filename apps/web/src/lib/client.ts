@@ -1,3 +1,4 @@
+import { parseChatStream, type ChatReply } from "./chat";
 import type {
   Budget,
   Category,
@@ -73,6 +74,28 @@ export async function downloadCsv() {
   link.download = "notarik-expenses.csv";
   link.click();
   URL.revokeObjectURL(url);
+}
+
+export async function sendChat(message: string, threadId: string | null): Promise<ChatReply> {
+  const res = await fetch("/api/proxy/chat", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ message, thread_id: threadId }),
+  });
+  if (res.status === 401) {
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+    window.location.assign("/login");
+  }
+  if (res.status === 429) throw new ApiError(429, "You are sending messages too fast. Try again in a minute.");
+  if (!res.ok) throw new ApiError(res.status, "Notarik could not answer. Try again.");
+  return parseChatStream(await res.text());
+}
+
+export async function confirmChat(threadId: string, decision: "approve" | "reject") {
+  return request<{ status: "approved" | "rejected"; transaction_id?: string }>(`/chat/${encodeURIComponent(threadId)}/confirm`, {
+    method: "POST",
+    body: JSON.stringify({ decision }),
+  });
 }
 
 export async function signOut() {
