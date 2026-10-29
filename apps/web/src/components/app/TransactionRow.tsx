@@ -11,7 +11,7 @@ export function TransactionRow({ row }: { row: Transaction }) {
   const time = timeOf(row.created_at);
   return (
     <li>
-      <Link href={`/app/transactions/${row.id}`} className="flex items-center gap-3 rounded-2xl py-2 transition-colors hover:bg-surface-subtle md:-mx-2 md:px-2">
+      <Link href={`/app/transactions/${row.id}`} className="flex items-center gap-3 rounded-2xl py-2 transition-colors hover:bg-border-default/50 md:-mx-2 md:px-2">
         <CategoryIcon category={row.category} />
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="flex items-center gap-1.5">

@@ -136,7 +136,7 @@ export function AskView() {
       </div>
       <h1 className="sr-only md:hidden">Ask Notarik</h1>
 
-      <div role="log" aria-live="polite" aria-label="Conversation" className="flex flex-1 flex-col gap-3.5 overflow-y-auto pb-4 md:rounded-3xl md:bg-surface-default md:p-6">
+      <div role="log" aria-live="polite" aria-label="Conversation" className="flex flex-1 flex-col gap-3.5 overflow-y-auto pb-4 md:rounded-3xl md:bg-surface-subtle md:p-6">
         <AiBubble text={greeting} />
         {messages.map((message) =>
           message.role === "user" ? (

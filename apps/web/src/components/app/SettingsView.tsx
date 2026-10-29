@@ -46,7 +46,7 @@ function Switch({ label, checked, disabled, onChange }: { label: string; checked
 function Row({ iconName, title, subtitle, value, onClick, href, right, tinted, last }: { iconName: string; title: string; subtitle?: string; value?: string; onClick?: () => void; href?: string; right?: ReactNode; tinted?: boolean; last?: boolean }) {
   const body = (
     <>
-      <span className={`flex size-8 shrink-0 items-center justify-center rounded-[10px] ${tinted ? "bg-brand-accent-subtle" : "bg-surface-default md:bg-surface-subtle"}`}>{icon(iconName)}</span>
+      <span className={`flex size-8 shrink-0 items-center justify-center rounded-[10px] ${tinted ? "bg-brand-accent-subtle" : "bg-surface-default"}`}>{icon(iconName)}</span>
       <span className="flex min-w-0 flex-1 flex-col text-left">
         <span className="text-caption font-medium">{title}</span>
         {subtitle && <span className="text-caption-small text-text-secondary">{subtitle}</span>}
@@ -65,7 +65,7 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
       <h2 className="text-caption-small font-semibold text-text-secondary">{title}</h2>
-      <div className="rounded-[20px] bg-surface-subtle px-3 py-1 md:bg-surface-default">{children}</div>
+      <div className="rounded-[20px] bg-surface-subtle px-3 py-1">{children}</div>
     </section>
   );
 }
@@ -110,7 +110,7 @@ export function SettingsView() {
     <div className="flex max-w-xl flex-col gap-5">
       <h1 className="flex h-14 items-center text-body-1 font-semibold md:h-auto md:font-heading md:text-headline-4 md:font-bold">Settings</h1>
 
-      <section aria-label="Account" className="flex items-center gap-3 rounded-[20px] bg-surface-subtle p-3 md:bg-surface-default">
+      <section aria-label="Account" className="flex items-center gap-3 rounded-[20px] bg-surface-subtle p-3">
         <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-brand-accent-subtle text-body-1 font-semibold text-brand-primary-strong">
           {me.data ? name.charAt(0).toUpperCase() : ""}
         </span>
@@ -159,8 +159,8 @@ export function SettingsView() {
         <Row last iconName="settings-info" title="Version" value={pkg.version} />
       </Group>
 
-      {/* The sidebar has Log out from 768px; the mobile layout has no other place for it. */}
-      <button type="button" onClick={signOut} className="py-2 font-heading text-button-2 font-bold text-status-danger-text md:hidden">
+      {/* The wide sidebar follows the Figma frame, which has no Log out, so it lives here at every width. */}
+      <button type="button" onClick={signOut} className="py-2 font-heading text-button-2 font-bold text-status-danger-text">
         Log out
       </button>
 

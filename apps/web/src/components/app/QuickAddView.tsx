@@ -131,7 +131,7 @@ export function QuickAddView() {
             onAmount={(key, total) => setEdits((current) => ({ ...current, [key]: { ...current[key], total } }))}
           />
         ) : typed && parsed.total != null ? (
-          <section aria-label="Understood expense" className="flex flex-col gap-3 rounded-3xl bg-surface-subtle px-4 pt-3.5 pb-4 md:bg-surface-default">
+          <section aria-label="Understood expense" className="flex flex-col gap-3 rounded-3xl bg-surface-subtle px-4 pt-3.5 pb-4">
             <p className="flex items-center gap-1.5 text-caption-small font-semibold text-brand-primary-strong">
               <Image src="/app-assets/svg/review-mark.svg" alt="" width={12} height={10} unoptimized />
               Notarik understood

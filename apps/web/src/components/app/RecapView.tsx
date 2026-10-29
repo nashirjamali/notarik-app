@@ -99,21 +99,21 @@ export function RecapView() {
               </div>
             )}
 
-            <section aria-label="Budget" className="flex items-center gap-5 rounded-3xl bg-surface-subtle p-5 md:bg-surface-default">
+            <section aria-label="Budget" className="flex items-center gap-5 rounded-3xl bg-surface-subtle p-5">
               <BudgetRing percent={percent} over={over} />
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <span className="text-caption-small text-text-secondary">Spent this month</span>
                 <span className="text-body-1 font-semibold">{formatIdr(total)}</span>
                 <span className="text-caption-small text-text-secondary">{limit ? `of ${formatIdr(limit)}` : "No monthly budget set"}</span>
                 {daysLeft > 0 && (
-                  <span className="mt-1.5 w-fit rounded-full bg-surface-default px-2.5 py-1 text-caption-small font-semibold md:bg-surface-subtle">
+                  <span className="mt-1.5 w-fit rounded-full bg-surface-default px-2.5 py-1 text-caption-small font-semibold">
                     {daysLeft} {daysLeft === 1 ? "day" : "days"} left
                   </span>
                 )}
               </div>
             </section>
 
-            <section aria-labelledby="by-category" className="flex flex-col gap-1 md:rounded-3xl md:bg-surface-default md:p-6">
+            <section aria-labelledby="by-category" className="flex flex-col gap-1 md:rounded-3xl md:bg-surface-subtle md:p-6">
               <h2 id="by-category" className="text-caption-small font-semibold text-text-secondary">
                 By category
               </h2>
