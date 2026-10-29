@@ -47,3 +47,13 @@ export function timeOf(timestamp: string): string {
   if (Number.isNaN(date.getTime())) return "";
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 }
+
+/** "Today, 22 Oct 2026 · 08:15" for the details screen. */
+export function fullDate(iso: string, timestamp: string, today: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  const plain = match ? `${Number(match[3])} ${SHORT[Number(match[2]) - 1]} ${match[1]}` : iso;
+  const heading = dayHeading(iso, today);
+  const lead = heading === "Today" || heading === "Yesterday" ? `${heading}, ${plain}` : plain;
+  const time = timeOf(timestamp);
+  return time ? `${lead} · ${time}` : lead;
+}
