@@ -34,7 +34,7 @@ Source of truth for looks: the Expo app (also running as Expo web on :8081 for s
 - New shell: floating dark pill bottom nav with the active circle and the raised **+** (under 768 px); sidebar with the same entries (768 px and up); `TopBar` (title, back, right action) and `BottomSheet` components.
 - Built: `sync:assets`, nav pill + sidebar, centered mobile title in `PageTitle` (a full `TopBar` with back button lands with the first screen that needs it), Log out in Settings under 768 px. `BottomSheet` moves to PR 4 (Quick add category sheet), its first user. Menu renamed and reordered; `/app/chat` route and `/app/ask` redirect. Tests for nav at 390 / 768 / 1440.
 
-**PR 2. Home.** Hero, two action cards, four shortcut tiles, "Try asking Notarik" chips that open Chat with the prompt.
+**PR 2. Home. (done)** Hero, two action cards, four shortcut tiles, "Try asking Notarik" chips that open Chat with the prompt.
 
 **PR 3. Transactions and detail.** TopBar with search toggle, "Spent" summary, category chips, day groups; detail screen with edit/delete as on mobile (`transactions/[id].tsx`). Keeps CSV export (moves under Settings > Export data as on mobile, a shortcut can stay).
 

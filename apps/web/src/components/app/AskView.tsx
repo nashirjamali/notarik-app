@@ -2,6 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { confirmChat, sendChat } from "@/lib/client";
 import { splitAmounts, type PendingAction } from "@/lib/chat";
@@ -43,10 +44,21 @@ export function AskView() {
   const [error, setError] = useState<string | null>(null);
   const next = useRef(1);
   const end = useRef<HTMLDivElement>(null);
+  // Home's "Try asking Notarik" chips open Chat with ?prompt=..., which is sent once.
+  const prompt = useSearchParams().get("prompt");
+  const sentPrompt = useRef(false);
 
   useEffect(() => {
     end.current?.scrollIntoView?.({ block: "end" });
   }, [messages, busy]);
+
+  useEffect(() => {
+    if (!prompt || sentPrompt.current) return;
+    sentPrompt.current = true;
+    void send(prompt);
+    // Once per page load; `send` changes on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prompt]);
 
   async function send(text: string) {
     const message = text.trim();
