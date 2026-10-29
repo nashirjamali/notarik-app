@@ -1,4 +1,4 @@
-import { parseChatStream, type ChatReply } from "./chat";
+import { parseChatStream, type ChatReply, type ConfirmResult } from "./chat";
 import type {
   Budget,
   Category,
@@ -107,10 +107,10 @@ export async function sendChat(message: string, threadId: string | null): Promis
   return parseChatStream(await res.text());
 }
 
-export async function confirmChat(threadId: string, decision: "approve" | "reject") {
-  return request<{ status: "approved" | "rejected"; transaction_id?: string }>(`/chat/${encodeURIComponent(threadId)}/confirm`, {
+export async function confirmChat(threadId: string, decision: "approve" | "reject" | "edit", payload?: Record<string, unknown>) {
+  return request<ConfirmResult>(`/chat/${encodeURIComponent(threadId)}/confirm`, {
     method: "POST",
-    body: JSON.stringify({ decision }),
+    body: JSON.stringify({ decision, payload }),
   });
 }
 
