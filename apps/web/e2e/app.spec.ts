@@ -162,6 +162,7 @@ test("another user cannot open or change someone else's expense", async ({ brows
   await b.goto(`/app/transactions/${id}`);
   await expect(b.getByText("does not exist or was deleted")).toBeVisible();
   expect((await a.request.get(`/api/proxy/transactions/${id}`)).status()).toBe(200);
+});
 
 test("responses carry security headers and unknown app pages show a friendly 404", async ({ page }) => {
   const login = await page.request.get("/login");
