@@ -6,6 +6,8 @@ import type {
   Me,
   Projection,
   Recap,
+  ReceiptEdits,
+  ReceiptRun,
   Settings,
   Transaction,
   TransactionInput,
@@ -26,7 +28,8 @@ export class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api/proxy${path}`, {
     ...init,
-    headers: init?.body ? { "content-type": "application/json" } : undefined,
+    // A string body is JSON; for FormData the browser sets the multipart content type (with its boundary) itself.
+    headers: typeof init?.body === "string" ? { "content-type": "application/json" } : undefined,
   });
   if (res.status === 401 && typeof window !== "undefined") {
     // A full navigation on purpose: it drops every cached query and React state of the signed-out session.
@@ -45,6 +48,13 @@ export const getMe = () => request<Me>("/me");
 export const getSettings = () => request<Settings>("/me/settings");
 export const updateSettings = (patch: Partial<Settings>) =>
   request<Settings>("/me/settings", { method: "PATCH", body: JSON.stringify(patch) });
+export function uploadReceipt(file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return request<ReceiptRun>("/receipts", { method: "POST", body: form });
+}
+export const confirmReceipt = (id: string, edits: ReceiptEdits) =>
+  request<{ transaction_id: string }>(`/receipts/${encodeURIComponent(id)}/confirm`, { method: "POST", body: JSON.stringify(edits) });
 export const getRecap = (month: string) => request<Recap>(`/recap?month=${month}`);
 export const getProjection = (month: string) => request<Projection>(`/projection?month=${month}`);
 export const getCategoryBudgets = (month: string) => request<CategoryBudget[]>(`/budget/categories?month=${month}`);

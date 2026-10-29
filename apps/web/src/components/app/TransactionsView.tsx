@@ -41,6 +41,9 @@ export function TransactionsView() {
         aside={
           <div className="flex flex-wrap items-center gap-3">
             {month ? <MonthSwitcher month={month} onChange={setMonth} /> : <Skeleton className="h-10 w-56" />}
+            <Link href="/app/receipts/new" className="rounded-full bg-brand-accent-subtle px-5 py-2.5 text-button-2 font-bold text-brand-primary-strong transition-colors hover:bg-brand-accent">
+              Scan receipt
+            </Link>
             <Link href="/app/transactions/new" className="rounded-full bg-brand-primary px-5 py-2.5 text-button-2 font-bold text-text-inverse transition-colors hover:bg-brand-primary-strong">
               Add expense
             </Link>
