@@ -60,6 +60,8 @@ export const getProjection = (month: string) => request<Projection>(`/projection
 export const getCategoryBudgets = (month: string) => request<CategoryBudget[]>(`/budget/categories?month=${month}`);
 export const putBudget = (month: string, totalMinor: number) =>
   request<Budget>("/budget", { method: "PUT", body: JSON.stringify({ month, total_minor: totalMinor }) });
+export const putCategoryBudget = (month: string, category: Category, totalMinor: number | null) =>
+  request<CategoryBudget[]>("/budget/categories", { method: "PUT", body: JSON.stringify({ month, category, total_minor: totalMinor }) });
 export const getBudget = (month: string) => request<Budget>(`/budget?month=${month}`);
 
 export function listTransactions(query: { month: string; category?: Category; q?: string; cursor?: string | null; limit?: number }) {
