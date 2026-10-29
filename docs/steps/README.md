@@ -8,7 +8,7 @@ Do the steps **in order**. Each file is one unit of work with a goal, what you w
 |-------|---------|
 | `SETUP` | Decisions, repo, tooling |
 | `BE` | Backend (API, database, auth, RLS) |
-| `FE` | Frontend (Expo app for phone and web) |
+| `FE` | Frontend (Expo app for phone, Next.js for web) |
 | `FEATURE` | End-to-end slice touching backend and frontend |
 | `AI` | LLM, LangGraph graphs, agents, RAG |
 | `TEST` | Test and evaluation infrastructure |
@@ -44,6 +44,8 @@ Do the steps **in order**. Each file is one unit of work with a goal, what you w
 | 22 | TEST | [Routing, behaviour and safety evals](22-TEST-routing-behaviour-safety-evals.md) | 4 |
 | 23 | OPS | [Tracing, deployment and release](23-OPS-tracing-deploy-release.md) | 5 |
 | 24 | DOCS | [README, demo and v1 data migration](24-DOCS-readme-demo-migration.md) | 5 |
+| 25 | FE | [Next.js skeleton and landing page](25-FE-nextjs-skeleton-and-landing.md) — web decision: `../adr/007-web-nextjs-for-landing-and-web-app.md` | 6 |
+| 26 | FE | [Web app shell, auth and first screens](26-FE-web-app-shell-auth-and-first-screens.md) | 6 |
 
 **Start at step 02.** Steps 00 and 01 are skipped for now (see their files).
 
