@@ -56,22 +56,19 @@ def update_settings(
     connection: Connection = Depends(user_connection),
     user_id: UUID = Depends(current_user),
 ):
-    current = _read(connection, user_id)
-    merged = current.model_copy(update=body.model_dump(exclude_none=True))
-    connection.execute(
+    # One statement: a read-then-write here would lose a change when two PATCHes (two switches
+    # flipped quickly) read the same old row and each write back its own full copy.
+    row = connection.execute(
         text(
             """
             INSERT INTO user_settings (user_id, auto_read_receipts, notifications)
-            VALUES (:user_id, :auto, :notifications)
+            VALUES (:user_id, COALESCE(CAST(:auto AS boolean), true), COALESCE(CAST(:notifications AS boolean), true))
             ON CONFLICT (user_id) DO UPDATE
-              SET auto_read_receipts = EXCLUDED.auto_read_receipts,
-                  notifications = EXCLUDED.notifications
+              SET auto_read_receipts = COALESCE(CAST(:auto AS boolean), user_settings.auto_read_receipts),
+                  notifications = COALESCE(CAST(:notifications AS boolean), user_settings.notifications)
+            RETURNING auto_read_receipts, notifications
             """
         ),
-        {
-            "user_id": user_id,
-            "auto": merged.auto_read_receipts,
-            "notifications": merged.notifications,
-        },
-    )
-    return merged
+        {"user_id": user_id, "auto": body.auto_read_receipts, "notifications": body.notifications},
+    ).one()
+    return Settings(auto_read_receipts=row.auto_read_receipts, notifications=row.notifications)
