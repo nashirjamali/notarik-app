@@ -41,7 +41,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     const page = await context.newPage();
     await page.goto("/login");
     await page.getByLabel("Email").fill(await user(request));
-    await page.getByLabel("Password").fill("password123");
+    await page.getByLabel("Password", { exact: true }).fill("password123");
     await page.getByRole("button", { name: "Log in" }).click();
     await page.waitForURL("**/app");
     const month = new Date().toISOString().slice(0, 7);

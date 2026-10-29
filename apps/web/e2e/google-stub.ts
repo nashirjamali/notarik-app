@@ -5,7 +5,7 @@ import type { BrowserContext } from "@playwright/test";
  * The fake button hands the callback a made-up credential when clicked.
  */
 export async function stubGoogle(context: BrowserContext) {
-  await context.route("https://accounts.google.com/gsi/client", (route) =>
+  await context.route("https://accounts.google.com/gsi/client*", (route) =>
     route.fulfill({
       contentType: "text/javascript",
       body: `

@@ -56,7 +56,9 @@ Source of truth for looks: the Expo app (also running as Expo web on :8081 for s
 
 *Original scope:* Account card with avatar, grouped rows (Notarik AI, Preferences, Money, About), Categories / Help / Privacy sheets, Export data, Log out.
 
-**PR 8. Auth screens.** Onboarding/landing entry, login and signup to match the mobile screens (Google button stays).
+**PR 8. Auth screens. (done)** Login and Create account in the mobile layout (back, lockup, headline, filled fields, show password, forgot password message, disabled until filled, footer link). The mobile onboarding screen is not copied: the web `/` is the landing page and already plays that role. The Google script is loaded with `hl=en`.
+
+*Original scope:* Onboarding/landing entry, login and signup to match the mobile screens (Google button stays).
 
 **PR 9. Cleanup.** Remove unused old components, update `docs/steps/26`, `apps/web/README.md`, run Lighthouse again.
 
