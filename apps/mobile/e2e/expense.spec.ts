@@ -124,10 +124,13 @@ test("settings: switches persist, sheets open and data exports", async ({ page }
   await expect(sw("Confirm before saving")).toHaveAttribute("aria-checked", "true");
   await expect(sw("Confirm before saving")).toHaveAttribute("aria-disabled", "true");
 
+  // The switches flip at once (optimistic), so wait for both saves before reloading: a reload would cancel a request still in flight.
+  const saves = Promise.all([1, 2].map(() => page.waitForResponse((response) => response.url().includes("/me/settings") && response.request().method() === "PATCH")));
   await sw("Auto-read receipts").click();
   await sw("Notifications").click();
   await expect(sw("Auto-read receipts")).toHaveAttribute("aria-checked", "false");
   await expect(sw("Notifications")).toHaveAttribute("aria-checked", "false");
+  await saves;
   await page.reload({ waitUntil: "domcontentloaded" });
   await tab(page, "Settings").click();
   await expect(sw("Auto-read receipts")).toHaveAttribute("aria-checked", "false");
