@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { dayHeading, monthLabel, shiftMonth } from "./months";
+import { dayHeading, monthLabel, shiftMonth, timeOf } from "./months";
 import { groupByDay } from "./group";
 
 test("shifts months across year boundaries", () => {
@@ -26,4 +26,9 @@ test("groups consecutive rows by day and totals them in integers", () => {
     ["2026-10-29", 30_000, 2],
     ["2026-10-28", 100, 1],
   ]);
+});
+
+test("reads the clock time from a timestamp, and nothing from a bad one", () => {
+  expect(timeOf(new Date(2026, 9, 29, 8, 5).toISOString())).toBe("08:05");
+  expect(timeOf("not a date")).toBe("");
 });

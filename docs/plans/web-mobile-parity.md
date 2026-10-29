@@ -36,7 +36,9 @@ Source of truth for looks: the Expo app (also running as Expo web on :8081 for s
 
 **PR 2. Home. (done)** Hero, two action cards, four shortcut tiles, "Try asking Notarik" chips that open Chat with the prompt.
 
-**PR 3. Transactions and detail.** TopBar with search toggle, "Spent" summary, category chips, day groups; detail screen with edit/delete as on mobile (`transactions/[id].tsx`). Keeps CSV export (moves under Settings > Export data as on mobile, a shortcut can stay).
+**PR 3. Transactions list. (done)** The detail screen moves to a PR 3b right after (it has its own menu, option sheets, receipt viewer and delete confirmation).
+
+*Original scope:* Transactions and detail. TopBar with search toggle, "Spent" summary, category chips, day groups; detail screen with edit/delete as on mobile (`transactions/[id].tsx`). Keeps CSV export (moves under Settings > Export data as on mobile, a shortcut can stay).
 
 **PR 4. Add flow.** Quick add (sentence, parsed rows, category sheet, save), then Snap receipt (gallery, PDF, camera capture) and the receipt review screen. Replaces today's add and scan pages.
 

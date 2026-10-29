@@ -63,9 +63,9 @@ test("log in, see the seeded expense, keep tokens out of the page, log out", asy
   await expect(visibleText("Today").first()).toBeVisible();
 
   // Category filter: another category has nothing, so the empty state shows.
-  await page.getByRole("button", { name: "Bills" }).click();
+  await page.getByRole("radio", { name: "Bills" }).click();
   await expect(visibleText("No expenses this month")).toBeVisible();
-  await page.getByRole("button", { name: "Food & Drink" }).click();
+  await page.getByRole("radio", { name: "Food & Drink" }).click();
   await expect(visibleText("Warung Tegal")).toBeVisible();
 
   // The browser can never read a token.
@@ -136,7 +136,7 @@ test("add, edit and delete an expense", async ({ page }) => {
   const visible = (text: string) => page.getByText(text, { exact: true }).filter({ visible: true });
 
   await page.getByRole("link", { name: "Transactions" }).filter({ visible: true }).first().click();
-  await page.getByRole("link", { name: "Add expense" }).click();
+  await page.getByRole("link", { name: "Add", exact: true }).filter({ visible: true }).click();
   await expect(page).toHaveURL(/\/transactions\/new$/);
 
   // Validation first.
@@ -420,5 +420,30 @@ test("Home is the mobile Home: action cards, shortcuts and suggested questions",
   await main.getByRole("link", { name: "Log nasi goreng 25k" }).click();
   await expect(page).toHaveURL(/\/app\/chat\?prompt=/);
   await expect(page.getByRole("main").getByText("Log nasi goreng 25k").first()).toBeVisible();
+  await context.close();
+});
+
+test("Transactions in the mobile layout: search toggle, month row, category chips, no wide-layout buttons", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.goto("/app/transactions");
+  const main = page.getByRole("main");
+  await expect(main.getByRole("heading", { level: 1, name: "Transactions" })).toBeVisible();
+  await expect(main.getByText("Warung Tegal")).toBeVisible();
+  await expect(main.getByText("Spent")).toBeVisible();
+  await expect(main.getByRole("radiogroup", { name: "Filter by category" }).getByRole("radio")).toHaveText(["All", "Food & Drink", "Groceries", "Transport", "Bills", "Shopping", "Other"]);
+  await expect(main.getByRole("link", { name: "Scan receipt" })).toBeHidden();
+  await expect(main.getByRole("button", { name: "Export CSV" })).toBeHidden();
+
+  await expect(main.getByRole("searchbox", { name: "Search expenses" })).toBeHidden();
+  await main.getByRole("button", { name: "Search" }).click();
+  const box = main.getByRole("searchbox", { name: "Search expenses" });
+  await expect(box).toBeFocused();
+  await box.fill("nothing like this");
+  await expect(main.getByText("No expenses this month")).toBeVisible();
+  await main.getByRole("button", { name: "Close search" }).click();
+  await expect(box).toBeHidden();
+  await expect(main.getByText("Warung Tegal")).toBeVisible();
   await context.close();
 });
