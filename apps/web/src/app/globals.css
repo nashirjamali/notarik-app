@@ -12,8 +12,8 @@
   --color-brand-primary: #8d54ea;
   --color-brand-accent: #8d54ea80; /* primary at 50% */
   --color-brand-accent-subtle: #8d54ea1a; /* primary at 10% */
-  /* Violet for small text and links: 4.6:1 or better on white, surface-subtle and the 10% tint. */
-  --color-brand-primary-strong: #8345e8;
+  /* Violet for small text and links: 4.7:1 or better on white, surface-subtle, the pastel cards and the 10% tint. */
+  --color-brand-primary-strong: #7433d9;
   /* Dark end of the violet gradient (banners, cards). The light end is brand-primary. */
   --color-brand-gradient-to: #753dd1;
 
@@ -24,7 +24,8 @@
   --color-pastel-yellow: #fff5d6;
 
   --color-text-primary: #141718;
-  --color-text-secondary: #6c7275;
+  /* Darkened from #6c7275 (4.0:1 on the pastel cards) so secondary text reaches 4.5:1 on every surface. */
+  --color-text-secondary: #60676a;
   --color-text-inverse: #fefefe;
 
   --color-surface-default: #fefefe;
