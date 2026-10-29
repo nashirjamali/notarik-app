@@ -389,13 +389,12 @@ for (const vp of [
     const page = await context.newPage();
     await logIn(page, await seedUser(page.request, "Warung Tegal"));
     const links = page.getByRole("navigation", { name: "Main" }).filter({ visible: true }).getByRole("link");
-    await expect(links).toHaveText(vp.width < 768 ? ["", "", "", "", ""] : ["Home", "Transactions", "+Add", "Chat", "Settings"]);
-    await expect(links.nth(0)).toHaveAccessibleName(/Home/);
-    await expect(links.nth(1)).toHaveAccessibleName(/Transactions/);
-    await expect(links.nth(2)).toHaveAttribute("href", "/app/transactions/new");
-    await expect(links.nth(3)).toHaveAttribute("href", "/app/chat");
-    await expect(links.nth(4)).toHaveAttribute("href", "/app/settings");
-    await expect(links.nth(0)).toHaveAttribute("aria-current", "page");
+    await expect(links).toHaveText(vp.width < 768 ? ["", "", "", "", ""] : ["+Add", "Home", "Transactions", "Chat", "Settings"]);
+    // The pill keeps the mobile order; the sidebar puts Add on top as the primary action.
+    const order = vp.width < 768 ? ["/app", "/app/transactions", "/app/transactions/new", "/app/chat", "/app/settings"] : ["/app/transactions/new", "/app", "/app/transactions", "/app/chat", "/app/settings"];
+    for (const [index, href] of order.entries()) await expect(links.nth(index)).toHaveAttribute("href", href);
+    await expect(links.filter({ has: page.locator('[aria-current="page"]') })).toHaveCount(0);
+    await expect(page.getByRole("navigation", { name: "Main" }).filter({ visible: true }).locator('[aria-current="page"]')).toHaveAttribute("href", "/app");
     await context.close();
   });
 }

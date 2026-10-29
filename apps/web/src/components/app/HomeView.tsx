@@ -38,7 +38,7 @@ function ActionCard({ href, title, subtitle, icon, primary }: { href: string; ti
     <Link
       href={href}
       className={`flex h-56 min-w-0 flex-1 flex-col justify-between overflow-hidden rounded-3xl px-4 pt-4 pb-[18px] transition-transform hover:-translate-y-0.5 ${
-        primary ? "bg-brand-primary text-text-inverse" : "bg-surface-subtle text-text-primary"
+        primary ? "bg-brand-primary text-text-inverse" : "bg-surface-subtle text-text-primary md:bg-surface-default"
       }`}
     >
       <span className="flex items-start justify-between">
