@@ -257,7 +257,7 @@ test("the BFF rejects cross-site writes and unknown API areas", async ({ page })
   expect(crossSite.status()).toBe(403);
   const crossSiteWrite = await page.request.post("/api/proxy/transactions", { headers: { origin: "https://evil.example" }, data: {} });
   expect(crossSiteWrite.status()).toBe(403);
-  expect((await page.request.get("/api/proxy/receipts/abc")).status()).toBe(404);
+  expect((await page.request.get("/api/proxy/admin/abc")).status()).toBe(404);
   expect((await page.request.get("/api/proxy/auth/refresh")).status()).toBe(404);
   // Still signed in after the blocked attempts.
   expect((await page.request.get("/api/proxy/me")).status()).toBe(200);
@@ -323,4 +323,29 @@ test("settings shows the account and saves a preference that survives a reload",
   await page.reload();
   await expect(main.getByRole("switch", { name: "Notifications" })).toHaveAttribute("aria-checked", "false");
   await expect(main.getByRole("switch", { name: "Read receipts automatically" })).toHaveAttribute("aria-checked", "true");
+});
+
+// A 1x1 PNG: enough for the API to accept the upload. The e2e API has no LLM key, so nothing is read from it.
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+
+test("scan a receipt: rejects a wrong file, then upload, fix the details and save", async ({ page }) => {
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.getByRole("link", { name: "Transactions" }).filter({ visible: true }).first().click();
+  await page.getByRole("link", { name: "Scan receipt" }).click();
+  await expect(page).toHaveURL(/\/app\/receipts\/new$/);
+  const main = page.getByRole("main");
+
+  await main.getByLabel("Receipt file").setInputFiles({ name: "note.gif", mimeType: "image/gif", buffer: Buffer.from("GIF89a") });
+  await expect(main.getByRole("alert")).toContainText("JPEG, PNG or PDF");
+
+  await main.getByLabel("Receipt file").setInputFiles({ name: "receipt.png", mimeType: "image/png", buffer: PNG });
+  await expect(main.getByRole("heading", { name: "Check your receipt" })).toBeVisible();
+  await expect(main.getByRole("img", { name: "Your uploaded receipt" })).toBeVisible();
+
+  await main.getByLabel("Merchant").fill("Toko Scan");
+  await main.getByLabel("Amount").fill("42rb");
+  await main.getByRole("button", { name: "Save expense" }).click();
+  await expect(page).toHaveURL(/\/app\/transactions\/[0-9a-f-]{36}$/);
+  await expect(main.getByText("Toko Scan").first()).toBeVisible();
+  await expect(main.getByText("Rp 42.000").first()).toBeVisible();
 });

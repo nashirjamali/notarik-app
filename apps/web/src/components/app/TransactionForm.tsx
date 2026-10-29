@@ -10,6 +10,7 @@ const field =
   "w-full rounded-2xl border border-border-default bg-surface-default px-4 py-3 text-body-2 outline-none focus:border-brand-primary focus:ring-2 focus:ring-brand-accent";
 
 export type FormValues = Omit<TransactionInput, "items">;
+type Initial = Pick<Transaction, "merchant" | "total_minor" | "date" | "category" | "payment_method" | "note">;
 
 /** Create and edit share one form. The amount is typed as text ("25rb") and parsed to integer rupiah. */
 export function TransactionForm({
@@ -20,14 +21,17 @@ export function TransactionForm({
   error,
   onSubmit,
   onCancel,
+  withPayment = true,
 }: {
-  initial?: Transaction;
+  initial?: Partial<Initial>;
   today: string;
   submitLabel: string;
   busy: boolean;
   error: string | null;
   onSubmit: (values: FormValues) => void;
   onCancel: () => void;
+  /** A receipt confirmation has no payment method to send. */
+  withPayment?: boolean;
 }) {
   const [problem, setProblem] = useState<string | null>(null);
 
@@ -67,7 +71,7 @@ export function TransactionForm({
           inputMode="text"
           autoComplete="off"
           placeholder="e.g. 25rb"
-          defaultValue={initial ? formatIdr(initial.total_minor).replace("Rp ", "") : ""}
+          defaultValue={initial?.total_minor ? formatIdr(initial.total_minor).replace("Rp ", "") : ""}
           className={field}
         />
       </label>
@@ -87,6 +91,7 @@ export function TransactionForm({
           </select>
         </label>
       </div>
+      {withPayment && (
       <label className="flex flex-col gap-1.5 text-caption font-medium">
         Payment method
         <select name="payment" defaultValue={initial?.payment_method ?? ""} className={field}>
@@ -98,6 +103,7 @@ export function TransactionForm({
           ))}
         </select>
       </label>
+      )}
       <label className="flex flex-col gap-1.5 text-caption font-medium">
         Note
         <textarea name="note" rows={2} maxLength={500} defaultValue={initial?.note ?? ""} className={field} />

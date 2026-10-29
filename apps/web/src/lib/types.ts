@@ -15,6 +15,22 @@ export const categories: Category[] = ["Groceries", "Dining", "Transport", "Shop
 
 export type Me = { user_id: string; name: string | null; email: string | null };
 
+/** What the API read from a receipt. Every field can be missing: the user fills the gaps before confirming. */
+export type ReceiptRun = {
+  id: string;
+  status: string;
+  content_type?: string | null;
+  draft: {
+    merchant?: string | null;
+    date?: string | null;
+    total_minor?: number | null;
+    category?: Category;
+    items?: { name: string; qty?: number | null; line_total_minor?: number | null }[];
+  } | null;
+  issues: { code: string; field: string; detail: string }[] | null;
+};
+export type ReceiptEdits = { merchant: string; date: string; total_minor: number; category: Category; note?: string };
+
 export type Settings = { auto_read_receipts: boolean; notifications: boolean };
 
 export type Recap = {

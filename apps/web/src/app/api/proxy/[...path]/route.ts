@@ -4,8 +4,10 @@ import { ACCESS_COOKIE, REFRESH_COOKIE, clearSession, setSession, type TokenPair
 import { API_URL, refreshTokens } from "@/lib/server/upstream";
 
 /** Only these API areas are reachable from the browser. Auth is owned by /api/auth/*. */
-const ALLOWED = new Set(["transactions", "recap", "budget", "me", "projection", "chat"]);
+const ALLOWED = new Set(["transactions", "recap", "budget", "me", "projection", "chat", "receipts"]);
 const METHODS_WITH_BODY = new Set(["POST", "PUT", "PATCH"]);
+/** The API accepts receipts up to 5 MB; leave room for the multipart envelope and refuse bigger bodies before buffering them. */
+const MAX_BODY_BYTES = 6 * 1024 * 1024;
 
 type Context = { params: Promise<{ path: string[] }> };
 
@@ -19,13 +21,19 @@ async function handle(request: NextRequest, { params }: Context) {
   }
 
   const url = `${API_URL}/${path.map(encodeURIComponent).join("/")}${request.nextUrl.search}`;
-  const body = METHODS_WITH_BODY.has(request.method) ? await request.text() : undefined;
+  const declared = Number(request.headers.get("content-length") ?? 0);
+  if (declared > MAX_BODY_BYTES) {
+    return NextResponse.json({ code: "validation_error", message: "That file is too large" }, { status: 413 });
+  }
+  // Bytes, not text: receipts are binary, and the multipart boundary lives in the content type.
+  const body = METHODS_WITH_BODY.has(request.method) ? await request.arrayBuffer() : undefined;
+  const contentType = request.headers.get("content-type") ?? "application/json";
   const send = (token: string) =>
     fetch(url, {
       method: request.method,
       headers: {
         authorization: `Bearer ${token}`,
-        ...(body !== undefined ? { "content-type": "application/json" } : {}),
+        ...(body !== undefined ? { "content-type": contentType } : {}),
       },
       body,
       cache: "no-store",
