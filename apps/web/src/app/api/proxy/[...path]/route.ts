@@ -4,7 +4,7 @@ import { ACCESS_COOKIE, REFRESH_COOKIE, clearSession, setSession, type TokenPair
 import { API_URL, refreshTokens } from "@/lib/server/upstream";
 
 /** Only these API areas are reachable from the browser. Auth is owned by /api/auth/*. */
-const ALLOWED = new Set(["transactions", "recap", "budget", "me", "projection"]);
+const ALLOWED = new Set(["transactions", "recap", "budget", "me", "projection", "chat"]);
 const METHODS_WITH_BODY = new Set(["POST", "PUT", "PATCH"]);
 
 type Context = { params: Promise<{ path: string[] }> };

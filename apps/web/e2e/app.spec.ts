@@ -136,6 +136,34 @@ test("search narrows the list and the export downloads a CSV of the user's own r
   expect(csv).toContain("Warung Tegal");
 });
 
+test("ask Notarik: answers from your data, proposes an expense and only saves after Confirm", async ({ page }) => {
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.getByRole("link", { name: "Ask Notarik" }).filter({ visible: true }).first().click();
+  const seen = (text: string | RegExp) => page.getByText(text).filter({ visible: true });
+  await expect(page.getByRole("heading", { name: "Ask Notarik" })).toBeVisible();
+
+  await page.getByLabel("Message").filter({ visible: true }).fill("berapa pengeluaran bulan ini");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(seen(/Rp 25\.000/).first()).toBeVisible();
+
+  // A proposal is not saved until it is confirmed: cancel first.
+  await page.getByLabel("Message").filter({ visible: true }).fill("kopi 30rb");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(seen("Save Rp 30.000 as Food & Drink?")).toBeVisible();
+  await page.getByRole("button", { name: "Cancel" }).filter({ visible: true }).click();
+  await expect(seen("Cancelled. Nothing was changed.")).toBeVisible();
+
+  await page.getByLabel("Message").filter({ visible: true }).fill("kopi 45rb");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(seen("Save Rp 45.000 as Food & Drink?")).toBeVisible();
+  await page.getByRole("button", { name: "Confirm" }).filter({ visible: true }).click();
+  await expect(seen("Done. Saved.")).toBeVisible();
+
+  await page.getByRole("link", { name: "Transactions" }).filter({ visible: true }).first().click();
+  await expect(page.getByText("Rp 45.000", { exact: true }).filter({ visible: true }).first()).toBeVisible();
+  await expect(page.getByText("Rp 30.000", { exact: true }).filter({ visible: true })).toHaveCount(0);
+});
+
 test("the BFF rejects cross-site writes and unknown API areas", async ({ page }) => {
   const email = await seedUser(page.request, "Warung Tegal");
   await logIn(page, email);
