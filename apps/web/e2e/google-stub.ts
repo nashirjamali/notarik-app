@@ -15,7 +15,7 @@ export async function stubGoogle(context: BrowserContext) {
           renderButton(element, options) {
             const button = document.createElement("button");
             button.type = "button";
-            button.textContent = options.text === "signup_with" ? "Sign up with Google" : "Continue with Google";
+            button.textContent = options.text === "continue_with" ? "Continue with Google" : options.text;
             button.onclick = () => callback({ credential: "fake.id.token" });
             element.append(button);
           },

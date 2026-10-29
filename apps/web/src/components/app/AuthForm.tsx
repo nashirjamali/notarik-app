@@ -86,7 +86,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       >
         {busy ? "Please wait…" : signup ? "Create account" : "Log in"}
       </button>
-      <GoogleButton mode={mode} />
+      <GoogleButton />
       <p className="text-center text-caption text-text-secondary">
         {signup ? "Already have an account? " : "New to Notarik? "}
         <Link href={signup ? "/login" : "/signup"} className="font-medium text-brand-primary-strong hover:underline">

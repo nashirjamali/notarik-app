@@ -6,9 +6,10 @@ import { GOOGLE_CLIENT_ID, loadGoogle, nonceFromBytes } from "@/lib/google";
 
 /**
  * "Continue with Google" through Google Identity Services. Google draws the button and hands back an
- * ID token; our server checks it and sets the session cookies. The same call signs in or creates the account.
+ * ID token; our server checks it and sets the session cookies. The same call signs in or creates the account,
+ * so both pages say "Continue with Google".
  */
-export function GoogleButton({ mode }: { mode: "login" | "signup" }) {
+export function GoogleButton() {
   const router = useRouter();
   const slot = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +48,9 @@ export function GoogleButton({ mode }: { mode: "login" | "signup" }) {
           theme: "outline",
           size: "large",
           shape: "pill",
-          text: mode === "signup" ? "signup_with" : "continue_with",
+          text: "continue_with",
+          // The rest of the app is in English; without this Google follows the browser language.
+          locale: "en",
           width: 320,
         });
       })
@@ -55,7 +58,7 @@ export function GoogleButton({ mode }: { mode: "login" | "signup" }) {
     return () => {
       cancelled = true;
     };
-  }, [mode, router]);
+  }, [router]);
 
   if (!GOOGLE_CLIENT_ID) return null;
   return (

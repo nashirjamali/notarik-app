@@ -354,7 +354,7 @@ test("scan a receipt: rejects a wrong file, then upload, fix the details and sav
 });
 
 test("Google sign-in sends the token and nonce to our server and shows the failure, with no session", async ({ page, context }) => {
-  for (const [path, label] of [["/login", "Continue with Google"], ["/signup", "Sign up with Google"]] as const) {
+  for (const [path, label] of [["/login", "Continue with Google"], ["/signup", "Continue with Google"]] as const) {
     await page.goto(path);
     const sent = page.waitForRequest("**/api/auth/google");
     await page.getByRole("button", { name: label }).click();
