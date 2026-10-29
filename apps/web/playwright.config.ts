@@ -27,7 +27,12 @@ export default defineConfig({
       url: "http://127.0.0.1:3100",
       reuseExistingServer: !process.env.CI,
       // The production build is served over plain http here, so the cookies cannot be Secure.
-      env: { API_URL: "http://127.0.0.1:8000", COOKIE_INSECURE: "1" },
+      env: {
+        API_URL: "http://127.0.0.1:8000",
+        COOKIE_INSECURE: "1",
+        // Public and baked in at build time. Shows the Google button; the tests replace Google's script.
+        NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID: "e2e-client.apps.googleusercontent.com",
+      },
       timeout: 240_000,
     },
   ],

@@ -4,8 +4,13 @@ import { isSameSite } from "./guard";
 import { setSession, type TokenPair } from "./session";
 import { API_URL } from "./upstream";
 
-/** Shared by /api/auth/login and /api/auth/signup: forward the credentials, keep the tokens in cookies. */
-export async function authenticate(request: NextRequest, path: "/auth/login" | "/auth/signup") {
+/** Shared by /api/auth/login, signup and google: forward the credentials, keep the tokens in cookies. */
+export async function authenticate(
+  request: NextRequest,
+  path: "/auth/login" | "/auth/signup" | "/auth/social",
+  /** Builds the upstream body from the browser's; return null to reject it. */
+  shape: (body: unknown) => unknown = (body) => body,
+) {
   if (!isSameSite(request)) {
     return NextResponse.json({ code: "forbidden", message: "Cross-site request blocked" }, { status: 403 });
   }
@@ -15,12 +20,14 @@ export async function authenticate(request: NextRequest, path: "/auth/login" | "
   } catch {
     return NextResponse.json({ code: "bad_request", message: "Invalid request" }, { status: 400 });
   }
+  const forwarded = shape(body);
+  if (forwarded === null) return NextResponse.json({ code: "bad_request", message: "Invalid request" }, { status: 400 });
   let upstream: Response;
   try {
     upstream = await fetch(`${API_URL}${path}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(forwarded),
       cache: "no-store",
     });
   } catch {
