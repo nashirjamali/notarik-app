@@ -74,6 +74,8 @@ export function listTransactions(query: { month: string; category?: Category; q?
 export const getTransaction = (id: string) => request<Transaction>(`/transactions/${encodeURIComponent(id)}`);
 export const createTransaction = (body: TransactionInput) =>
   request<Transaction>("/transactions", { method: "POST", body: JSON.stringify(body) });
+export const createTransactionsBatch = (inputs: TransactionInput[]) =>
+  request<{ items: Transaction[] }>("/transactions/batch", { method: "POST", body: JSON.stringify({ transactions: inputs }) });
 export const updateTransaction = (id: string, body: TransactionPatch) =>
   request<Transaction>(`/transactions/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(body) });
 export const deleteTransaction = (id: string) => request<void>(`/transactions/${encodeURIComponent(id)}`, { method: "DELETE" });

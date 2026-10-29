@@ -40,7 +40,9 @@ Source of truth for looks: the Expo app (also running as Expo web on :8081 for s
 
 *Original scope:* Transactions and detail. TopBar with search toggle, "Spent" summary, category chips, day groups; detail screen with edit/delete as on mobile (`transactions/[id].tsx`). Keeps CSV export (moves under Settings > Export data as on mobile, a shortcut can stay).
 
-**PR 4. Add flow.** Quick add (sentence, parsed rows, category sheet, save), then Snap receipt (gallery, PDF, camera capture) and the receipt review screen. Replaces today's add and scan pages.
+**PR 4. Add flow. (done, with two gaps)** Quick add (parser ported with its 100 mobile tests, several expenses at once, category sheet), the dark Snap screen with Gallery / Take photo / PDF, and a Review header with Retake and Discard. Gaps: the review fields are still the shared form rather than the mobile review layout (editable item rows, flagged items), and Voice is not shown. The category chips use dark text on their colour: white on the orange and yellow chips fails 4.5:1.
+
+*Original scope:* Quick add (sentence, parsed rows, category sheet, save), then Snap receipt (gallery, PDF, camera capture) and the receipt review screen. Replaces today's add and scan pages.
 
 **PR 5. Chat.** Mobile layout of the thread and composer (scan button, send), suggestion prompts via `?prompt=`, confirm/cancel cards styled like `ChatParts`.
 

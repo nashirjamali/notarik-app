@@ -46,7 +46,7 @@ for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 
     await page.waitForURL("**/app");
     const month = new Date().toISOString().slice(0, 7);
     const { items } = await (await page.request.get(`/api/proxy/transactions?month=${month}`)).json();
-    for (const path of ["/app", "/app/transactions", `/app/transactions/${items[0].id}`, "/app/recap", "/app/chat", "/app/settings", "/app/receipts/new"]) {
+    for (const path of ["/app", "/app/transactions", `/app/transactions/${items[0].id}`, "/app/recap", "/app/chat", "/app/settings", "/app/receipts/new", "/app/transactions/new"]) {
       await page.goto(path);
       await page.waitForLoadState("networkidle");
       await expect(page.getByRole("heading", { level: 1 })).toBeVisible();

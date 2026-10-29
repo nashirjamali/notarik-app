@@ -8,7 +8,9 @@ import { formatIdr } from "@/lib/money";
 import type { ReceiptRun } from "@/lib/types";
 import { useClock } from "@/lib/useClock";
 import { TransactionForm } from "./TransactionForm";
-import { Card, PageTitle, Skeleton } from "./ui";
+import Image from "next/image";
+import { TopBar } from "./TopBar";
+import { Card } from "./ui";
 
 const MAX_BYTES = 5 * 1024 * 1024;
 const TYPES = ["image/jpeg", "image/png", "application/pdf"];
@@ -18,7 +20,9 @@ export function ScanReceiptView() {
   const router = useRouter();
   const client = useQueryClient();
   const clock = useClock();
-  const input = useRef<HTMLInputElement>(null);
+  const gallery = useRef<HTMLInputElement>(null);
+  const photo = useRef<HTMLInputElement>(null);
+  const pdf = useRef<HTMLInputElement>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const upload = useMutation({ mutationFn: uploadReceipt });
   const confirm = useMutation({
@@ -43,7 +47,16 @@ export function ScanReceiptView() {
     const isPdf = run.content_type === "application/pdf";
     return (
       <>
-        <PageTitle>Check your receipt</PageTitle>
+        <TopBar
+          title="Review receipt"
+          onBack={() => upload.reset()}
+          right={
+            <button type="button" onClick={() => upload.reset()} className="self-center text-caption font-medium text-brand-primary-strong">
+              Retake
+            </button>
+          }
+        />
+        <h1 className="sr-only md:not-sr-only md:mb-6 md:font-heading md:text-headline-4 md:font-bold">Check your receipt</h1>
         <div className="grid gap-4 lg:grid-cols-[1fr_minmax(0,28rem)]">
           <Card className="flex items-start justify-center">
             {isPdf ? (
@@ -71,6 +84,7 @@ export function ScanReceiptView() {
               initial={{ merchant: draft.merchant ?? "", total_minor: draft.total_minor ?? 0, date: draft.date ?? clock.today, category: draft.category ?? "Other", note: null }}
               today={clock.today}
               submitLabel="Save expense"
+              cancelLabel="Discard"
               withPayment={false}
               busy={confirm.isPending}
               error={confirm.error?.message ?? null}
@@ -99,33 +113,46 @@ export function ScanReceiptView() {
   }
 
   const error = problem ?? upload.error?.message ?? null;
+  const svg = (name: string) => `/app-assets/svg/${name}.svg`;
+  const side = "flex flex-col items-center gap-1.5 text-caption-small text-text-inverse disabled:opacity-50";
   return (
     <>
-      <PageTitle>Scan receipt</PageTitle>
-      <Card className="flex max-w-xl flex-col gap-4">
-        <p className="text-body-2 text-text-secondary">Upload a photo or PDF of a receipt. Notarik reads it, and you check the details before anything is saved.</p>
-        <input ref={input} type="file" accept="image/jpeg,image/png,application/pdf" aria-label="Receipt file" className="sr-only" onChange={(event) => pick(event.target.files?.[0])} />
-        {upload.isPending ? (
-          <div role="status" className="flex flex-col gap-3">
-            <p className="text-body-2 font-medium">Reading your receipt…</p>
-            <Skeleton className="h-12 w-full" />
-          </div>
-        ) : (
-          <button
-            type="button"
-            onClick={() => input.current?.click()}
-            className="h-12 w-fit rounded-full bg-brand-primary px-8 font-heading text-button-1 font-bold text-text-inverse hover:bg-brand-primary-strong"
-          >
-            Choose a file
-          </button>
-        )}
+      <TopBar title="Scan receipt" onBack={() => router.back()} />
+      <h1 className="sr-only md:not-sr-only md:mb-6 md:font-heading md:text-headline-4 md:font-bold">Scan receipt</h1>
+      {/* One hidden input per way in: the first is the one tests and assistive tech find by name. */}
+      <input ref={gallery} type="file" accept="image/jpeg,image/png,application/pdf" aria-label="Receipt file" className="sr-only" tabIndex={-1} onChange={(event) => pick(event.target.files?.[0])} />
+      <input ref={photo} type="file" accept="image/jpeg,image/png" capture="environment" aria-label="Receipt photo" className="sr-only" tabIndex={-1} onChange={(event) => pick(event.target.files?.[0])} />
+      <input ref={pdf} type="file" accept="application/pdf" aria-label="Receipt PDF" className="sr-only" tabIndex={-1} onChange={(event) => pick(event.target.files?.[0])} />
+      <div className="relative mx-auto flex min-h-[32rem] max-w-xl flex-col justify-between overflow-hidden rounded-3xl bg-text-primary px-6 pt-8 pb-8 text-text-inverse">
+        <p className="text-center text-caption">Fit the whole receipt in the frame</p>
+        <Image src={svg("snap-corner-brackets")} alt="" width={240} height={320} unoptimized className="mx-auto my-6 h-auto w-3/5 max-w-60 opacity-80" />
         {error && (
-          <p role="alert" className="rounded-2xl bg-status-danger-subtle px-4 py-3 text-caption text-status-danger">
+          <p role="alert" className="mb-4 rounded-2xl bg-status-danger-subtle px-4 py-3 text-center text-caption text-status-danger-text">
             {error}
           </p>
         )}
-        <p className="text-caption-small text-text-secondary">JPEG, PNG or PDF, up to 5 MB.</p>
-      </Card>
+        <div className="flex items-end justify-around">
+          <button type="button" disabled={upload.isPending} onClick={() => gallery.current?.click()} className={side}>
+            <span className="flex size-12 items-center justify-center rounded-xl border-2 border-surface-default bg-surface-default/20" />
+            Gallery
+          </button>
+          <button type="button" aria-label="Take photo" disabled={upload.isPending} onClick={() => photo.current?.click()} className="disabled:opacity-50">
+            <Image src={svg("snap-shutter")} alt="" width={72} height={72} unoptimized />
+          </button>
+          <button type="button" disabled={upload.isPending} onClick={() => pdf.current?.click()} className={side}>
+            <span className="flex size-12 items-center justify-center rounded-xl bg-surface-default/20">
+              <Image src={svg("snap-file-text")} alt="" width={24} height={24} unoptimized />
+            </span>
+            PDF
+          </button>
+        </div>
+        <p className="mt-5 text-center text-caption-small opacity-80">JPEG, PNG or PDF, up to 5 MB.</p>
+        {upload.isPending && (
+          <div role="status" className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-text-primary/80">
+            <p className="text-body-2 font-medium">Reading receipt…</p>
+          </div>
+        )}
+      </div>
     </>
   );
 }
