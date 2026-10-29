@@ -20,9 +20,9 @@ export function Faq() {
           <p className="text-body-2 text-text-secondary">Still curious? We keep things simple on purpose.</p>
           <Icon3d name="mic" size={96} className="w-24 -rotate-[8deg]" />
         </div>
-        <dl className="flex flex-1 flex-col gap-4">
+        <ul className="flex flex-1 flex-col gap-4">
           {faqs.map((f, n) => (
-            <div
+            <li
               key={f.q}
               className="flex items-center gap-3 rounded-[1.75rem] bg-surface-subtle py-5 pr-[18px] pl-3.5 hover:scale-[1.01] md:gap-[18px] md:pr-7 md:pl-5"
               {...reveal(n * 100)}
@@ -31,12 +31,12 @@ export function Faq() {
                 <Icon3d name={f.icon} size={44} className="w-11" />
               </span>
               <div className="flex min-w-0 flex-col gap-1">
-                <dt className="text-body-2 font-medium">{f.q}</dt>
-                <dd className="text-caption text-text-secondary">{f.a}</dd>
+                <p className="text-body-2 font-medium">{f.q}</p>
+                <p className="text-caption text-text-secondary">{f.a}</p>
               </div>
-            </div>
+            </li>
           ))}
-        </dl>
+        </ul>
       </Container>
     </section>
   );
