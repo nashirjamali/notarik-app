@@ -4,7 +4,10 @@ export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
   expect: { timeout: 10_000 },
+  // CI runners are slower than a laptop: one retry, with a trace kept for the failing attempt so a flake can be read, not guessed.
+  retries: process.env.CI ? 1 : 0,
   use: {
+    trace: "retain-on-failure",
     ...devices["Desktop Chrome"],
     // Locally use the installed Chrome (no browser download); CI installs Playwright's Chromium.
     channel: process.env.CI ? undefined : "chrome",
