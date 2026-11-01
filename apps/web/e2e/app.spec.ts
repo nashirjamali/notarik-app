@@ -367,14 +367,14 @@ test("scan a receipt with the camera: live preview, capture, then the review ste
   await page.goto("/app/receipts/new");
   const main = page.getByRole("main");
 
-  await main.getByRole("button", { name: "Take photo" }).click();
+  await main.getByRole("button", { name: "Open camera" }).click();
   await expect(main.getByLabel("Camera preview")).toBeVisible();
   await expect(main.getByLabel("Camera preview")).toHaveJSProperty("readyState", 4);
   // Closing the camera returns to the plain screen.
   await main.getByRole("button", { name: "Close camera" }).click();
   await expect(main.getByLabel("Camera preview")).toHaveCount(0);
 
-  await main.getByRole("button", { name: "Take photo" }).click();
+  await main.getByRole("button", { name: "Open camera" }).click();
   // The shutter is off until the preview shows a frame.
   await expect(main.getByRole("button", { name: "Capture photo" })).toBeEnabled();
   await main.getByRole("button", { name: "Capture photo" }).click();
@@ -390,9 +390,27 @@ test("scan a receipt with the camera: live preview, capture, then the review ste
   const other = await blocked.newPage();
   await logIn(other, await seedUser(other.request, "Warung Tegal"));
   await other.goto("/app/receipts/new");
-  await other.getByRole("main").getByRole("button", { name: "Take photo" }).click();
+  await other.getByRole("main").getByRole("button", { name: "Open camera" }).click();
   await expect(other.getByRole("main").getByRole("alert")).toContainText("Camera access is blocked");
   await blocked.close();
+});
+
+test("scan a receipt on a phone: Open camera hands over to the phone's own camera, no fake viewfinder", async ({ browser }) => {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.goto("/app/receipts/new");
+  const main = page.getByRole("main");
+  await expect(main.getByRole("button", { name: "Choose from gallery" })).toBeVisible();
+  await expect(main.getByRole("button", { name: "Capture photo" })).toHaveCount(0);
+  const chooser = page.waitForEvent("filechooser");
+  await main.getByRole("button", { name: "Open camera" }).tap();
+  const picked = await chooser;
+  expect(picked.isMultiple()).toBe(false);
+  // The camera input asks for a photo taken now (capture), not a preview inside the page.
+  await expect(main.getByLabel("Receipt photo")).toHaveAttribute("capture", "environment");
+  await expect(main.getByLabel("Camera preview")).toHaveCount(0);
+  await context.close();
 });
 
 test("Google sign-in sends the token and nonce to our server and shows the failure, with no session", async ({ page, context }) => {
