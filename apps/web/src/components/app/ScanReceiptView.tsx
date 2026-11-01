@@ -169,7 +169,17 @@ export function ScanReceiptView() {
 
   const error = problem ?? upload.error?.message ?? null;
   const svg = (name: string) => `/app-assets/svg/${name}.svg`;
-  const side = "flex flex-col items-center gap-1.5 text-caption-small text-text-inverse disabled:opacity-50";
+  const alert = error && (
+    <p role="alert" className="w-full rounded-2xl bg-status-danger-subtle px-4 py-3 text-center text-caption text-status-danger-text">
+      {error}
+    </p>
+  );
+  const reading = upload.isPending && (
+    <div role="status" className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 bg-text-primary/80 text-text-inverse">
+      <p className="text-body-2 font-medium">Reading receipt…</p>
+    </div>
+  );
+  const option = "flex h-[52px] w-full items-center justify-center rounded-full font-heading text-button-1 font-bold transition-colors disabled:opacity-50";
   return (
     <>
       <TopBar title="Scan receipt" onBack={() => router.back()} />
@@ -178,51 +188,48 @@ export function ScanReceiptView() {
       <input ref={gallery} type="file" accept="image/jpeg,image/png,application/pdf" aria-label="Receipt file" className="sr-only" tabIndex={-1} onChange={(event) => pick(event.target.files?.[0])} />
       <input ref={photo} type="file" accept="image/jpeg,image/png" capture="environment" aria-label="Receipt photo" className="sr-only" tabIndex={-1} onChange={(event) => pick(event.target.files?.[0])} />
       <input ref={pdf} type="file" accept="application/pdf" aria-label="Receipt PDF" className="sr-only" tabIndex={-1} onChange={(event) => pick(event.target.files?.[0])} />
-      <div className="relative flex min-h-[32rem] max-w-xl flex-col justify-between overflow-hidden rounded-3xl bg-text-primary px-6 pt-8 pb-8 text-text-inverse">
-        {camera === "on" && (
-          <>
-            <video ref={video} muted playsInline onLoadedData={() => setFrameReady(true)} aria-label="Camera preview" className="absolute inset-0 size-full object-cover" />
-            <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-text-primary/80 via-transparent to-text-primary/60" />
-            <button type="button" onClick={stopCamera} className="absolute top-4 right-4 z-10 rounded-full bg-text-primary/60 px-4 py-2 text-caption font-medium text-text-inverse">
-              Close camera
+
+      {camera === "on" ? (
+        // The live camera (computers): a real viewfinder, so the shutter belongs here.
+        <div className="relative flex min-h-[32rem] max-w-xl flex-col justify-between overflow-hidden rounded-3xl bg-text-primary px-6 pt-8 pb-8 text-text-inverse">
+          <video ref={video} muted playsInline onLoadedData={() => setFrameReady(true)} aria-label="Camera preview" className="absolute inset-0 size-full object-cover" />
+          <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-text-primary/80 via-transparent to-text-primary/60" />
+          <button type="button" onClick={stopCamera} className="absolute top-4 right-4 z-10 rounded-full bg-text-primary/60 px-4 py-2 text-caption font-medium text-text-inverse">
+            Close camera
+          </button>
+          <p className="relative text-center text-caption">Fit the whole receipt in the frame</p>
+          <Image src={svg("snap-corner-brackets")} alt="" width={240} height={320} unoptimized className="relative mx-auto my-6 h-auto w-3/5 max-w-60 opacity-80" />
+          {alert}
+          <div className="relative flex justify-center">
+            <button type="button" aria-label="Capture photo" disabled={upload.isPending || !frameReady} onClick={takePhoto} className="disabled:opacity-50">
+              <Image src={svg("snap-shutter")} alt="" width={72} height={72} unoptimized />
             </button>
-          </>
-        )}
-        <p className="relative text-center text-caption">{camera === "starting" ? "Starting the camera…" : "Fit the whole receipt in the frame"}</p>
-        <Image src={svg("snap-corner-brackets")} alt="" width={240} height={320} unoptimized className="relative mx-auto my-6 h-auto w-3/5 max-w-60 opacity-80" />
-        {error && (
-          <p role="alert" className="mb-4 rounded-2xl bg-status-danger-subtle px-4 py-3 text-center text-caption text-status-danger-text">
-            {error}
-          </p>
-        )}
-        <div className="relative flex items-end justify-around">
-          <button type="button" disabled={upload.isPending} onClick={() => gallery.current?.click()} className={side}>
-            <span className="flex size-12 items-center justify-center rounded-xl border-2 border-surface-default bg-surface-default/20" />
-            Gallery
-          </button>
-          <button
-            type="button"
-            aria-label={camera === "on" ? "Capture photo" : "Take photo"}
-            disabled={upload.isPending || camera === "starting" || (camera === "on" && !frameReady)}
-            onClick={() => (camera === "on" ? takePhoto() : void openCamera())}
-            className="disabled:opacity-50"
-          >
-            <Image src={svg("snap-shutter")} alt="" width={72} height={72} unoptimized />
-          </button>
-          <button type="button" disabled={upload.isPending} onClick={() => pdf.current?.click()} className={side}>
-            <span className="flex size-12 items-center justify-center rounded-xl bg-surface-default/20">
-              <Image src={svg("snap-file-text")} alt="" width={24} height={24} unoptimized />
-            </span>
-            PDF
-          </button>
-        </div>
-        <p className="relative mt-5 text-center text-caption-small opacity-80">JPEG, PNG or PDF, up to 5 MB.</p>
-        {upload.isPending && (
-          <div role="status" className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-text-primary/80">
-            <p className="text-body-2 font-medium">Reading receipt…</p>
           </div>
-        )}
-      </div>
+          {reading}
+        </div>
+      ) : (
+        <div className="relative flex max-w-xl flex-col items-center gap-5 overflow-hidden rounded-3xl bg-surface-subtle px-6 py-10 text-center">
+          <Image src="/design/3d-camera.png" alt="" width={96} height={96} className="size-24 object-contain" />
+          <div className="flex flex-col gap-1">
+            <h2 className="font-heading text-body-1 font-bold">Scan a receipt</h2>
+            <p className="text-caption text-text-secondary">Photograph the whole receipt, or choose one you already have.</p>
+          </div>
+          {alert}
+          <div className="flex w-full flex-col gap-3">
+            <button type="button" disabled={upload.isPending || camera === "starting"} onClick={() => void openCamera()} className={`${option} bg-brand-primary text-text-inverse hover:bg-brand-primary-strong`}>
+              {camera === "starting" ? "Starting the camera…" : "Open camera"}
+            </button>
+            <button type="button" disabled={upload.isPending} onClick={() => gallery.current?.click()} className={`${option} bg-surface-default hover:bg-border-default`}>
+              Choose from gallery
+            </button>
+            <button type="button" disabled={upload.isPending} onClick={() => pdf.current?.click()} className={`${option} bg-surface-default hover:bg-border-default`}>
+              Upload a PDF
+            </button>
+          </div>
+          <p className="text-caption-small text-text-secondary">JPEG, PNG or PDF, up to 5 MB.</p>
+          {reading}
+        </div>
+      )}
     </>
   );
 }
