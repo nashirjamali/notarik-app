@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { confirmReceipt, uploadReceipt } from "@/lib/client";
 import { formatIdr } from "@/lib/money";
 import type { ReceiptRun } from "@/lib/types";
@@ -23,6 +23,11 @@ export function ScanReceiptView() {
   const gallery = useRef<HTMLInputElement>(null);
   const photo = useRef<HTMLInputElement>(null);
   const pdf = useRef<HTMLInputElement>(null);
+  const video = useRef<HTMLVideoElement>(null);
+  const stream = useRef<MediaStream | null>(null);
+  const [camera, setCamera] = useState<"off" | "starting" | "on">("off");
+  // The shutter works once the preview shows a frame; before that there is nothing to capture.
+  const [frameReady, setFrameReady] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const upload = useMutation({ mutationFn: uploadReceipt });
   const confirm = useMutation({
@@ -39,6 +44,56 @@ export function ScanReceiptView() {
     if (file.size > MAX_BYTES) return setProblem("That file is over 5 MB");
     setProblem(null);
     upload.mutate(file);
+  }
+
+  function stopCamera() {
+    stream.current?.getTracks().forEach((track) => track.stop());
+    stream.current = null;
+    setFrameReady(false);
+    setCamera("off");
+  }
+
+  // The camera light must go off when the page is left.
+  useEffect(() => () => stream.current?.getTracks().forEach((track) => track.stop()), []);
+
+  useEffect(() => {
+    if (camera !== "on" || !video.current || !stream.current) return;
+    video.current.srcObject = stream.current;
+    void video.current.play().catch(() => {});
+  }, [camera]);
+
+  /** A live preview in the page on a computer. A phone's native camera (the file input's `capture`) gives a better photo, so it keeps that. */
+  async function openCamera() {
+    setProblem(null);
+    if (window.matchMedia?.("(pointer: coarse)").matches || !navigator.mediaDevices?.getUserMedia) return photo.current?.click();
+    setCamera("starting");
+    try {
+      stream.current = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 } }, audio: false });
+      setCamera("on");
+    } catch (error) {
+      setCamera("off");
+      const name = error instanceof DOMException ? error.name : "";
+      if (name === "NotAllowedError" || name === "SecurityError") setProblem("Camera access is blocked. Allow it in your browser, or choose a file from Gallery.");
+      else photo.current?.click(); // No camera on this device: fall back to choosing a photo.
+    }
+  }
+
+  function takePhoto() {
+    const frame = video.current;
+    if (!frame || !frame.videoWidth) return;
+    const canvas = document.createElement("canvas");
+    canvas.width = frame.videoWidth;
+    canvas.height = frame.videoHeight;
+    canvas.getContext("2d")?.drawImage(frame, 0, 0);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return setProblem("Could not take the photo. Try again.");
+        stopCamera();
+        pick(new File([blob], "receipt.jpg", { type: "image/jpeg" }));
+      },
+      "image/jpeg",
+      0.9,
+    );
   }
 
   const run: ReceiptRun | undefined = upload.data;
@@ -124,19 +179,34 @@ export function ScanReceiptView() {
       <input ref={photo} type="file" accept="image/jpeg,image/png" capture="environment" aria-label="Receipt photo" className="sr-only" tabIndex={-1} onChange={(event) => pick(event.target.files?.[0])} />
       <input ref={pdf} type="file" accept="application/pdf" aria-label="Receipt PDF" className="sr-only" tabIndex={-1} onChange={(event) => pick(event.target.files?.[0])} />
       <div className="relative flex min-h-[32rem] max-w-xl flex-col justify-between overflow-hidden rounded-3xl bg-text-primary px-6 pt-8 pb-8 text-text-inverse">
-        <p className="text-center text-caption">Fit the whole receipt in the frame</p>
-        <Image src={svg("snap-corner-brackets")} alt="" width={240} height={320} unoptimized className="mx-auto my-6 h-auto w-3/5 max-w-60 opacity-80" />
+        {camera === "on" && (
+          <>
+            <video ref={video} muted playsInline onLoadedData={() => setFrameReady(true)} aria-label="Camera preview" className="absolute inset-0 size-full object-cover" />
+            <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-text-primary/80 via-transparent to-text-primary/60" />
+            <button type="button" onClick={stopCamera} className="absolute top-4 right-4 z-10 rounded-full bg-text-primary/60 px-4 py-2 text-caption font-medium text-text-inverse">
+              Close camera
+            </button>
+          </>
+        )}
+        <p className="relative text-center text-caption">{camera === "starting" ? "Starting the camera…" : "Fit the whole receipt in the frame"}</p>
+        <Image src={svg("snap-corner-brackets")} alt="" width={240} height={320} unoptimized className="relative mx-auto my-6 h-auto w-3/5 max-w-60 opacity-80" />
         {error && (
           <p role="alert" className="mb-4 rounded-2xl bg-status-danger-subtle px-4 py-3 text-center text-caption text-status-danger-text">
             {error}
           </p>
         )}
-        <div className="flex items-end justify-around">
+        <div className="relative flex items-end justify-around">
           <button type="button" disabled={upload.isPending} onClick={() => gallery.current?.click()} className={side}>
             <span className="flex size-12 items-center justify-center rounded-xl border-2 border-surface-default bg-surface-default/20" />
             Gallery
           </button>
-          <button type="button" aria-label="Take photo" disabled={upload.isPending} onClick={() => photo.current?.click()} className="disabled:opacity-50">
+          <button
+            type="button"
+            aria-label={camera === "on" ? "Capture photo" : "Take photo"}
+            disabled={upload.isPending || camera === "starting" || (camera === "on" && !frameReady)}
+            onClick={() => (camera === "on" ? takePhoto() : void openCamera())}
+            className="disabled:opacity-50"
+          >
             <Image src={svg("snap-shutter")} alt="" width={72} height={72} unoptimized />
           </button>
           <button type="button" disabled={upload.isPending} onClick={() => pdf.current?.click()} className={side}>
@@ -146,7 +216,7 @@ export function ScanReceiptView() {
             PDF
           </button>
         </div>
-        <p className="mt-5 text-center text-caption-small opacity-80">JPEG, PNG or PDF, up to 5 MB.</p>
+        <p className="relative mt-5 text-center text-caption-small opacity-80">JPEG, PNG or PDF, up to 5 MB.</p>
         {upload.isPending && (
           <div role="status" className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-text-primary/80">
             <p className="text-body-2 font-medium">Reading receipt…</p>

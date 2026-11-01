@@ -12,6 +12,8 @@ export default defineConfig({
     // Locally use the installed Chrome (no browser download); CI installs Playwright's Chromium.
     channel: process.env.CI ? undefined : "chrome",
     baseURL: "http://127.0.0.1:3100",
+    // A fake camera (a test pattern) that is allowed without a prompt, for the scan-receipt camera test.
+    launchOptions: { args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"] },
   },
   webServer: [
     {
