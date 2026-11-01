@@ -360,6 +360,41 @@ test("scan a receipt: rejects a wrong file, then upload, fix the details and sav
   await expect(main.getByText("Rp 42.000").first()).toBeVisible();
 });
 
+test("scan a receipt with the camera: live preview, capture, then the review step; a blocked camera says so", async ({ browser }) => {
+  const context = await browser.newContext({ permissions: ["camera"] });
+  const page = await context.newPage();
+  await logIn(page, await seedUser(page.request, "Warung Tegal"));
+  await page.goto("/app/receipts/new");
+  const main = page.getByRole("main");
+
+  await main.getByRole("button", { name: "Take photo" }).click();
+  await expect(main.getByLabel("Camera preview")).toBeVisible();
+  await expect(main.getByLabel("Camera preview")).toHaveJSProperty("readyState", 4);
+  // Closing the camera returns to the plain screen.
+  await main.getByRole("button", { name: "Close camera" }).click();
+  await expect(main.getByLabel("Camera preview")).toHaveCount(0);
+
+  await main.getByRole("button", { name: "Take photo" }).click();
+  // The shutter is off until the preview shows a frame.
+  await expect(main.getByRole("button", { name: "Capture photo" })).toBeEnabled();
+  await main.getByRole("button", { name: "Capture photo" }).click();
+  await expect(main.getByRole("heading", { name: "Check your receipt" })).toBeVisible();
+  await expect(main.getByRole("img", { name: "Your uploaded receipt" })).toBeVisible();
+  await context.close();
+
+  // Without permission the browser rejects the request: the page explains it instead of doing nothing.
+  const blocked = await browser.newContext();
+  await blocked.addInitScript(() => {
+    navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException("denied", "NotAllowedError"));
+  });
+  const other = await blocked.newPage();
+  await logIn(other, await seedUser(other.request, "Warung Tegal"));
+  await other.goto("/app/receipts/new");
+  await other.getByRole("main").getByRole("button", { name: "Take photo" }).click();
+  await expect(other.getByRole("main").getByRole("alert")).toContainText("Camera access is blocked");
+  await blocked.close();
+});
+
 test("Google sign-in sends the token and nonce to our server and shows the failure, with no session", async ({ page, context }) => {
   for (const [path, label] of [["/login", "Continue with Google"], ["/signup", "Continue with Google"]] as const) {
     await page.goto(path);
