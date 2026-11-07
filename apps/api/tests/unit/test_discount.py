@@ -26,3 +26,22 @@ def test_total_below_subtotal_without_discount_is_flagged():
 def test_negative_discount_from_the_model_becomes_positive():
     draft = _draft({"merchant": "X", "total_minor": 1, "items": [], "discount": -5000}, "photo")
     assert draft.discount_minor == 5000
+
+
+def test_common_model_key_aliases_are_mapped():
+    draft = _draft(
+        {"establishment": "ALFAMART", "total_minor": 5, "items": [{"item": "Susu", "qty": 2, "line_total_minor": 5}]},
+        "photo",
+    )
+    assert draft.merchant == "ALFAMART"
+    assert draft.items[0].name == "Susu"
+
+
+def test_negative_item_is_moved_to_discount():
+    draft = _draft(
+        {"merchant": "X", "total_minor": 50_000, "items": [
+            {"name": "A", "line_total_minor": 56_000}, {"name": "Diskon Promo", "line_total_minor": -6_000}]},
+        "photo",
+    )
+    assert [item.name for item in draft.items] == ["A"]
+    assert draft.discount_minor == 6_000
