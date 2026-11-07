@@ -2004,6 +2004,13 @@
             "minimum": 0.0,
             "title": "Total Minor"
           },
+          "discount_minor": {
+            "type": "integer",
+            "maximum": 10000000000000.0,
+            "minimum": 0.0,
+            "title": "Discount Minor",
+            "default": 0
+          },
           "category": {
             "type": "string",
             "enum": [
@@ -2123,6 +2130,11 @@
           "total_minor": {
             "type": "integer",
             "title": "Total Minor"
+          },
+          "discount_minor": {
+            "type": "integer",
+            "title": "Discount Minor",
+            "default": 0
           },
           "currency": {
             "type": "string",
@@ -2262,6 +2274,19 @@
               }
             ],
             "title": "Total Minor"
+          },
+          "discount_minor": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000000000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Minor"
           },
           "category": {
             "anyOf": [
@@ -2450,6 +2475,19 @@
               }
             ],
             "title": "Total Minor"
+          },
+          "discount_minor": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 10000000000000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Discount Minor"
           },
           "category": {
             "anyOf": [

@@ -556,6 +556,11 @@ export interface components {
             /** Total Minor */
             total_minor: number;
             /**
+             * Discount Minor
+             * @default 0
+             */
+            discount_minor: number;
+            /**
              * Category
              * @enum {string}
              */
@@ -596,6 +601,11 @@ export interface components {
             date: string;
             /** Total Minor */
             total_minor: number;
+            /**
+             * Discount Minor
+             * @default 0
+             */
+            discount_minor: number;
             /** Currency */
             currency: string;
             /**
@@ -630,6 +640,8 @@ export interface components {
             date?: string | null;
             /** Total Minor */
             total_minor?: number | null;
+            /** Discount Minor */
+            discount_minor?: number | null;
             /** Category */
             category?: ("Groceries" | "Dining" | "Transport" | "Shopping" | "Bills" | "Other") | null;
             /** Source */
@@ -671,6 +683,8 @@ export interface components {
             date?: string | null;
             /** Total Minor */
             total_minor?: number | null;
+            /** Discount Minor */
+            discount_minor?: number | null;
             /** Category */
             category?: string | null;
             /** Note */

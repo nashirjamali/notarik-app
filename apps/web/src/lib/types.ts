@@ -6,7 +6,8 @@ export type Transaction = Schemas["TransactionRead"];
 export type TransactionPage = Schemas["TransactionPage"];
 export type Category = Transaction["category"];
 export type PaymentMethod = NonNullable<Transaction["payment_method"]>;
-export type TransactionInput = Omit<Schemas["TransactionCreate"], "source">;
+/** Typed-in expenses never carry a discount; the API defaults it to 0, so it is optional here. */
+export type TransactionInput = Omit<Schemas["TransactionCreate"], "source" | "discount_minor"> & { discount_minor?: number };
 export type TransactionPatch = Schemas["TransactionUpdate"];
 
 export const paymentMethods: PaymentMethod[] = ["Cash", "QRIS", "Debit card", "Credit card", "E-wallet", "Bank transfer", "Other"];
@@ -27,6 +28,7 @@ export type ReceiptRun = {
     merchant?: string | null;
     date?: string | null;
     total_minor?: number | null;
+    discount_minor?: number | null;
     category?: Category;
     items?: { name: string; qty?: number | null; line_total_minor?: number | null }[];
   } | null;

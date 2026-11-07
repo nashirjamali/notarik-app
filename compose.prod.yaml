@@ -42,6 +42,8 @@ services:
       GOOGLE_IOS_CLIENT_ID: ${GOOGLE_IOS_CLIENT_ID:-}
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-google/gemini-2.5-flash}
+    volumes:
+      - receipts:/data/receipts
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -74,3 +76,4 @@ services:
 
 volumes:
   pgdata:
+  receipts:
