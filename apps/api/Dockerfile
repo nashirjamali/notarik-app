@@ -17,6 +17,10 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY alembic.ini ./
 COPY app ./app
 
+# Receipt images live on a volume the non-root user can write to.
+RUN mkdir -p /data/receipts && chown -R app:app /data
+ENV RECEIPTS_DIR=/data/receipts
+
 USER app
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips", "*"]

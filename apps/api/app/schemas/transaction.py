@@ -43,6 +43,7 @@ class TransactionCreate(BaseModel):
     merchant: str = Field(min_length=1, max_length=200)
     date: Date
     total_minor: int = Field(ge=0, le=MAX_MINOR)
+    discount_minor: int = Field(default=0, ge=0, le=MAX_MINOR)
     category: Category
     source: Source = "manual"
     payment_method: PaymentMethod | None = None
@@ -69,6 +70,7 @@ class TransactionUpdate(BaseModel):
     merchant: str | None = Field(default=None, min_length=1, max_length=200)
     date: Date | None = None
     total_minor: int | None = Field(default=None, ge=0, le=MAX_MINOR)
+    discount_minor: int | None = Field(default=None, ge=0, le=MAX_MINOR)
     category: Category | None = None
     source: Source | None = None
     payment_method: PaymentMethod | None = None
@@ -88,6 +90,7 @@ class TransactionRead(BaseModel):
     merchant: str
     date: Date
     total_minor: int
+    discount_minor: int = 0
     currency: str
     category: Category
     source: Source

@@ -17,6 +17,7 @@ class ConfirmBody(BaseModel):
     merchant: str | None = None
     date: str | None = None
     total_minor: int | None = Field(default=None, ge=0, le=MAX_MINOR)
+    discount_minor: int | None = Field(default=None, ge=0, le=MAX_MINOR)
     category: str | None = None
     note: str | None = Field(default=None, max_length=500)
     items: list[dict] | None = None

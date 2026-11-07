@@ -37,7 +37,7 @@ def validate_draft(draft: ExpenseDraft, today: date | None = None) -> list[Valid
     if (
         draft.subtotal_minor is not None
         and draft.total_minor is not None
-        and draft.total_minor + SUM_TOLERANCE < draft.subtotal_minor
+        and draft.total_minor + SUM_TOLERANCE < draft.subtotal_minor - (draft.discount_minor or 0)
     ):
         issues.append(
             ValidationIssue(
@@ -48,7 +48,13 @@ def validate_draft(draft: ExpenseDraft, today: date | None = None) -> list[Valid
         )
     if item_sum is not None and draft.items:
         target = draft.subtotal_minor if draft.subtotal_minor is not None else draft.total_minor
-        if target is not None and abs(item_sum - target) > SUM_TOLERANCE:
+        # Items are printed before a separate discount line, so the sum may match with or without it.
+        gaps = (
+            (abs(item_sum - target), abs(item_sum - (draft.discount_minor or 0) - target))
+            if target is not None
+            else (0,)
+        )
+        if target is not None and min(gaps) > SUM_TOLERANCE:
             issues.append(
                 ValidationIssue(
                     code="ITEMS_SUM_MISMATCH",

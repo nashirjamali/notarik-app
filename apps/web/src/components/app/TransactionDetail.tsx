@@ -162,6 +162,7 @@ export function TransactionDetail() {
               </span>
               <h1 className="text-body-2 font-medium">{row.merchant}</h1>
               <p className="font-heading text-[40px] leading-[48px] font-bold tracking-[-1.6px]">{formatIdr(row.total_minor)}</p>
+              {row.discount_minor > 0 && <p className="text-caption text-text-secondary">After a {formatIdr(row.discount_minor)} discount</p>}
               {fromReceipt && (
                 <span className="flex items-center gap-1 rounded-full bg-brand-accent-subtle py-0.5 pr-2 pl-1.5 text-caption-small font-semibold text-brand-primary-strong">
                   <Image src={svg("review-mark")} alt="" width={12} height={10} unoptimized />
@@ -249,6 +250,12 @@ export function TransactionDetail() {
                             <span className="shrink-0 font-medium">{formatIdr(item.line_total_minor)}</span>
                           </li>
                         ))}
+                        {row.discount_minor > 0 && (
+                          <li className="flex justify-between gap-4 py-1.5 text-caption font-medium text-status-success-text">
+                            <span>Discount</span>
+                            <span>−{formatIdr(row.discount_minor)}</span>
+                          </li>
+                        )}
                       </ul>
                     )}
                   </>

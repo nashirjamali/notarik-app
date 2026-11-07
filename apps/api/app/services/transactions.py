@@ -14,12 +14,12 @@ from app.schemas.transaction import (
 
 _INSERT = """
 INSERT INTO transactions (
-  user_id, merchant, date, total_minor, category, source, payment_method, note
+  user_id, merchant, date, total_minor, discount_minor, category, source, payment_method, note
 )
 VALUES (
-  :user_id, :merchant, :date, :total_minor, :category, :source, :payment_method, :note
+  :user_id, :merchant, :date, :total_minor, :discount_minor, :category, :source, :payment_method, :note
 )
-RETURNING id, merchant, date, total_minor, currency, category, source,
+RETURNING id, merchant, date, total_minor, discount_minor, currency, category, source,
   payment_method, note, extraction_run_id AS receipt_run_id, created_at
 """
 
@@ -98,6 +98,7 @@ def create_transaction(
             "merchant": body.merchant,
             "date": body.date,
             "total_minor": body.total_minor,
+            "discount_minor": body.discount_minor,
             "category": body.category,
             "source": body.source,
             "payment_method": body.payment_method,
@@ -129,7 +130,7 @@ def get_transaction(
     row = connection.execute(
         text(
             """
-            SELECT id, merchant, date, total_minor, currency, category, source, payment_method, note,
+            SELECT id, merchant, date, total_minor, discount_minor, currency, category, source, payment_method, note,
                    extraction_run_id AS receipt_run_id, created_at
             FROM transactions
             WHERE id = :id AND user_id = :user_id
@@ -158,7 +159,7 @@ def list_transactions(
     rows = connection.execute(
         text(
             """
-            SELECT id, merchant, date, total_minor, currency, category, source, payment_method, note,
+            SELECT id, merchant, date, total_minor, discount_minor, currency, category, source, payment_method, note,
                    extraction_run_id AS receipt_run_id, created_at
             FROM transactions
             WHERE user_id = :user_id
@@ -221,7 +222,7 @@ def update_transaction(
         return None
     fields = body.model_dump(exclude_unset=True)
     items = fields.pop("items", None)
-    allowed = {"merchant", "date", "total_minor", "category", "source", "payment_method", "note"}
+    allowed = {"merchant", "date", "total_minor", "discount_minor", "category", "source", "payment_method", "note"}
     fields = {key: value for key, value in fields.items() if key in allowed}
     if "note" in fields:
         fields["note"] = (fields["note"] or "").strip() or None

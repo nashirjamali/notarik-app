@@ -20,6 +20,9 @@ MAX_ACTIVE = 3
 def receipt_root() -> Path:
     if _ROOT is not None:
         return _ROOT
+    configured = Settings().receipts_dir
+    if configured:
+        return Path(configured)
     return Path(__file__).resolve().parents[2] / "data" / "receipts"
 
 
@@ -175,6 +178,7 @@ def confirm_run(connection: Connection, user_id: UUID, run_id: UUID, edits: dict
             merchant=final.merchant,
             date=final.date,
             total_minor=final.total_minor,
+            discount_minor=final.discount_minor or 0,
             category=final.category,
             source=final.source if final.source in {"photo", "pdf"} else "photo",
             note=note,

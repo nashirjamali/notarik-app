@@ -27,6 +27,8 @@ class ExpenseDraft(BaseModel):
     date: Date | None = None
     total_minor: int | None = None
     subtotal_minor: int | None = None
+    # Sum of discounts printed as their own lines (promo, voucher, diskon). Positive; total_minor is already net of it.
+    discount_minor: int | None = None
     category: Category = "Other"
     items: list[ItemDraft] = Field(default_factory=list)
     source: Source = "photo"

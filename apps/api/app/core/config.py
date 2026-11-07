@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     openrouter_model: str = "google/gemini-2.5-flash"
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     receipt_max_bytes: int = 5_000_000
+    # Where uploaded receipt images are stored. Empty means apps/api/data/receipts (local development).
+    receipts_dir: str = ""
     chat_requests_per_minute: int = 30
     daily_token_budget: int = 100_000
     model_config = ConfigDict(env_file=ROOT_ENV, extra="ignore")

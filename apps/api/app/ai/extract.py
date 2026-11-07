@@ -7,6 +7,8 @@ Rules:
 - total_minor is the final payable amount (amount due), never the subtotal. Integers, Indonesian rupiah, no separators.
 - items[].line_total_minor is the rightmost printed line total, not the unit price after X. Never recompute qty times unit price.
 - qty is informational. If a discount is already in the printed line total, keep that printed total.
+- discount_minor is the sum of every discount printed as its own line (Diskon, Potongan, Promo, Voucher, Hemat), as a positive integer. 0 if there is none. Do not subtract it from item line totals or from total_minor.
+- If a discount is printed under an item, keep that item's line total as printed and include the discount in discount_minor.
 - If a field is unreadable, use null. Do not guess.
 - category is one of Groceries, Dining, Transport, Shopping, Bills, Other.
 - date is YYYY-MM-DD or null.
@@ -49,7 +51,7 @@ def repair_draft(model, image: bytes, content_type: str, draft: ExpenseDraft, is
     repaired = _draft(payload, draft.source)
     merged = draft.model_dump()
     incoming = repaired.model_dump()
-    for field in ("merchant", "date", "total_minor", "subtotal_minor", "category", "items"):
+    for field in ("merchant", "date", "total_minor", "subtotal_minor", "discount_minor", "category", "items"):
         if field in failing or field == "items" and "items" in failing:
             merged[field] = incoming[field]
     return ExpenseDraft.model_validate(merged)
@@ -64,6 +66,11 @@ def _draft(payload: dict, source: str) -> ExpenseDraft:
         payload["total_minor"] = payload.pop("total")
     if "subtotal" in payload and "subtotal_minor" not in payload:
         payload["subtotal_minor"] = payload.pop("subtotal")
+    if "discount" in payload and "discount_minor" not in payload:
+        payload["discount_minor"] = payload.pop("discount")
+    if isinstance(payload.get("discount_minor"), (int, float)):
+        # Receipts print discounts as "-5.000"; the draft keeps the amount positive.
+        payload["discount_minor"] = abs(int(payload["discount_minor"]))
     items = []
     for item in payload.get("items") or []:
         if not isinstance(item, dict):

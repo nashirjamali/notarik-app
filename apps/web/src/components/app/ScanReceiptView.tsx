@@ -159,6 +159,12 @@ export function ScanReceiptView() {
                     </li>
                   ))}
                 </ul>
+                {!!draft.discount_minor && (
+                  <p className="mt-2 flex justify-between gap-4 text-caption font-medium text-status-success-text">
+                    <span>Discount</span>
+                    <span>−{formatIdr(draft.discount_minor)}</span>
+                  </p>
+                )}
               </div>
             )}
           </Card>
