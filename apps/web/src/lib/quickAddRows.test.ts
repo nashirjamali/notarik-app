@@ -104,3 +104,17 @@ describe("rowIndexFromLoc", () => {
     expect(rowIndexFromLoc("merchant")).toBeNull();
   });
 });
+
+describe("expensesFromRows", () => {
+  const rows = rowsFromText("kopi 20rb di starbucks, roti 15rb di Starbucks, bensin 50rb di shell, parkir 5rb").map((row) => ({ ...row, total: row.total ?? 0 }));
+
+  it("joins lines from the same place and day into one expense with items", async () => {
+    const { expensesFromRows } = await import("@/lib/quickAddRows");
+    const bodies = expensesFromRows(rows);
+    expect(bodies).toHaveLength(3);
+    expect(bodies[0]).toMatchObject({ merchant: "Starbucks", total_minor: 35000 });
+    expect(bodies[0].items).toHaveLength(2);
+    expect(bodies[1].merchant).toBe("Shell");
+    expect(bodies[2].items).toEqual([]);
+  });
+});

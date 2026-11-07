@@ -71,6 +71,35 @@ export function oneExpense(rows: (QuickParse & { total: number })[]): Transactio
   };
 }
 
+type Complete = QuickParse & { total: number };
+
+/** Rows of one input that name the same place on the same day are one visit: they share a group. A row without a place stands alone. */
+export function groupRows<T extends QuickParse>(rows: T[]): T[][] {
+  const groups: T[][] = [];
+  const byPlace = new Map<string, T[]>();
+  for (const row of rows) {
+    const place = row.merchant?.trim().toLowerCase();
+    if (!place) {
+      groups.push([row]);
+      continue;
+    }
+    const key = `${place}|${row.date}`;
+    const group = byPlace.get(key);
+    if (group) group.push(row);
+    else {
+      const created = [row];
+      byPlace.set(key, created);
+      groups.push(created);
+    }
+  }
+  return groups;
+}
+
+/** What Quick add saves for several rows: one expense per place and day (its rows become the items), the rest on their own. */
+export function expensesFromRows(rows: Complete[]): TransactionInput[] {
+  return groupRows(rows).map((group) => (group.length > 1 ? oneExpense(group) : toInput(group[0])));
+}
+
 /** The row an API error is about: "transactions.2.total_minor" is row 2 (counting from 0). */
 export function rowIndexFromLoc(loc: string): number | null {
   const match = /^transactions\.(\d+)(?:\.|$)/.exec(loc);

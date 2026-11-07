@@ -9,7 +9,7 @@ import { createTransaction, createTransactionsBatch } from "@/lib/client";
 import { formatIdr } from "@/lib/money";
 import { dayHeading, today } from "@/lib/months";
 import { MAX_ROWS, parseQuickAdd, splitEntries } from "@/lib/quickAdd";
-import { applyEdit, oneExpense, rowsFromText, toInput, type Row, type RowEdit } from "@/lib/quickAddRows";
+import { applyEdit, expensesFromRows, groupRows, oneExpense, rowsFromText, type Row, type RowEdit } from "@/lib/quickAddRows";
 import { categoryOrder, type Category, type TransactionInput } from "@/lib/types";
 import { OptionSheet } from "./OptionSheet";
 import { CategoryTile, QuickAddRows } from "./QuickAddRows";
@@ -74,7 +74,7 @@ export function QuickAddView() {
       setMessage(null);
       const complete = rows.filter((row): row is Row & { total: number } => row.total != null);
       if (asOne) save.mutate(oneExpense(complete));
-      else saveMany.mutate(complete.map(toInput));
+      else saveMany.mutate(expensesFromRows(complete));
       return;
     }
     if (allRemoved) return setMessage("Nothing left to save");
@@ -91,7 +91,8 @@ export function QuickAddView() {
     });
   }
 
-  const saveLabel = many ? (asOne ? "Save as one expense" : `Save ${rows.length} expenses`) : "Save expense";
+  const expenseCount = groupRows(rows).length;
+  const saveLabel = many ? (asOne || expenseCount === 1 ? "Save as one expense" : `Save ${expenseCount} expenses`) : "Save expense";
   const title = parsed.merchant ?? (parsed.description || "Expense");
   const subtitle = parsed.merchant ? parsed.description || categoryMeta[category].label : categoryMeta[category].label;
   const back = () => (window.history.length > 1 ? router.back() : router.replace("/app"));
