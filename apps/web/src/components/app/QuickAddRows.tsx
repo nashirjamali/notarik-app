@@ -5,7 +5,7 @@ import { useState } from "react";
 import { parseAmount } from "@/lib/amount";
 import { formatIdr } from "@/lib/money";
 import { dayHeading, today } from "@/lib/months";
-import { rowTitle, type Row } from "@/lib/quickAddRows";
+import { groupRows, rowTitle, type Row } from "@/lib/quickAddRows";
 import { categoryMeta } from "./ui";
 
 /** The "Notarik understood N expenses" card of Quick add: one line per expense. */
@@ -26,6 +26,7 @@ export function QuickAddRows({
   onAmount: (key: string, total: number | null) => void;
 }) {
   const total = rows.reduce((sum, row) => sum + (row.total ?? 0), 0);
+  const expenses = groupRows(rows).length;
   return (
     <section aria-label="Understood expenses" className="flex flex-col gap-3 rounded-3xl bg-surface-subtle px-4 pt-3.5 pb-3">
       <div className="flex items-center justify-between">
@@ -43,7 +44,7 @@ export function QuickAddRows({
       <div className="flex items-center justify-between gap-4 border-t border-border-default pt-3">
         <div className="flex flex-col">
           <span id="as-one" className="text-caption font-medium">Save as one expense</span>
-          <span className="text-caption-small text-text-secondary">{asOne ? "One expense with each line as an item" : `${rows.length} separate expenses`}</span>
+          <span className="text-caption-small text-text-secondary">{asOne ? "One expense with each line as an item" : expenses < rows.length ? `${expenses} expenses; lines from the same place are combined` : `${rows.length} separate expenses`}</span>
         </div>
         <button
           type="button"
