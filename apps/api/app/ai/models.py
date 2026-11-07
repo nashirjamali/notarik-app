@@ -54,8 +54,10 @@ class OpenRouterModel:
                     },
                 ],
                 "response_format": {"type": "json_object"},
+                # Reading a receipt needs no chain of thought; with it on, the model took over 30 s and timed out.
+                "reasoning": {"enabled": False},
             },
-            timeout=30,
+            timeout=60,
         )
         elapsed = int((perf_counter() - started) * 1000)
         if response.status_code == 429:

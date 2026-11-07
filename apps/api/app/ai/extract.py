@@ -2,12 +2,14 @@ from pydantic import ValidationError
 
 from app.ai.drafts import ExpenseDraft, ExtractionFailure
 
-EXTRACTION_PROMPT = """Read the receipt image and return only the structured fields.
+EXTRACTION_PROMPT = """Read the receipt image and return only a JSON object with exactly these keys:
+{"merchant": string|null, "date": "YYYY-MM-DD"|null, "total_minor": integer|null, "subtotal_minor": integer|null, "discount_minor": integer, "category": string, "items": [{"name": string, "qty": number|null, "line_total_minor": integer|null}]}
 Rules:
 - total_minor is the final payable amount (amount due), never the subtotal. Integers, Indonesian rupiah, no separators.
 - items[].line_total_minor is the rightmost printed line total, not the unit price after X. Never recompute qty times unit price.
 - qty is informational. If a discount is already in the printed line total, keep that printed total.
-- discount_minor is the sum of every discount printed as its own line (Diskon, Potongan, Promo, Voucher, Hemat), as a positive integer. 0 if there is none. Do not subtract it from item line totals or from total_minor.
+- discount_minor is the sum of every discount printed as its own line (Diskon, Potongan, Promo, Voucher, Hemat), as a positive integer. 0 if there is none. Do not subtract it from item line totals or from total_minor. If the same discount shows both under an item and in the summary, count it once.
+- Discount lines (negative amounts, Diskon, Promo, Voucher) are never items. Put them only in discount_minor.
 - If a discount is printed under an item, keep that item's line total as printed and include the discount in discount_minor.
 - If a field is unreadable, use null. Do not guess.
 - category is one of Groceries, Dining, Transport, Shopping, Bills, Other.
@@ -66,6 +68,9 @@ def _draft(payload: dict, source: str) -> ExpenseDraft:
         payload["total_minor"] = payload.pop("total")
     if "subtotal" in payload and "subtotal_minor" not in payload:
         payload["subtotal_minor"] = payload.pop("subtotal")
+    for alias in ("establishment", "store", "store_name", "merchant_name", "vendor"):
+        if alias in payload and "merchant" not in payload:
+            payload["merchant"] = payload.pop(alias)
     if "discount" in payload and "discount_minor" not in payload:
         payload["discount_minor"] = payload.pop("discount")
     if isinstance(payload.get("discount_minor"), (int, float)):
@@ -76,11 +81,20 @@ def _draft(payload: dict, source: str) -> ExpenseDraft:
         if not isinstance(item, dict):
             continue
         row = dict(item)
+        for alias in ("item", "description", "item_name", "product"):
+            if alias in row and "name" not in row:
+                row["name"] = row.pop(alias)
         if "line_total" in row and "line_total_minor" not in row:
             row["line_total_minor"] = row.pop("line_total")
         if "price" in row and "line_total_minor" not in row:
             row["line_total_minor"] = row.pop("price")
         items.append(row)
+    # A negative line is a discount the model listed as an item; it belongs in discount_minor, not in the items.
+    negatives = [row for row in items if isinstance(row.get("line_total_minor"), (int, float)) and row["line_total_minor"] < 0]
+    if negatives:
+        items = [row for row in items if row not in negatives]
+        if not payload.get("discount_minor"):
+            payload["discount_minor"] = sum(abs(int(row["line_total_minor"])) for row in negatives)
     payload["items"] = items
     try:
         return ExpenseDraft.model_validate(payload)
